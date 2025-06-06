@@ -1,0 +1,18 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <!-- Gold circle background -->
+  <circle cx="256" cy="256" r="256" fill="#FFD700"/>
+  
+  <!-- Black star -->
+  <path d="M256 96
+           L296 216
+           L416 216
+           L320 296
+           L360 416
+           L256 336
+           L152 416
+           L192 296
+           L96 216
+           L216 216
+           Z" 
+        fill="black"/>
+</svg> 

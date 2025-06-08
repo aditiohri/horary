@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
+import { calculateHoraryChart } from "../utils/astrology";
 
 interface QuestionData {
   question: string;
@@ -8,9 +9,11 @@ interface QuestionData {
     latitude: number;
     longitude: number;
   };
+  chart: any;
 }
 
 const question = ref("");
+const questionData = ref<QuestionData | null>(null);
 const error = ref("");
 const location = ref<{ latitude: number; longitude: number } | null>(null);
 const locationError = ref("");
@@ -48,14 +51,33 @@ const getLocation = async () => {
 const handleSubmit = async () => {
   if (!validateQuestion()) return;
 
-  const questionData: QuestionData = {
-    question: question.value,
-    timestamp: new Date().toISOString(),
-    ...(location.value && { location: location.value }),
-  };
+  try {
+    if (!location.value) {
+      throw new Error("Location is required for horary calculations");
+    }
 
-  console.log("Question data:", questionData);
-  // TODO: Handle the question data (e.g., send to backend)
+    const chart = await calculateHoraryChart(
+      new Date(),
+      location.value.latitude,
+      location.value.longitude
+    );
+
+    const horaryData = {
+      question: question.value,
+      timestamp: new Date().toISOString(),
+      location: location.value,
+      chart,
+    };
+
+    console.log("Question data with chart:", questionData);
+    // TODO: Send to backend
+    questionData.value = horaryData;
+  } catch (error) {
+    console.error("Error calculating chart:", error);
+    // Show error to user
+    error.value =
+      error instanceof Error ? error.message : "Failed to calculate chart";
+  }
 };
 
 onMounted(() => {
@@ -64,6 +86,8 @@ onMounted(() => {
 </script>
 
 <template>
+  <h2>Ask a question</h2>
+  <div id="paper"></div>
   <form @submit.prevent="handleSubmit" class="question-form">
     <div class="form-group">
       <label for="question">Ask your horary question:</label>
@@ -81,8 +105,8 @@ onMounted(() => {
       {{ locationError }}
     </div>
 
-    <div v-if="location" class="location">
-      {{ location }}
+    <div v-if="error" class="error-message">
+      {{ error }}
     </div>
 
     <button type="submit" :disabled="!!error">Submit Question</button>

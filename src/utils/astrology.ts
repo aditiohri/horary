@@ -1,12 +1,21 @@
 import { Origin, Horoscope } from "circular-natal-horoscope-js/dist/index.js";
-import { Chart } from "@astrodraw/astrochart";
 
 interface Planets {
   [key: string]: [number];
 }
 
+const points = [
+  "sun",
+  "moon",
+  "mercury",
+  "venus",
+  "mars",
+  "jupiter",
+  "saturn",
+  "ascendant",
+  "midheaven",
+];
 
-const BODIES = ["sun", "moon", "mercury", "venus", "mars", "jupiter", "saturn"];
 export function calculateHoraryChart(
   timestamp: Date,
   latitude: number,
@@ -44,7 +53,7 @@ export function calculateHoraryChart(
       key: string;
       ChartPosition: { Ecliptic: { DecimalDegrees: number } };
     }) => {
-      if (BODIES.includes(body.key as string)) {
+      if (points.includes(body.key as string)) {
         planets[body.key] = [body.ChartPosition.Ecliptic.DecimalDegrees];
       }
     }
@@ -58,10 +67,8 @@ export function calculateHoraryChart(
       return house.ChartPosition.StartPosition.Ecliptic.DecimalDegrees;
     }
   );
-  const chartData = {
+  return {
     planets: planets,
     cusps: houseCusps,
   };
-  const chart = new Chart("paper", 600, 600).radix(chartData);
-  return chart;
 }

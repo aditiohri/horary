@@ -9,18 +9,22 @@ interface QuestionData {
     latitude: number;
     longitude: number;
   };
-  chart: any;
+  chartData: any;
 }
 
+const emit = defineEmits<{
+  (e: "chart-calculated", data: QuestionData): void;
+}>();
+
 const question = ref("");
-const questionData = ref<QuestionData | null>(null);
 const error = ref("");
 const location = ref<{ latitude: number; longitude: number } | null>(null);
 const locationError = ref("");
+const isCalculating = ref(false);
 
 // Validate question length
 const validateQuestion = () => {
-  if (question.value.length < 1) {
+  if (question.value.length < 10) {
     error.value = "Question must be at least 10 characters long";
     return false;
   }
@@ -52,11 +56,12 @@ const handleSubmit = async () => {
   if (!validateQuestion()) return;
 
   try {
+    isCalculating.value = true;
     if (!location.value) {
       throw new Error("Location is required for horary calculations");
     }
 
-    const chart = await calculateHoraryChart(
+    const chartData = await calculateHoraryChart(
       new Date(),
       location.value.latitude,
       location.value.longitude
@@ -66,17 +71,17 @@ const handleSubmit = async () => {
       question: question.value,
       timestamp: new Date().toISOString(),
       location: location.value,
-      chart,
+      chartData,
     };
 
-    console.log("Question data with chart:", questionData);
-    // TODO: Send to backend
-    questionData.value = horaryData;
+    emit("chart-calculated", horaryData);
+    question.value = ""; // Clear the question after successful submission
   } catch (error) {
     console.error("Error calculating chart:", error);
-    // Show error to user
     error.value =
       error instanceof Error ? error.message : "Failed to calculate chart";
+  } finally {
+    isCalculating.value = false;
   }
 };
 
@@ -86,49 +91,52 @@ onMounted(() => {
 </script>
 
 <template>
-  <h2>Ask a question</h2>
-  <div id="paper"></div>
-  <form @submit.prevent="handleSubmit" class="question-form">
-    <div class="form-group">
-      <label for="question">Ask your horary question:</label>
-      <textarea
-        id="question"
-        v-model="question"
-        :class="{ error: error }"
-        placeholder="Type your question here..."
-        rows="4"
-        @input="validateQuestion"></textarea>
-      <span v-if="error" class="error-message">{{ error }}</span>
-    </div>
+  <div class="question-form-container">
+    <form @submit.prevent="handleSubmit" class="question-form">
+      <div class="form-group">
+        <textarea
+          id="question"
+          v-model="question"
+          :class="{ error: error }"
+          placeholder="Ask your horary question..."
+          rows="1"
+          @input="validateQuestion"
+          @keydown.enter.prevent="handleSubmit"></textarea>
+        <span v-if="error" class="error-message">{{ error }}</span>
+      </div>
 
-    <div v-if="locationError" class="location-error">
-      {{ locationError }}
-    </div>
+      <div v-if="locationError" class="location-error">
+        {{ locationError }}
+      </div>
 
-    <div v-if="error" class="error-message">
-      {{ error }}
-    </div>
-
-    <button type="submit" :disabled="!!error">Submit Question</button>
-  </form>
+      <button
+        type="submit"
+        :disabled="!!error || isCalculating"
+        class="submit-button">
+        {{ isCalculating ? "Calculating..." : "Ask" }}
+      </button>
+    </form>
+  </div>
 </template>
 
 <style scoped>
+.question-form-container {
+  width: 100%;
+  background: white;
+  border-radius: 1rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
 .question-form {
-  max-width: 600px;
-  margin: 2rem auto;
-  padding: 1rem;
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  align-items: flex-end;
 }
 
 .form-group {
-  margin-bottom: 1.5rem;
-}
-
-label {
-  display: block;
-  margin-bottom: 0.5rem;
-  font-weight: 500;
-  color: #2c3e50;
+  flex: 1;
+  margin: 0;
 }
 
 textarea {
@@ -137,8 +145,11 @@ textarea {
   border: 2px solid #e2e8f0;
   border-radius: 0.5rem;
   font-size: 1rem;
-  resize: vertical;
+  resize: none;
   transition: border-color 0.2s ease;
+  min-height: 44px;
+  max-height: 120px;
+  overflow-y: auto;
 }
 
 textarea:focus {
@@ -153,17 +164,17 @@ textarea.error {
 .error-message {
   color: #e53e3e;
   font-size: 0.875rem;
-  margin-top: 0.5rem;
+  margin-top: 0.25rem;
   display: block;
 }
 
 .location-error {
   color: #e53e3e;
   font-size: 0.875rem;
-  margin-bottom: 1rem;
+  margin: 0.25rem 0;
 }
 
-button {
+.submit-button {
   background-color: #4a90e2;
   color: white;
   padding: 0.75rem 1.5rem;
@@ -173,36 +184,31 @@ button {
   font-weight: 500;
   cursor: pointer;
   transition: background-color 0.2s ease;
+  height: 44px;
+  white-space: nowrap;
 }
 
-button:hover:not(:disabled) {
+.submit-button:hover:not(:disabled) {
   background-color: #357abd;
 }
 
-button:disabled {
+.submit-button:disabled {
   background-color: #cbd5e0;
   cursor: not-allowed;
-}
-
-.location {
-  color: #2c3e50;
-  font-size: 0.875rem;
-  margin-bottom: 1rem;
 }
 
 /* Mobile optimizations */
 @media (max-width: 640px) {
   .question-form {
     padding: 0.5rem;
-    margin: 1rem auto;
   }
 
   textarea {
     font-size: 16px; /* Prevents zoom on iOS */
   }
 
-  button {
-    width: 100%;
+  .submit-button {
+    padding: 0.75rem 1rem;
   }
 }
 </style>

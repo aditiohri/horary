@@ -25,7 +25,19 @@ const handleChartCalculated = async (data: QuestionData) => {
     // Clear any existing chart
     paper.innerHTML = "";
     // Create new chart within our container
-    const radix = new Chart("paper", 600, 600).radix(data.chartData);
+    const radix = new Chart("paper", 600, 600, {
+      DEBUG: true,
+      SYMBOL_SUN: "sun",
+      SYMBOL_MOON: "moon",
+      SYMBOL_MERCURY: "mercury",
+      SYMBOL_VENUS: "venus",
+      SYMBOL_MARS: "mars",
+      SYMBOL_JUPITER: "jupiter",
+      SYMBOL_SATURN: "saturn",
+      SYMBOL_AS: "ascendant",
+      SYMBOL_MC: "midheaven",
+    }).radix(data.chartData);
+    document.getElementById("paper-astrology-radix-axis").remove();
     radix.aspects();
   }
 };

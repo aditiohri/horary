@@ -15,30 +15,6 @@ interface ChartProps {
 }
 
 const props = defineProps<ChartProps>();
-
-// Watch for changes in chartData and re-render the chart
-// watch(
-//   () => props.chartData,
-//   (newData) => {
-//     if (newData?.chart) {
-//       // Wait for the next tick to ensure the paper div exists
-//       nextTick(() => {
-//         const paper = document.getElementById("paper");
-//         if (paper) {
-//           // Clear any existing chart
-//           paper.innerHTML = "";
-//           // Create new chart within our container
-//           const radix = new Chart("paper", 600, 600).radix(newData.chart);
-//           radix.addPointsOfInterest({
-//             As: props.chartData?.chart.cusps[0],
-//           });
-//           radix.aspects();
-//         }
-//       });
-//     }
-//   },
-//   { immediate: true }
-// );
 </script>
 
 <template>

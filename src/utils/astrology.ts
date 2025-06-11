@@ -4,17 +4,7 @@ interface Planets {
   [key: string]: [number];
 }
 
-const points = [
-  "sun",
-  "moon",
-  "mercury",
-  "venus",
-  "mars",
-  "jupiter",
-  "saturn",
-  "ascendant",
-  "midheaven",
-];
+const points = ["sun", "moon", "mercury", "venus", "mars", "jupiter", "saturn"];
 
 export function calculateHoraryChart(
   timestamp: Date,
@@ -35,8 +25,8 @@ export function calculateHoraryChart(
     origin,
     houseSystem: "whole-sign",
     zodiac: "tropical",
-    aspectPoints: ["bodies", "points", "angles"],
-    aspectWithPoints: ["bodies", "points", "angles"],
+    aspectPoints: ["bodies"],
+    aspectWithPoints: ["bodies"],
     aspectTypes: ["major"],
     customOrbs: {
       conjunction: 8,
@@ -58,6 +48,12 @@ export function calculateHoraryChart(
       }
     }
   );
+  planets["ascendant"] = [
+    horoscope.Ascendant.ChartPosition.Ecliptic.DecimalDegrees,
+  ];
+  planets["midheaven"] = [
+    horoscope.Midheaven.ChartPosition.Ecliptic.DecimalDegrees,
+  ];
   const houseCusps: number[] = horoscope.Houses.map(
     (house: {
       ChartPosition: {

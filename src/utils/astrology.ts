@@ -63,8 +63,21 @@ export function calculateHoraryChart(
       return house.ChartPosition.StartPosition.Ecliptic.DecimalDegrees;
     }
   );
+  // filter out traditional aspects and planets
+  const aspects = horoscope.Aspects.all.filter(
+    (aspect: { aspectLevel: string; point1key: string; point2key: string }) => {
+      return aspect.aspectLevel === "major";
+    }
+  );
+  console.log(
+    aspects,
+    Object.getOwnPropertyNames(horoscope.Aspects.all[0]),
+    horoscope.Aspects.all[0]["point1key"],
+    horoscope.Aspects.all[0]["point2key"]
+  );
   return {
     planets: planets,
     cusps: houseCusps,
+    aspects: aspects,
   };
 }

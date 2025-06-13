@@ -13,6 +13,7 @@
   "dependencies": {
     "@astrodraw/astrochart": "^3.0.2",
     "circular-natal-horoscope-js": "^1.1.0",
+    "openai": "^5.3.0",
     "vue": "^3.5.13"
   },
   "devDependencies": {

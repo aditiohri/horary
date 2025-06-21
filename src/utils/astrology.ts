@@ -9,7 +9,7 @@ const points = ["sun", "moon", "mercury", "venus", "mars", "jupiter", "saturn"];
 export function calculateHoraryChart(
   timestamp: Date,
   latitude: number,
-  longitude: number
+  longitude: number,
 ): any {
   const origin = new Origin({
     year: timestamp.getFullYear(),
@@ -46,7 +46,7 @@ export function calculateHoraryChart(
       if (points.includes(body.key as string)) {
         planets[body.key] = [body.ChartPosition.Ecliptic.DecimalDegrees];
       }
-    }
+    },
   );
   planets["ascendant"] = [
     horoscope.Ascendant.ChartPosition.Ecliptic.DecimalDegrees,
@@ -61,23 +61,31 @@ export function calculateHoraryChart(
       };
     }) => {
       return house.ChartPosition.StartPosition.Ecliptic.DecimalDegrees;
-    }
+    },
   );
   // filter out traditional aspects and planets
-  const aspects = horoscope.Aspects.all.filter(
-    (aspect: { aspectLevel: string; point1key: string; point2key: string }) => {
-      return aspect.aspectLevel === "major";
+  const aspects = { ...horoscope.Aspects.points };
+  let tradAspects = [];
+  for (const planet in aspects) {
+    if (points.includes(planet.toString())) {
+      const planetAspects = aspects[planet]
+        .filter(
+          (aspect) =>
+            aspect.aspectLevel === "major" &&
+            points.includes(aspect.point1Key.toString()) &&
+            points.includes(aspect.point2Key.toString()),
+        )
+        .map((aspect) => {
+          return `${aspect.point1Key} ${aspect.aspectKey} ${aspect.point2Key}`;
+        });
+      tradAspects = tradAspects.concat(planetAspects);
     }
-  );
-  console.log(
-    aspects,
-    Object.getOwnPropertyNames(horoscope.Aspects.all[0]),
-    horoscope.Aspects.all[0]["point1key"],
-    horoscope.Aspects.all[0]["point2key"]
-  );
+  }
+  tradAspects = new Set(tradAspects);
+  // console.log(horoscope.Aspects.points, tradAspects);
   return {
     planets: planets,
     cusps: houseCusps,
-    aspects: aspects,
+    aspects: [...tradAspects],
   };
 }

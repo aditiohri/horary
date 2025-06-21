@@ -161,12 +161,12 @@ function formatChartForLLM(reading: HoraryReading): string {
 
   let formattedData = `## Chart Data for Question: "${reading.question}"\n`;
   formattedData += `**Time**: ${new Date(
-    reading.timestamp
+    reading.timestamp,
   ).toLocaleString()}\n`;
 
   if (reading.location) {
     formattedData += `**Location**: ${reading.location.latitude.toFixed(
-      2
+      2,
     )}°N, ${reading.location.longitude.toFixed(2)}°W\n\n`;
   }
 
@@ -185,7 +185,7 @@ function formatChartForLLM(reading: HoraryReading): string {
   chartData.cusps.forEach((cusp, index) => {
     const { sign, degree } = degreesToSignAndDegree(cusp);
     formattedData += `- **House ${index + 1}**: ${degree.toFixed(
-      2
+      2,
     )}° ${sign}\n`;
   });
 
@@ -195,7 +195,7 @@ function formatChartForLLM(reading: HoraryReading): string {
     chartData.aspects.forEach((aspect) => {
       formattedData += `- ${aspect.planet1} ${aspect.aspect} ${
         aspect.planet2
-      } (orb: ${aspect.orb.toFixed(2)}°)\n`;
+      }\n`;
     });
   }
 
@@ -203,7 +203,7 @@ function formatChartForLLM(reading: HoraryReading): string {
 }
 
 export const generateHoraryReading = async (
-  reading: HoraryReading
+  reading: HoraryReading,
 ): Promise<string | null> => {
   try {
     const formattedChart = formatChartForLLM(reading);
@@ -233,7 +233,7 @@ Please analyze this horary chart following the traditional methodology. Begin by
 export const continueHoraryConversation = async (
   reading: HoraryReading,
   conversationHistory: Array<{ role: "user" | "assistant"; content: string }>,
-  newMessage: string
+  newMessage: string,
 ): Promise<string | null> => {
   try {
     const formattedChart = formatChartForLLM(reading);

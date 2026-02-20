@@ -3,7 +3,7 @@
   "checkpoint_id": "a9e98e273aa1",
   "strategy": "manual-commit",
   "branch": "main",
-  "checkpoints_count": 1,
+  "checkpoints_count": 27,
   "files_touched": [
     "README.md",
     "src/App.vue",
@@ -27,13 +27,20 @@
       "context": "/a9/e98e273aa1/0/context.md",
       "content_hash": "/a9/e98e273aa1/0/content_hash.txt",
       "prompt": "/a9/e98e273aa1/0/prompt.txt"
+    },
+    {
+      "metadata": "/a9/e98e273aa1/1/metadata.json",
+      "transcript": "/a9/e98e273aa1/1/full.jsonl",
+      "context": "/a9/e98e273aa1/1/context.md",
+      "content_hash": "/a9/e98e273aa1/1/content_hash.txt",
+      "prompt": "/a9/e98e273aa1/1/prompt.txt"
     }
   ],
   "token_usage": {
-    "input_tokens": 264,
-    "cache_creation_tokens": 122079,
-    "cache_read_tokens": 1322578,
-    "output_tokens": 3949,
-    "api_call_count": 30
+    "input_tokens": 3700,
+    "cache_creation_tokens": 420514,
+    "cache_read_tokens": 23908065,
+    "output_tokens": 13548,
+    "api_call_count": 263
   }
 }

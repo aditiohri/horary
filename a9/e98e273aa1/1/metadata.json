@@ -1,0 +1,40 @@
+{
+  "cli_version": "0.4.5",
+  "checkpoint_id": "a9e98e273aa1",
+  "session_id": "515dde7d-7200-4c4e-afe5-678e91d56910",
+  "strategy": "manual-commit",
+  "created_at": "2026-02-20T20:19:39.900785Z",
+  "branch": "main",
+  "checkpoints_count": 26,
+  "files_touched": [
+    "src/App.vue",
+    "src/components/ChartDataView.vue",
+    "src/components/HoraryChart.vue",
+    "src/components/QuestionForm.vue",
+    "src/components/UserChat.vue",
+    "src/composables/useDarkMode.ts",
+    "src/types/circular-natal-horoscope-js.d.ts",
+    "src/utils/__tests__/aspectMotion.test.ts",
+    "src/utils/aspectMotion.ts",
+    "src/utils/astrology.ts"
+  ],
+  "agent": "Claude Code",
+  "turn_id": "3b4ceeda0208",
+  "token_usage": {
+    "input_tokens": 3436,
+    "cache_creation_tokens": 298435,
+    "cache_read_tokens": 22585487,
+    "output_tokens": 9599,
+    "api_call_count": 233
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-02-20T20:19:39.014869Z",
+    "agent_lines": 1489,
+    "human_added": 150,
+    "human_modified": 81,
+    "human_removed": 0,
+    "total_committed": 1717,
+    "agent_percentage": 86.72102504368084
+  },
+  "transcript_path": ".claude/projects/-Users-aditiohri-Code-horary/515dde7d-7200-4c4e-afe5-678e91d56910.jsonl"
+}

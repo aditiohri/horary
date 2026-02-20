@@ -1,0 +1,26 @@
+{
+  "cli_version": "0.4.5",
+  "checkpoint_id": "fb73f4f72822",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "src/components/HoraryChart.vue"
+  ],
+  "sessions": [
+    {
+      "metadata": "/fb/73f4f72822/0/metadata.json",
+      "transcript": "/fb/73f4f72822/0/full.jsonl",
+      "context": "/fb/73f4f72822/0/context.md",
+      "content_hash": "/fb/73f4f72822/0/content_hash.txt",
+      "prompt": "/fb/73f4f72822/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 264,
+    "cache_creation_tokens": 122079,
+    "cache_read_tokens": 1322578,
+    "output_tokens": 3949,
+    "api_call_count": 30
+  }
+}

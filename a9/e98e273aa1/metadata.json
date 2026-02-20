@@ -1,0 +1,39 @@
+{
+  "cli_version": "0.4.5",
+  "checkpoint_id": "a9e98e273aa1",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "README.md",
+    "src/App.vue",
+    "src/components/ChartDataView.vue",
+    "src/components/Chat.vue",
+    "src/components/HoraryChart.vue",
+    "src/components/QuestionForm.vue",
+    "src/components/ReadingHistory.vue",
+    "src/components/UserChat.vue",
+    "src/composables/useDarkMode.ts",
+    "src/types/circular-natal-horoscope-js.d.ts",
+    "src/utils/__tests__/aspectMotion.test.ts",
+    "src/utils/aspectMotion.ts",
+    "src/utils/astrology.ts",
+    "src/utils/llm.ts"
+  ],
+  "sessions": [
+    {
+      "metadata": "/a9/e98e273aa1/0/metadata.json",
+      "transcript": "/a9/e98e273aa1/0/full.jsonl",
+      "context": "/a9/e98e273aa1/0/context.md",
+      "content_hash": "/a9/e98e273aa1/0/content_hash.txt",
+      "prompt": "/a9/e98e273aa1/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 264,
+    "cache_creation_tokens": 122079,
+    "cache_read_tokens": 1322578,
+    "output_tokens": 3949,
+    "api_call_count": 30
+  }
+}

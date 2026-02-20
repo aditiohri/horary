@@ -1,7 +1,12 @@
 import { Origin, Horoscope } from "circular-natal-horoscope-js/dist/index.js";
 
+interface PlanetData {
+  position: number;
+  isRetrograde: boolean;
+}
+
 interface Planets {
-  [key: string]: [number];
+  [key: string]: PlanetData;
 }
 
 const points = ["sun", "moon", "mercury", "venus", "mars", "jupiter", "saturn"];
@@ -29,11 +34,13 @@ export function calculateHoraryChart(
     aspectWithPoints: ["bodies"],
     aspectTypes: ["major"],
     customOrbs: {
-      conjunction: 8,
-      opposition: 8,
-      trine: 8,
-      square: 7,
-      sextile: 6,
+      // Maximum orbs allowed by library (conjunction limited to 12°)
+      // NOTE: This is too restrictive for horary astrology - need Swiss Ephemeris
+      conjunction: 12,
+      opposition: 12,
+      trine: 12,
+      square: 10,
+      sextile: 8,
     },
     language: "en",
   });
@@ -42,18 +49,24 @@ export function calculateHoraryChart(
     (body: {
       key: string;
       ChartPosition: { Ecliptic: { DecimalDegrees: number } };
+      isRetrograde?: boolean;
     }) => {
       if (points.includes(body.key as string)) {
-        planets[body.key] = [body.ChartPosition.Ecliptic.DecimalDegrees];
+        planets[body.key] = {
+          position: body.ChartPosition.Ecliptic.DecimalDegrees,
+          isRetrograde: body.isRetrograde ?? false,
+        };
       }
     },
   );
-  planets["ascendant"] = [
-    horoscope.Ascendant.ChartPosition.Ecliptic.DecimalDegrees,
-  ];
-  planets["midheaven"] = [
-    horoscope.Midheaven.ChartPosition.Ecliptic.DecimalDegrees,
-  ];
+  planets["ascendant"] = {
+    position: horoscope.Ascendant.ChartPosition.Ecliptic.DecimalDegrees,
+    isRetrograde: false,
+  };
+  planets["midheaven"] = {
+    position: horoscope.Midheaven.ChartPosition.Ecliptic.DecimalDegrees,
+    isRetrograde: false,
+  };
   const houseCusps: number[] = horoscope.Houses.map(
     (house: {
       ChartPosition: {
@@ -64,8 +77,13 @@ export function calculateHoraryChart(
     },
   );
   // filter out traditional aspects and planets
-  const aspects = { ...horoscope.Aspects.points };
-  let tradAspects = [];
+  const aspects: Record<string, Array<{
+    aspectLevel: string;
+    point1Key: string;
+    point2Key: string;
+    aspectKey: string;
+  }>> = { ...horoscope.Aspects.points };
+  let tradAspects: string[] = [];
   for (const planet in aspects) {
     if (points.includes(planet.toString())) {
       const planetAspects = aspects[planet]
@@ -81,11 +99,10 @@ export function calculateHoraryChart(
       tradAspects = tradAspects.concat(planetAspects);
     }
   }
-  tradAspects = new Set(tradAspects);
-  // console.log(horoscope.Aspects.points, tradAspects);
+  const uniqueAspects = [...new Set(tradAspects)];
   return {
     planets: planets,
     cusps: houseCusps,
-    aspects: [...tradAspects],
+    aspects: uniqueAspects,
   };
 }

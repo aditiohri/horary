@@ -3,12 +3,14 @@ import { ref } from 'vue';
 import UserChat from "./components/UserChat.vue";
 import ReadingHistory from "./components/ReadingHistory.vue";
 import { useReadingStorage, type StoredReading } from './utils/storage';
+import { useDarkMode } from './composables/useDarkMode';
 
 type AppView = 'chat' | 'history';
 
 const currentView = ref<AppView>('chat');
 const selectedHistoryReading = ref<StoredReading | null>(null);
 const { getStorageStats } = useReadingStorage();
+const { isDark, toggleDarkMode } = useDarkMode();
 
 const showHistory = () => {
   currentView.value = 'history';
@@ -32,23 +34,33 @@ const storageStats = getStorageStats();
     <header class="app-header">
       <div class="header-content">
         <h1>Horary Astrology</h1>
-        <nav class="header-nav">
-          <button 
-            @click="showChat" 
-            :class="['nav-button', { active: currentView === 'chat' }]"
+        <div class="header-actions">
+          <nav class="header-nav">
+            <button
+              @click="showChat"
+              :class="['nav-button', { active: currentView === 'chat' }]"
+            >
+              New Reading
+            </button>
+            <button
+              @click="showHistory"
+              :class="['nav-button', { active: currentView === 'history' }]"
+            >
+              History
+              <span v-if="storageStats.totalReadings > 0" class="history-count">
+                {{ storageStats.totalReadings }}
+              </span>
+            </button>
+          </nav>
+          <button
+            @click="toggleDarkMode"
+            class="dark-mode-toggle"
+            :aria-label="isDark ? 'Switch to light mode' : 'Switch to dark mode'"
           >
-            New Reading
+            <span v-if="isDark">☀️</span>
+            <span v-else>🌙</span>
           </button>
-          <button 
-            @click="showHistory" 
-            :class="['nav-button', { active: currentView === 'history' }]"
-          >
-            History
-            <span v-if="storageStats.totalReadings > 0" class="history-count">
-              {{ storageStats.totalReadings }}
-            </span>
-          </button>
-        </nav>
+        </div>
       </div>
     </header>
 
@@ -74,13 +86,67 @@ const storageStats = getStorageStats();
   box-sizing: border-box;
 }
 
+/* CSS Custom Properties for Theming */
+:root {
+  /* Light mode colors */
+  --color-bg-primary: #f7fafc;
+  --color-bg-secondary: #ffffff;
+  --color-bg-tertiary: #f7fafc;
+  --color-bg-hover: #e2e8f0;
+  --color-bg-active: #4a90e2;
+
+  --color-text-primary: #2c3e50;
+  --color-text-secondary: #4a5568;
+  --color-text-tertiary: #718096;
+  --color-text-inverse: #ffffff;
+
+  --color-border: #e2e8f0;
+  --color-border-focus: #cbd5e0;
+
+  --color-accent: #4a90e2;
+  --color-success: #10b981;
+  --color-warning: #fbbf24;
+  --color-error: #dc2626;
+
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 2px 4px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Dark mode colors */
+:root.dark {
+  --color-bg-primary: #1a202c;
+  --color-bg-secondary: #2d3748;
+  --color-bg-tertiary: #374151;
+  --color-bg-hover: #4a5568;
+  --color-bg-active: #4a90e2;
+
+  --color-text-primary: #f7fafc;
+  --color-text-secondary: #e2e8f0;
+  --color-text-tertiary: #cbd5e0;
+  --color-text-inverse: #1a202c;
+
+  --color-border: #4a5568;
+  --color-border-focus: #718096;
+
+  --color-accent: #63b3ed;
+  --color-success: #34d399;
+  --color-warning: #fbbf24;
+  --color-error: #f87171;
+
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 2px 4px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 4px 6px rgba(0, 0, 0, 0.3);
+}
+
 body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
     Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
   line-height: 1.6;
-  color: #2c3e50;
-  background-color: #f7fafc;
+  color: var(--color-text-primary);
+  background-color: var(--color-bg-primary);
   overflow-x: hidden;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 /* App container */
@@ -95,13 +161,15 @@ body {
 
 /* Header */
 .app-header {
-  background-color: white;
+  background-color: var(--color-bg-secondary);
   padding: 1rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-sm);
   position: sticky;
   top: 0;
   z-index: 10;
   width: 100%;
+  border-bottom: 1px solid var(--color-border);
+  transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
 .header-content {
@@ -110,11 +178,19 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 1rem;
 }
 
 .app-header h1 {
   font-size: 1.5rem;
-  color: #2c3e50;
+  color: var(--color-text-primary);
+  white-space: nowrap;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
 }
 
 .header-nav {
@@ -123,9 +199,9 @@ body {
 }
 
 .nav-button {
-  background: #f7fafc;
-  color: #4a5568;
-  border: 1px solid #e2e8f0;
+  background: var(--color-bg-tertiary);
+  color: var(--color-text-secondary);
+  border: 1px solid var(--color-border);
   padding: 0.5rem 1rem;
   border-radius: 0.5rem;
   cursor: pointer;
@@ -135,16 +211,17 @@ body {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  white-space: nowrap;
 }
 
 .nav-button:hover {
-  background: #e2e8f0;
+  background: var(--color-bg-hover);
 }
 
 .nav-button.active {
-  background: #4a90e2;
-  color: white;
-  border-color: #4a90e2;
+  background: var(--color-bg-active);
+  color: var(--color-text-inverse);
+  border-color: var(--color-bg-active);
 }
 
 .history-count {
@@ -161,6 +238,31 @@ body {
   background: rgba(255, 255, 255, 0.3);
 }
 
+/* Dark Mode Toggle */
+.dark-mode-toggle {
+  background: var(--color-bg-tertiary);
+  border: 1px solid var(--color-border);
+  border-radius: 0.5rem;
+  padding: 0.5rem;
+  cursor: pointer;
+  font-size: 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  width: 2.5rem;
+  height: 2.5rem;
+}
+
+.dark-mode-toggle:hover {
+  background: var(--color-bg-hover);
+  transform: scale(1.05);
+}
+
+.dark-mode-toggle:active {
+  transform: scale(0.95);
+}
+
 /* Main content */
 .app-main {
   flex: 1;
@@ -174,6 +276,24 @@ body {
   overflow-x: hidden;
 }
 
+/* Tablet optimizations */
+@media (max-width: 768px) {
+  .app-header h1 {
+    font-size: 1.25rem;
+  }
+
+  .nav-button {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.8125rem;
+  }
+
+  .dark-mode-toggle {
+    width: 2.25rem;
+    height: 2.25rem;
+    font-size: 1.125rem;
+  }
+}
+
 /* Mobile optimizations */
 @media (max-width: 640px) {
   .app-header {
@@ -181,27 +301,56 @@ body {
   }
 
   .header-content {
-    flex-direction: column;
-    gap: 1rem;
-    align-items: stretch;
+    flex-wrap: wrap;
   }
 
   .app-header h1 {
-    font-size: 1.25rem;
-    text-align: center;
+    font-size: 1.125rem;
+    flex: 1 1 auto;
+  }
+
+  .header-actions {
+    flex: 1 1 100%;
+    justify-content: space-between;
+    gap: 0.5rem;
   }
 
   .header-nav {
-    justify-content: center;
+    flex: 1;
+    gap: 0.5rem;
   }
 
   .nav-button {
     flex: 1;
     justify-content: center;
+    padding: 0.625rem 0.5rem;
+    font-size: 0.8125rem;
+  }
+
+  .dark-mode-toggle {
+    width: 2.5rem;
+    height: 2.5rem;
+    flex-shrink: 0;
   }
 
   .app-main {
     padding: 0.5rem;
+  }
+}
+
+/* Very small screens */
+@media (max-width: 380px) {
+  .app-header h1 {
+    font-size: 1rem;
+  }
+
+  .nav-button {
+    font-size: 0.75rem;
+    padding: 0.5rem 0.375rem;
+  }
+
+  .history-count {
+    font-size: 0.625rem;
   }
 }
 </style>

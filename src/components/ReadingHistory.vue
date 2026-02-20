@@ -13,7 +13,6 @@ const { getAllReadings, deleteReading, searchReadings, getStorageStats } =
 const readings = ref<StoredReading[]>([]);
 const searchQuery = ref("");
 const isLoading = ref(false);
-const selectedReading = ref<StoredReading | null>(null);
 const showConfirmDelete = ref(false);
 const readingToDelete = ref<StoredReading | null>(null);
 
@@ -87,11 +86,6 @@ const handleDelete = async () => {
   } catch (error) {
     console.error("Error deleting reading:", error);
   }
-};
-
-// Format date
-const formatDate = (timestamp: string) => {
-  return new Date(timestamp).toLocaleString();
 };
 
 // Truncate question

@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import { defineProps, onMounted, watch, nextTick } from "vue";
-import { Chart } from "@astrodraw/astrochart";
+import { defineProps } from "vue";
 
 interface ChartProps {
   chartData: {
@@ -10,7 +9,7 @@ interface ChartProps {
       latitude: number;
       longitude: number;
     };
-    chart: any;
+    chartData: any;
   } | null;
 }
 
@@ -19,7 +18,7 @@ const props = defineProps<ChartProps>();
 
 <template>
   <div class="chart-container" v-if="props.chartData">
-    <div class="chart-header">
+    <div class="chart-header hide-mobile">
       <h2>Horary Chart</h2>
       <div class="chart-meta">
         <p class="question">{{ props.chartData.question }}</p>
@@ -36,100 +35,110 @@ const props = defineProps<ChartProps>();
 
 <style scoped>
 .chart-container {
-  background: white;
+  background: var(--color-bg-secondary);
   border-radius: 1rem;
   padding: 1.5rem;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-md);
   width: 100%;
   overflow: hidden;
+  transition: background-color 0.3s ease;
 }
 
 .chart-header {
   margin-bottom: 1.5rem;
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid var(--color-border);
   padding-bottom: 1rem;
 }
 
 .chart-header h2 {
-  color: #2c3e50;
+  color: var(--color-text-primary);
   margin: 0 0 0.5rem 0;
   font-size: 1.5rem;
 }
 
 .chart-meta {
-  color: #4a5568;
+  color: var(--color-text-secondary);
 }
 
 .question {
   font-size: 1.1rem;
   margin: 0.5rem 0;
   font-style: italic;
+  color: var(--color-text-primary);
 }
 
 .timestamp {
-  color: #718096;
+  color: var(--color-text-tertiary);
   font-size: 0.9rem;
   margin: 0.5rem 0;
 }
 
 .chart-content {
   min-height: 300px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--color-border);
   border-radius: 0.5rem;
-  padding: 1rem;
+  padding: 0.5rem;
   display: flex;
   justify-content: center;
   align-items: center;
   position: relative;
   width: 100%;
   overflow: hidden;
+  background: var(--color-bg-secondary);
 }
 
 .chart-paper {
-  width: 600px;
-  height: 600px;
+  width: 100%;
+  height: auto;
+  max-width: 800px;
+  aspect-ratio: 1/1;
   display: flex;
   justify-content: center;
   align-items: center;
-  /* Optionally, for responsiveness: */
-  max-width: 100%;
-  aspect-ratio: 1/1;
+  position: relative;
 }
 
-/* Ensure the chart SVG is contained */
+/* Ensure the chart SVG is contained and responsive */
 .chart-paper :deep(svg) {
   max-width: 100%;
   max-height: 100%;
-  height: auto;
-  width: auto;
-  /* Remove absolute positioning */
+}
+
+/* Hide header on mobile */
+.hide-mobile {
+  display: block;
+}
+
+@media (max-width: 768px) {
+  .hide-mobile {
+    display: none;
+  }
+
+  .chart-container {
+    padding: 0.5rem;
+  }
+
+  .chart-content {
+    min-height: auto;
+    padding: 0.25rem;
+    border: none;
+  }
+
+  .chart-paper {
+    max-width: 100%;
+    width: 100%;
+  }
 }
 
 @media (max-width: 640px) {
   .chart-container {
-    padding: 1rem;
-  }
-
-  .chart-header h2 {
-    font-size: 1.25rem;
-  }
-
-  .question {
-    font-size: 1rem;
+    padding: 0;
+    background: transparent;
+    box-shadow: none;
   }
 
   .chart-content {
-    min-height: 250px;
-    padding: 0.5rem;
-  }
-
-  .chart-paper {
-    width: 100vw;
-    height: 100vw;
-    min-width: 0;
-    min-height: 0;
-    max-width: 100%;
-    max-height: 100vw;
+    padding: 0;
   }
 }
 </style>

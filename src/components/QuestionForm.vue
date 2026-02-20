@@ -76,10 +76,10 @@ const handleSubmit = async () => {
 
     emit("chart-calculated", horaryData);
     question.value = ""; // Clear the question after successful submission
-  } catch (error) {
-    console.error("Error calculating chart:", error);
+  } catch (err) {
+    console.error("Error calculating chart:", err);
     error.value =
-      error instanceof Error ? error.message : "Failed to calculate chart";
+      err instanceof Error ? err.message : "Failed to calculate chart";
   } finally {
     isCalculating.value = false;
   }

@@ -1,4 +1,106 @@
 import { OpenAI } from "openai";
+import { analyzeMoonAspects, extractAspectsWithMotion } from "./aspectMotion";
+
+// Enhanced format chart for LLM with aspect motion
+function formatChartForLLMWithMotion(reading: HoraryReading): string {
+  console.log(reading);
+  const chartData = reading.chartData;
+  let formattedData = `## Chart Data for Question: "${reading.question}"\n`;
+  formattedData += `**Time**: ${new Date(
+    reading.timestamp
+  ).toLocaleString()}\n`;
+
+  if (reading.location) {
+    formattedData += `**Location**: ${reading.location.latitude.toFixed(
+      2
+    )}°N, ${reading.location.longitude.toFixed(2)}°W\n\n`;
+  }
+
+  // Format planetary positions
+  formattedData += `### Planetary Positions:\n`;
+  Object.entries(chartData.planets).forEach(([planet, planetData]) => {
+    const { sign, degree } = degreesToSignAndDegree(planetData.position);
+    const house = getPlanetHouse(planetData.position, chartData.cusps);
+    const rxSymbol = planetData.isRetrograde ? " ℞" : "";
+    formattedData += `- **${
+      planet.charAt(0).toUpperCase() + planet.slice(1)
+    }${rxSymbol}**: ${degree.toFixed(2)}° ${sign} (House ${house})\n`;
+  });
+
+  // Format house cusps (existing code)
+  formattedData += `\n### House Cusps:\n`;
+  chartData.cusps.forEach((cusp, index) => {
+    const { sign, degree } = degreesToSignAndDegree(cusp);
+    formattedData += `- **House ${index + 1}**: ${degree.toFixed(
+      2
+    )}° ${sign}\n`;
+  });
+
+  // Enhanced aspects with motion data
+  if (chartData.aspects && chartData.aspects.length > 0) {
+    formattedData += `\n### Major Aspects:\n`;
+
+    // Get detailed motion data
+    const aspectsWithMotion = extractAspectsWithMotion(
+      chartData,
+      chartData.aspects
+    );
+    console.log(aspectsWithMotion);
+    aspectsWithMotion.forEach((aspect) => {
+      const status = aspect.isApplying
+        ? "→ Applying"
+        : aspect.isSeparating
+        ? "← Separating"
+        : "⚮ Stable";
+
+      formattedData += `- **${aspect.point1Label} ${aspect.aspectLabel} ${aspect.point2Label}** `;
+      formattedData += `${status} (orb: ${aspect.currentOrb.toFixed(2)}°)`;
+
+      if (aspect.timeToExact && aspect.timeToExact < 30) {
+        formattedData += ` [Exact in ${aspect.timeToExact.toFixed(1)} days]`;
+      } else if (aspect.timeSinceExact && aspect.timeSinceExact < 30) {
+        formattedData += ` [Was exact ${aspect.timeSinceExact.toFixed(
+          1
+        )} days ago]`;
+      }
+
+      if (aspect.isPerfect) {
+        formattedData += " **✱ PERFECT**";
+      }
+
+      formattedData += "\n";
+    });
+
+    // Special Moon analysis for horary
+    const moonAnalysis = analyzeMoonAspects(aspectsWithMotion);
+
+    if (moonAnalysis.lastSeparatingAspect || moonAnalysis.nextApplyingAspect) {
+      formattedData += `\n### Moon's Recent & Next Aspects (Crucial for Horary):\n`;
+
+      if (moonAnalysis.lastSeparatingAspect) {
+        const asp = moonAnalysis.lastSeparatingAspect;
+        formattedData += `- **Most Recent**: Moon ${asp.aspectLabel} ${
+          asp.point1Key === "moon" ? asp.point2Label : asp.point1Label
+        } `;
+        formattedData += `(separating, orb: ${asp.currentOrb.toFixed(2)}°)\n`;
+      }
+
+      if (moonAnalysis.nextApplyingAspect) {
+        const asp = moonAnalysis.nextApplyingAspect;
+        formattedData += `- **Next**: Moon ${asp.aspectLabel} ${
+          asp.point1Key === "moon" ? asp.point2Label : asp.point1Label
+        } `;
+        formattedData += `(applying, orb: ${asp.currentOrb.toFixed(2)}°`;
+        if (asp.timeToExact) {
+          formattedData += `, exact in ${asp.timeToExact.toFixed(1)} days`;
+        }
+        formattedData += ")\n";
+      }
+    }
+  }
+
+  return formattedData;
+}
 
 const openai = new OpenAI({
   apiKey: "ollama",
@@ -82,15 +184,13 @@ Remember: A good horary reading empowers the querent with insight and guidance w
 // Interface for chart data structure
 export interface HoraryChartData {
   planets: {
-    [key: string]: [number]; // degrees
+    [key: string]: {
+      position: number;
+      isRetrograde: boolean;
+    };
   };
   cusps: number[]; // house cusps in degrees
-  aspects?: Array<{
-    planet1: string;
-    planet2: string;
-    aspect: string;
-    orb: number;
-  }>;
+  aspects?: string[];
 }
 
 export interface HoraryReading {
@@ -161,23 +261,24 @@ function formatChartForLLM(reading: HoraryReading): string {
 
   let formattedData = `## Chart Data for Question: "${reading.question}"\n`;
   formattedData += `**Time**: ${new Date(
-    reading.timestamp,
+    reading.timestamp
   ).toLocaleString()}\n`;
 
   if (reading.location) {
     formattedData += `**Location**: ${reading.location.latitude.toFixed(
-      2,
+      2
     )}°N, ${reading.location.longitude.toFixed(2)}°W\n\n`;
   }
 
   // Format planetary positions
   formattedData += `### Planetary Positions:\n`;
-  Object.entries(chartData.planets).forEach(([planet, [degrees]]) => {
-    const { sign, degree } = degreesToSignAndDegree(degrees);
-    const house = getPlanetHouse(degrees, chartData.cusps);
+  Object.entries(chartData.planets).forEach(([planet, planetData]) => {
+    const { sign, degree } = degreesToSignAndDegree(planetData.position);
+    const house = getPlanetHouse(planetData.position, chartData.cusps);
+    const rxSymbol = planetData.isRetrograde ? " ℞" : "";
     formattedData += `- **${
       planet.charAt(0).toUpperCase() + planet.slice(1)
-    }**: ${degree.toFixed(2)}° ${sign} (House ${house})\n`;
+    }${rxSymbol}**: ${degree.toFixed(2)}° ${sign} (House ${house})\n`;
   });
 
   // Format house cusps
@@ -185,7 +286,7 @@ function formatChartForLLM(reading: HoraryReading): string {
   chartData.cusps.forEach((cusp, index) => {
     const { sign, degree } = degreesToSignAndDegree(cusp);
     formattedData += `- **House ${index + 1}**: ${degree.toFixed(
-      2,
+      2
     )}° ${sign}\n`;
   });
 
@@ -193,24 +294,30 @@ function formatChartForLLM(reading: HoraryReading): string {
   if (chartData.aspects && chartData.aspects.length > 0) {
     formattedData += `\n### Major Aspects:\n`;
     chartData.aspects.forEach((aspect) => {
-      formattedData += `- ${aspect.planet1} ${aspect.aspect} ${
-        aspect.planet2
-      }\n`;
+      formattedData += `- ${aspect}\n`;
     });
   }
 
   return formattedData;
 }
 
+// Updated LLM generation function
 export const generateHoraryReading = async (
-  reading: HoraryReading,
+  reading: HoraryReading
 ): Promise<string | null> => {
   try {
-    const formattedChart = formatChartForLLM(reading);
+    console.log(reading);
+    const formattedChart = formatChartForLLMWithMotion(reading);
 
     const prompt = `${formattedChart}
 
-Please analyze this horary chart following the traditional methodology. Begin by identifying the key chart components as outlined in your instructions, then ask me to confirm your analysis before proceeding with the interpretation.`;
+Please analyze this horary chart following traditional methodology. Pay special attention to:
+
+1. The Moon's separating aspect (what the querent has recently experienced)
+2. The Moon's applying aspect (what will happen next)
+3. Whether aspects are applying (events will occur) or separating (events are past)
+
+Begin by identifying the key chart components as outlined in your instructions, then ask me to confirm your analysis before proceeding with the interpretation.`;
 
     const response = await openai.chat.completions.create({
       model: "llama3.2:latest",
@@ -233,7 +340,7 @@ Please analyze this horary chart following the traditional methodology. Begin by
 export const continueHoraryConversation = async (
   reading: HoraryReading,
   conversationHistory: Array<{ role: "user" | "assistant"; content: string }>,
-  newMessage: string,
+  newMessage: string
 ): Promise<string | null> => {
   try {
     const formattedChart = formatChartForLLM(reading);

@@ -27,6 +27,7 @@ const generateInitialReading = async () => {
   if (hasInitialReading.value) return;
 
   isLoading.value = true;
+  console.log(props.reading);
   try {
     const reading = await generateHoraryReading(props.reading);
     if (reading) {

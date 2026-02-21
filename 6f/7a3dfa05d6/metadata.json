@@ -3,7 +3,7 @@
   "checkpoint_id": "6f7a3dfa05d6",
   "strategy": "manual-commit",
   "branch": "main",
-  "checkpoints_count": 1,
+  "checkpoints_count": 2,
   "files_touched": [
     "src/App.vue",
     "src/components/UserChat.vue"
@@ -15,13 +15,20 @@
       "context": "/6f/7a3dfa05d6/0/context.md",
       "content_hash": "/6f/7a3dfa05d6/0/content_hash.txt",
       "prompt": "/6f/7a3dfa05d6/0/prompt.txt"
+    },
+    {
+      "metadata": "/6f/7a3dfa05d6/1/metadata.json",
+      "transcript": "/6f/7a3dfa05d6/1/full.jsonl",
+      "context": "/6f/7a3dfa05d6/1/context.md",
+      "content_hash": "/6f/7a3dfa05d6/1/content_hash.txt",
+      "prompt": "/6f/7a3dfa05d6/1/prompt.txt"
     }
   ],
   "token_usage": {
-    "input_tokens": 264,
-    "cache_creation_tokens": 122079,
-    "cache_read_tokens": 1322578,
-    "output_tokens": 3949,
-    "api_call_count": 30
+    "input_tokens": 6412,
+    "cache_creation_tokens": 1781976,
+    "cache_read_tokens": 50840347,
+    "output_tokens": 28403,
+    "api_call_count": 544
   }
 }

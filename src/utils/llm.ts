@@ -1,5 +1,11 @@
 import { OpenAI } from "openai";
 import { analyzeMoonAspects, extractAspectsWithMotion } from "./aspectMotion";
+import {
+  calculateChartDignities,
+  getSignRuler,
+  getSignFromDegrees,
+  isDayChart as checkIsDayChart
+} from "./horary/dignities";
 
 // Enhanced format chart for LLM with aspect motion
 function formatChartForLLMWithMotion(reading: HoraryReading): string {
@@ -16,24 +22,60 @@ function formatChartForLLMWithMotion(reading: HoraryReading): string {
     )}°N, ${reading.location.longitude.toFixed(2)}°W\n\n`;
   }
 
-  // Format planetary positions
-  formattedData += `### Planetary Positions:\n`;
+  // Calculate essential dignities for all planets
+  const sunHouse = getPlanetHouse(chartData.planets.sun.position, chartData.cusps);
+  const isDayChartValue = checkIsDayChart(sunHouse);
+  const dignities = calculateChartDignities(chartData.planets, isDayChartValue);
+
+  // Format planetary positions with dignities
+  formattedData += `### Planetary Positions & Essential Dignities:\n`;
+  formattedData += `**Chart Type**: ${isDayChartValue ? 'Day Chart' : 'Night Chart'} (Sun in House ${sunHouse})\n\n`;
+
   Object.entries(chartData.planets).forEach(([planet, planetData]) => {
+    // Skip angles for dignity calculation
+    if (planet === 'ascendant' || planet === 'midheaven') {
+      const { sign, degree } = degreesToSignAndDegree(planetData.position);
+      formattedData += `- **${
+        planet.charAt(0).toUpperCase() + planet.slice(1)
+      }**: ${degree.toFixed(2)}° ${sign}\n`;
+      return;
+    }
+
     const { sign, degree } = degreesToSignAndDegree(planetData.position);
     const house = getPlanetHouse(planetData.position, chartData.cusps);
     const rxSymbol = planetData.isRetrograde ? " ℞" : "";
+
+    // Get dignity info
+    const dignity = dignities[planet];
+    const dignityInfo = dignity
+      ? ` | ${dignity.description} (${dignity.strength}, Score: ${dignity.score})`
+      : '';
+
     formattedData += `- **${
       planet.charAt(0).toUpperCase() + planet.slice(1)
-    }${rxSymbol}**: ${degree.toFixed(2)}° ${sign} (House ${house})\n`;
+    }${rxSymbol}**: ${degree.toFixed(2)}° ${sign} (House ${house})${dignityInfo}\n`;
   });
 
-  // Format house cusps (existing code)
-  formattedData += `\n### House Cusps:\n`;
+  // Format house cusps with rulers
+  formattedData += `\n### House Cusps & Rulers:\n`;
   chartData.cusps.forEach((cusp, index) => {
     const { sign, degree } = degreesToSignAndDegree(cusp);
-    formattedData += `- **House ${index + 1}**: ${degree.toFixed(
-      2
-    )}° ${sign}\n`;
+    const ruler = getSignRuler(sign);
+    const rulerPlanet = chartData.planets[ruler];
+
+    if (rulerPlanet) {
+      const rulerSign = getSignFromDegrees(rulerPlanet.position);
+      const rulerHouse = getPlanetHouse(rulerPlanet.position, chartData.cusps);
+      const rulerDignity = dignities[ruler];
+      const rulerStrength = rulerDignity ? rulerDignity.strength : 'Unknown';
+
+      formattedData += `- **House ${index + 1}**: ${degree.toFixed(2)}° ${sign} `;
+      formattedData += `(Ruled by ${ruler.charAt(0).toUpperCase() + ruler.slice(1)} `;
+      formattedData += `at ${rulerSign.degreeInSign.toFixed(1)}° ${rulerSign.sign.charAt(0).toUpperCase() + rulerSign.sign.slice(1)}, `;
+      formattedData += `House ${rulerHouse}, ${rulerStrength})\n`;
+    } else {
+      formattedData += `- **House ${index + 1}**: ${degree.toFixed(2)}° ${sign} (Ruled by ${ruler})\n`;
+    }
   });
 
   // Enhanced aspects with motion data
@@ -133,18 +175,55 @@ Evaluate whether the chart is radical (valid for judgment):
 - Is the timing appropriate (avoid late degrees unless significant)?
 - Are there any considerations before judgment?
 
-### 4. Traditional Horary Principles
+### 4. Essential Dignities (CRITICAL for Horary Judgment)
+You will receive essential dignity scores for each planet. Understand what they mean:
+
+**Dignity Types:**
+- **Ruler (Domicile)**: Planet in its own sign (+5 points) - Very strong, acts freely
+- **Exaltation**: Planet in sign of exaltation (+4 points) - Honored guest, elevated
+- **Triplicity**: Planet rules the element (day/night/participating) (+3 points) - Comfortable
+- **Detriment**: Planet opposite its rulership (-4 points) - Weakened, uncomfortable
+- **Fall**: Planet opposite its exaltation (-5 points) - Debilitated, ineffective
+- **Peregrine**: No essential dignity (0 points) - Neutral, acts for itself
+
+**Strength Levels:**
+- **Very Strong** (8+ points): Excellent condition, powerful to act
+- **Strong** (4-7 points): Good condition, can produce results
+- **Moderate** (1-3 points): Adequate but limited
+- **Peregrine** (0 points): Neutral, acts from self-interest
+- **Weak** (-1 to -4 points): Compromised ability to act
+- **Very Weak** (-5 or less): Severely debilitated, ineffective
+
+**How to Use Dignities:**
+- Strong significators = querent/quesited can achieve desired outcome
+- Weak significators = lack power, resources, or ability to succeed
+- Planets in fall/detriment may indicate problems or obstacles
+- House rulers' dignity shows condition of that life area
+
+### 5. House Rulers & Significators
+You will receive house cusp information showing which planet rules each house. This is ESSENTIAL for horary:
+- The ruler of the 1st house = the querent
+- The ruler of the house that represents the quesited = the thing asked about
+- Example: "Will I get the job?" → 1st house ruler = querent, 10th house ruler = the job
+
+The condition (dignity) of these ruling planets tells you whether the outcome is favorable.
+
+### 6. Traditional Horary Principles
 Apply classical horary techniques:
-- Use traditional planetary rulerships
-- Consider essential and accidental dignities
+- Use traditional planetary rulerships (provided in chart data)
+- Consider essential dignities (provided with each planet)
 - Examine perfection of aspects (conjunction, sextile, square, trine, opposition)
 - Look for prohibition, refranation, or translation of light
-- Consider fixed stars if within 1° orb
-- Evaluate the condition of significators
+- Evaluate the condition of significators using their dignity scores
 
-### 5. House Meanings for Common Questions
-- **1st House**: The querent (person asking)
-- **7th House**: Others, partners, open enemies, business partnerships
+### 7. House Significators (How to Find the Right Planets)
+Each house represents a different area of life. The RULER of a house (the planet that rules the sign on the cusp) is the significator for that area.
+
+**Example**: If Aries is on the 7th house cusp, Mars rules the 7th house and therefore Mars represents the partner/other person.
+
+### 8. House Meanings for Common Questions
+- **1st House**: The querent (person asking) - Ruler = querent's significator
+- **7th House**: Others, partners, open enemies, business partnerships - Ruler = quesited (thing asked about)
 - **2nd House**: Money, possessions, self-worth
 - **8th House**: Shared resources, death, transformation, other people's money
 - **3rd House**: Siblings, short journeys, communication, neighbors

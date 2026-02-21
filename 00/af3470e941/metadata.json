@@ -3,7 +3,7 @@
   "checkpoint_id": "00af3470e941",
   "strategy": "manual-commit",
   "branch": "main",
-  "checkpoints_count": 1,
+  "checkpoints_count": 2,
   "files_touched": [
     "src/utils/horary/voidOfCourseMoon.ts"
   ],
@@ -14,13 +14,20 @@
       "context": "/00/af3470e941/0/context.md",
       "content_hash": "/00/af3470e941/0/content_hash.txt",
       "prompt": "/00/af3470e941/0/prompt.txt"
+    },
+    {
+      "metadata": "/00/af3470e941/1/metadata.json",
+      "transcript": "/00/af3470e941/1/full.jsonl",
+      "context": "/00/af3470e941/1/context.md",
+      "content_hash": "/00/af3470e941/1/content_hash.txt",
+      "prompt": "/00/af3470e941/1/prompt.txt"
     }
   ],
   "token_usage": {
-    "input_tokens": 264,
-    "cache_creation_tokens": 122079,
-    "cache_read_tokens": 1322578,
-    "output_tokens": 3949,
-    "api_call_count": 30
+    "input_tokens": 4707,
+    "cache_creation_tokens": 826322,
+    "cache_read_tokens": 33898566,
+    "output_tokens": 20746,
+    "api_call_count": 366
   }
 }

@@ -1,0 +1,32 @@
+{
+  "cli_version": "0.4.5",
+  "checkpoint_id": "00af3470e941",
+  "session_id": "515dde7d-7200-4c4e-afe5-678e91d56910",
+  "strategy": "manual-commit",
+  "created_at": "2026-02-21T15:14:29.938353Z",
+  "branch": "main",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "src/utils/horary/voidOfCourseMoon.ts"
+  ],
+  "agent": "Claude Code",
+  "turn_id": "5f8983f22749",
+  "transcript_identifier_at_start": "a7f534a0-b2d5-42a3-9bc9-a7899002527b",
+  "token_usage": {
+    "input_tokens": 4443,
+    "cache_creation_tokens": 704243,
+    "cache_read_tokens": 32575988,
+    "output_tokens": 16797,
+    "api_call_count": 336
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-02-21T15:14:28.64219Z",
+    "agent_lines": 246,
+    "human_added": 0,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 246,
+    "agent_percentage": 100
+  },
+  "transcript_path": ".claude/projects/-Users-aditiohri-Code-horary/515dde7d-7200-4c4e-afe5-678e91d56910.jsonl"
+}

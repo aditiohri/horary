@@ -130,11 +130,15 @@ function willMoonMakeAspect(
       const orbDecrease = currentOrb - futureOrb;
       const timeToExact = timeToSignChange * (currentOrb / orbDecrease);
 
-      return {
-        willPerfect: true,
-        aspectType: aspect.name,
-        timeToExact: timeToExact * 24 // convert to hours
-      };
+      // Only consider it perfecting if it happens BEFORE Moon leaves the sign
+      // Use strict < to ensure aspect perfects while still in sign, not at the cusp
+      if (timeToExact < timeToSignChange) {
+        return {
+          willPerfect: true,
+          aspectType: aspect.name,
+          timeToExact: timeToExact * 24 // convert to hours
+        };
+      }
     }
   }
 

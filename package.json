@@ -8,6 +8,9 @@
     "start": "vite build && vite preview",
     "build": "vue-tsc -b && vite build",
     "preview": "vite preview",
+    "test": "vitest",
+    "test:ui": "vitest --ui",
+    "test:run": "vitest run",
     "generate-icons": "node scripts/generate-icons.js"
   },
   "dependencies": {
@@ -18,11 +21,14 @@
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^5.2.3",
+    "@vitest/ui": "^4.0.18",
     "@vue/tsconfig": "^0.7.0",
+    "jsdom": "^28.1.0",
     "svgexport": "^0.4.2",
     "typescript": "~5.8.3",
     "vite": "^6.3.5",
     "vite-plugin-pwa": "^1.0.0",
+    "vitest": "^4.0.18",
     "vue-tsc": "^2.2.8"
   }
 }

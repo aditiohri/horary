@@ -4,15 +4,15 @@ import { calculateAspectMotion, getPlanetMotion } from '../aspectMotion';
 describe('Aspect Motion - Retrograde Handling', () => {
   it('should correctly determine applying aspect when one planet is retrograde', () => {
     // Simulating a scenario where Moon (direct) is applying to a square with Mercury (retrograde)
-    // This was the bug case from README: July 18, 10:34 PM Toronto
+    // Moon moving forward fast, Mercury moving backward slowly
     const chartData = {
       planets: {
         moon: {
-          position: 100, // Moon at 100°
+          position: 170, // Moon at 170°
           isRetrograde: false,
         },
         mercury: {
-          position: 5, // Mercury at 5° (85° behind Moon, approaching 90° square)
+          position: 95, // Mercury at 95° retrograde
           isRetrograde: true,
         },
       },
@@ -20,8 +20,10 @@ describe('Aspect Motion - Retrograde Handling', () => {
 
     const result = calculateAspectMotion(chartData, 'moon square mercury');
 
-    // Moon is moving forward (~13°/day), Mercury is moving backward (~1°/day)
-    // They should be approaching the 90° square aspect
+    // Current separation: 75° (15° before exact 90° square)
+    // Moon moving forward (~13°/day), Mercury moving backward (~-1.4°/day)
+    // Future separation will be closer to 90° (around 89.5°)
+    // They are approaching the exact square aspect
     expect(result.isApplying).toBe(true);
     expect(result.isSeparating).toBe(false);
   });

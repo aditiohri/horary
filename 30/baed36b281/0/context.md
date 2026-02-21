@@ -1,0 +1,24 @@
+# Session Context
+
+## User Prompts
+
+### Prompt 1
+
+let's make a /plan to get this horary app to a shareable MVP. where are we at now? let's review the project, run some tests, and make a solid plan
+
+### Prompt 2
+
+i hate openAI as a company but i understand they are very popular. what are the pros and cons vs starting with openAI vs Claude, right away?
+
+### Prompt 3
+
+well i'm curious - if we allowed users the openAI possibility - would that open the door for other APIs that follow the openAI spec?
+
+### Prompt 4
+
+yes let's go with option 1
+
+### Prompt 5
+
+[Request interrupted by user for tool use]
+

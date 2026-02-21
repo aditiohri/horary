@@ -1,0 +1,26 @@
+{
+  "cli_version": "0.4.5",
+  "checkpoint_id": "0044ffda5c47",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "src/components/ChartDataView.vue"
+  ],
+  "sessions": [
+    {
+      "metadata": "/00/44ffda5c47/0/metadata.json",
+      "transcript": "/00/44ffda5c47/0/full.jsonl",
+      "context": "/00/44ffda5c47/0/context.md",
+      "content_hash": "/00/44ffda5c47/0/content_hash.txt",
+      "prompt": "/00/44ffda5c47/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 264,
+    "cache_creation_tokens": 122079,
+    "cache_read_tokens": 1322578,
+    "output_tokens": 3949,
+    "api_call_count": 30
+  }
+}

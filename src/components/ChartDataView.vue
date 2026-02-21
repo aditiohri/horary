@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { extractAspectsWithMotion, analyzeMoonAspects } from '../utils/aspectMotion';
+import { calculateChartDignities, isDayChart } from '../utils/horary/dignities';
+import { calculateVoidOfCourseMoon } from '../utils/horary/voidOfCourseMoon';
 
 interface ChartProps {
   chartData: {
@@ -29,6 +31,79 @@ const aspectsWithMotion = computed(() => {
 const moonAnalysis = computed(() => {
   if (aspectsWithMotion.value.length === 0) return null;
   return analyzeMoonAspects(aspectsWithMotion.value);
+});
+
+// Calculate Void of Course Moon
+const vocMoon = computed(() => {
+  if (!props.chartData) return null;
+  return calculateVoidOfCourseMoon(props.chartData.chartData.planets);
+});
+
+// Calculate essential dignities
+const planetDignities = computed(() => {
+  if (!props.chartData) return {};
+
+  // Determine if it's a day or night chart
+  const sunPosition = props.chartData.chartData.planets.sun?.position;
+  const cusps = props.chartData.chartData.cusps;
+
+  if (!sunPosition || !cusps) return {};
+
+  // Find which house the Sun is in
+  const normalizedSun = ((sunPosition % 360) + 360) % 360;
+  let sunHouse = 1;
+
+  for (let i = 0; i < cusps.length; i++) {
+    const currentCusp = ((cusps[i] % 360) + 360) % 360;
+    const nextCusp = ((cusps[(i + 1) % cusps.length] % 360) + 360) % 360;
+
+    if (nextCusp > currentCusp) {
+      if (normalizedSun >= currentCusp && normalizedSun < nextCusp) {
+        sunHouse = i + 1;
+        break;
+      }
+    } else {
+      if (normalizedSun >= currentCusp || normalizedSun < nextCusp) {
+        sunHouse = i + 1;
+        break;
+      }
+    }
+  }
+
+  const isDayChartValue = isDayChart(sunHouse);
+  return calculateChartDignities(props.chartData.chartData.planets, isDayChartValue);
+});
+
+// Determine day/night chart
+const chartType = computed(() => {
+  if (!props.chartData) return 'Unknown';
+
+  const sunPosition = props.chartData.chartData.planets.sun?.position;
+  const cusps = props.chartData.chartData.cusps;
+
+  if (!sunPosition || !cusps) return 'Unknown';
+
+  const normalizedSun = ((sunPosition % 360) + 360) % 360;
+  let sunHouse = 1;
+
+  for (let i = 0; i < cusps.length; i++) {
+    const currentCusp = ((cusps[i] % 360) + 360) % 360;
+    const nextCusp = ((cusps[(i + 1) % cusps.length] % 360) + 360) % 360;
+
+    if (nextCusp > currentCusp) {
+      if (normalizedSun >= currentCusp && normalizedSun < nextCusp) {
+        sunHouse = i + 1;
+        break;
+      }
+    } else {
+      if (normalizedSun >= currentCusp || normalizedSun < nextCusp) {
+        sunHouse = i + 1;
+        break;
+      }
+    }
+  }
+
+  return isDayChart(sunHouse) ? 'Day Chart' : 'Night Chart';
 });
 
 // Helper to get zodiac sign from degrees
@@ -99,6 +174,78 @@ const formatTimeToExact = (days: number | undefined) => {
           </tr>
         </tbody>
       </table>
+    </div>
+
+    <!-- Essential Dignities Section -->
+    <div class="data-section">
+      <h3>Essential Dignities <span class="chart-type-badge">{{ chartType }}</span></h3>
+      <table class="data-table dignities-table">
+        <thead>
+          <tr>
+            <th>Planet</th>
+            <th>Dignity</th>
+            <th>Strength</th>
+            <th>Score</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr
+            v-for="[planet, dignity] in Object.entries(planetDignities)"
+            :key="planet"
+            :class="{
+              'very-strong': (dignity as any).strength === 'Very Strong',
+              'strong': (dignity as any).strength === 'Strong',
+              'moderate': (dignity as any).strength === 'Moderate',
+              'peregrine': (dignity as any).strength === 'Peregrine',
+              'weak': (dignity as any).strength === 'Weak',
+              'very-weak': (dignity as any).strength === 'Very Weak'
+            }"
+          >
+            <td class="planet-name">
+              <span class="planet-symbol">{{ planet }}</span>
+            </td>
+            <td class="dignity-type">{{ (dignity as any).description }}</td>
+            <td class="dignity-strength">
+              <span class="strength-badge">{{ (dignity as any).strength }}</span>
+            </td>
+            <td class="dignity-score" :class="{
+              positive: (dignity as any).score > 0,
+              negative: (dignity as any).score < 0,
+              neutral: (dignity as any).score === 0
+            }">
+              {{ (dignity as any).score > 0 ? '+' : '' }}{{ (dignity as any).score }}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Void of Course Moon Section -->
+    <div class="data-section voc-section" v-if="vocMoon">
+      <h3>Void of Course Moon</h3>
+      <div class="voc-status" :class="{
+        'voc-warning': vocMoon.isVoid && !vocMoon.effectiveInCurrentSign,
+        'voc-ok': !vocMoon.isVoid,
+        'voc-exception': vocMoon.isVoid && vocMoon.effectiveInCurrentSign
+      }">
+        <div class="voc-header">
+          <span class="voc-icon">{{ vocMoon.isVoid ? '⚠️' : '✓' }}</span>
+          <strong>{{ vocMoon.isVoid ? 'VOID OF COURSE' : 'NOT VOID OF COURSE' }}</strong>
+        </div>
+        <div class="voc-details">
+          <p><strong>Current Sign:</strong> {{ vocMoon.currentSign }} ({{ vocMoon.degreesUntilNextSign.toFixed(1) }}° until {{ vocMoon.nextSign }})</p>
+          <p><strong>Time Until Sign Change:</strong> {{ vocMoon.hoursUntilNextSign.toFixed(1) }} hours</p>
+          <p v-if="!vocMoon.isVoid && vocMoon.lastAspect">
+            <strong>Next Aspect:</strong> Moon will {{ vocMoon.lastAspectType }} {{ vocMoon.lastAspectPlanet?.toUpperCase() }} before leaving {{ vocMoon.currentSign }}
+          </p>
+          <p v-if="vocMoon.isVoid && vocMoon.effectiveInCurrentSign" class="exception-note">
+            Moon is in {{ vocMoon.currentSign }}, an exception sign where VOC Moon is still effective.
+          </p>
+        </div>
+        <div class="voc-interpretation">
+          {{ vocMoon.interpretation }}
+        </div>
+      </div>
     </div>
 
     <!-- Moon Aspects - Separating -->
@@ -519,6 +666,174 @@ const formatTimeToExact = (days: number | undefined) => {
 .house-sign {
   font-size: 0.85rem;
   color: var(--color-text-secondary);
+}
+
+/* Essential Dignities Styles */
+.chart-type-badge {
+  font-size: 0.8rem;
+  font-weight: normal;
+  color: var(--color-text-secondary);
+  margin-left: 0.5rem;
+  padding: 0.25rem 0.5rem;
+  background: var(--color-bg-tertiary);
+  border-radius: 0.25rem;
+}
+
+.dignities-table .planet-symbol {
+  text-transform: capitalize;
+  font-weight: 600;
+}
+
+.dignity-type {
+  font-size: 0.9rem;
+}
+
+.strength-badge {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.dignity-score {
+  font-family: monospace;
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.dignity-score.positive {
+  color: #059669;
+}
+
+.dignity-score.negative {
+  color: #dc2626;
+}
+
+.dignity-score.neutral {
+  color: var(--color-text-tertiary);
+}
+
+/* Row coloring by strength */
+.dignities-table tr.very-strong {
+  background: rgba(16, 185, 129, 0.1);
+}
+
+.dignities-table tr.very-strong .strength-badge {
+  background: #10b981;
+  color: white;
+}
+
+.dignities-table tr.strong {
+  background: rgba(34, 197, 94, 0.08);
+}
+
+.dignities-table tr.strong .strength-badge {
+  background: #22c55e;
+  color: white;
+}
+
+.dignities-table tr.moderate {
+  background: rgba(59, 130, 246, 0.05);
+}
+
+.dignities-table tr.moderate .strength-badge {
+  background: #3b82f6;
+  color: white;
+}
+
+.dignities-table tr.peregrine {
+  background: transparent;
+}
+
+.dignities-table tr.peregrine .strength-badge {
+  background: #6b7280;
+  color: white;
+}
+
+.dignities-table tr.weak {
+  background: rgba(251, 146, 60, 0.08);
+}
+
+.dignities-table tr.weak .strength-badge {
+  background: #fb923c;
+  color: white;
+}
+
+.dignities-table tr.very-weak {
+  background: rgba(239, 68, 68, 0.1);
+}
+
+.dignities-table tr.very-weak .strength-badge {
+  background: #ef4444;
+  color: white;
+}
+
+/* Void of Course Moon Styles */
+.voc-section {
+  margin-bottom: 2rem;
+}
+
+.voc-status {
+  padding: 1.5rem;
+  border-radius: 0.5rem;
+  border: 2px solid;
+  background: var(--color-bg-secondary);
+}
+
+.voc-status.voc-warning {
+  border-color: #dc2626;
+  background: rgba(220, 38, 38, 0.05);
+}
+
+.voc-status.voc-ok {
+  border-color: #10b981;
+  background: rgba(16, 185, 129, 0.05);
+}
+
+.voc-status.voc-exception {
+  border-color: #f59e0b;
+  background: rgba(245, 158, 11, 0.05);
+}
+
+.voc-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  font-size: 1.1rem;
+}
+
+.voc-icon {
+  font-size: 1.5rem;
+}
+
+.voc-details {
+  margin: 1rem 0;
+  font-size: 0.95rem;
+}
+
+.voc-details p {
+  margin: 0.5rem 0;
+  color: var(--color-text-secondary);
+}
+
+.voc-details strong {
+  color: var(--color-text-primary);
+}
+
+.exception-note {
+  color: #f59e0b !important;
+  font-style: italic;
+}
+
+.voc-interpretation {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--color-border);
+  font-style: italic;
+  color: var(--color-text-primary);
 }
 
 /* Responsive */

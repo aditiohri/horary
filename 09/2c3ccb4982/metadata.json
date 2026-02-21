@@ -3,7 +3,7 @@
   "checkpoint_id": "092c3ccb4982",
   "strategy": "manual-commit",
   "branch": "main",
-  "checkpoints_count": 1,
+  "checkpoints_count": 2,
   "files_touched": [
     "docs/horary-llm-requirements.md"
   ],
@@ -14,13 +14,20 @@
       "context": "/09/2c3ccb4982/0/context.md",
       "content_hash": "/09/2c3ccb4982/0/content_hash.txt",
       "prompt": "/09/2c3ccb4982/0/prompt.txt"
+    },
+    {
+      "metadata": "/09/2c3ccb4982/1/metadata.json",
+      "transcript": "/09/2c3ccb4982/1/full.jsonl",
+      "context": "/09/2c3ccb4982/1/context.md",
+      "content_hash": "/09/2c3ccb4982/1/content_hash.txt",
+      "prompt": "/09/2c3ccb4982/1/prompt.txt"
     }
   ],
   "token_usage": {
-    "input_tokens": 264,
-    "cache_creation_tokens": 122079,
-    "cache_read_tokens": 1322578,
-    "output_tokens": 3949,
-    "api_call_count": 30
+    "input_tokens": 4728,
+    "cache_creation_tokens": 827250,
+    "cache_read_tokens": 34177158,
+    "output_tokens": 20749,
+    "api_call_count": 368
   }
 }

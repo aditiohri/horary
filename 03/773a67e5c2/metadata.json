@@ -3,7 +3,7 @@
   "checkpoint_id": "03773a67e5c2",
   "strategy": "manual-commit",
   "branch": "main",
-  "checkpoints_count": 1,
+  "checkpoints_count": 2,
   "files_touched": [
     "src/components/ChartDataView.vue"
   ],
@@ -14,13 +14,20 @@
       "context": "/03/773a67e5c2/0/context.md",
       "content_hash": "/03/773a67e5c2/0/content_hash.txt",
       "prompt": "/03/773a67e5c2/0/prompt.txt"
+    },
+    {
+      "metadata": "/03/773a67e5c2/1/metadata.json",
+      "transcript": "/03/773a67e5c2/1/full.jsonl",
+      "context": "/03/773a67e5c2/1/context.md",
+      "content_hash": "/03/773a67e5c2/1/content_hash.txt",
+      "prompt": "/03/773a67e5c2/1/prompt.txt"
     }
   ],
   "token_usage": {
-    "input_tokens": 264,
-    "cache_creation_tokens": 122079,
-    "cache_read_tokens": 1322578,
-    "output_tokens": 3949,
-    "api_call_count": 30
+    "input_tokens": 6369,
+    "cache_creation_tokens": 1780477,
+    "cache_read_tokens": 50226412,
+    "output_tokens": 28393,
+    "api_call_count": 539
   }
 }

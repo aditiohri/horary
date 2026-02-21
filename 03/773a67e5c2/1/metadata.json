@@ -1,0 +1,32 @@
+{
+  "cli_version": "0.4.5",
+  "checkpoint_id": "03773a67e5c2",
+  "session_id": "515dde7d-7200-4c4e-afe5-678e91d56910",
+  "strategy": "manual-commit",
+  "created_at": "2026-02-21T22:56:17.380662Z",
+  "branch": "main",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "src/components/ChartDataView.vue"
+  ],
+  "agent": "Claude Code",
+  "turn_id": "d6648995098d",
+  "transcript_identifier_at_start": "5e8b7bf3-b30d-4b99-ad00-5d5f5b2e9594",
+  "token_usage": {
+    "input_tokens": 6105,
+    "cache_creation_tokens": 1658398,
+    "cache_read_tokens": 48903834,
+    "output_tokens": 24444,
+    "api_call_count": 509
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-02-21T22:56:15.290774Z",
+    "agent_lines": 0,
+    "human_added": 0,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 0,
+    "agent_percentage": 0
+  },
+  "transcript_path": ".claude/projects/-Users-aditiohri-Code-horary/515dde7d-7200-4c4e-afe5-678e91d56910.jsonl"
+}

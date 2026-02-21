@@ -119,26 +119,58 @@ function willMoonMakeAspect(
 
     if (currentOrb > MOON_ORB) continue; // Not within orb, skip
 
-    // Check if applying (getting closer to exact)
-    const futureSep = Math.abs(futureMoonPos - futurePlanetPos);
-    const futureSepNormalized = Math.min(futureSep, 360 - futureSep);
-    const futureOrb = Math.abs(futureSepNormalized - aspect.angle);
+    // Calculate the relative speed (Moon's motion relative to planet)
+    const relativeSpeed = moonSpeed - planetSpeed; // degrees per day
 
-    // If future orb is smaller, aspect is applying
-    if (futureOrb < currentOrb) {
-      // Calculate when it will be exact
-      const orbDecrease = currentOrb - futureOrb;
-      const timeToExact = timeToSignChange * (currentOrb / orbDecrease);
+    // Calculate how the angular separation changes
+    // We need to determine if the aspect is applying (getting more exact)
+    // by checking if the separation is moving TOWARD the aspect angle
+
+    // Target separation for exact aspect
+    const targetSep = aspect.angle;
+
+    // Check if we're approaching the exact aspect
+    // We do this by seeing if a small time step brings us closer
+    const timeStep = 0.1; // 0.1 days ahead
+    const futureMoonSmall = ((normalizedMoon + moonSpeed * timeStep) % 360 + 360) % 360;
+    const futurePlanetSmall = ((normalizedPlanet + planetSpeed * timeStep) % 360 + 360) % 360;
+    const futureSmallSep = Math.abs(futureMoonSmall - futurePlanetSmall);
+    const futureSmallSepNormalized = Math.min(futureSmallSep, 360 - futureSmallSep);
+    const futureSmallOrb = Math.abs(futureSmallSepNormalized - aspect.angle);
+
+    const isApplying = futureSmallOrb < currentOrb;
+
+    console.log(`  ${aspect.name} check:`, {
+      currentOrb: currentOrb.toFixed(2),
+      futureSmallOrb: futureSmallOrb.toFixed(2),
+      applying: isApplying
+    });
+
+    // If aspect is applying, calculate when it will be exact
+    if (isApplying && currentOrb > 0.01) {
+      // Linear approximation: time to exact = currentOrb / rate of orb decrease
+      const orbDecreaseRate = (currentOrb - futureSmallOrb) / timeStep;
+      const timeToExact = currentOrb / orbDecreaseRate;
+
+      console.log(`  Applying ${aspect.name}! timeToExact: ${timeToExact.toFixed(2)} days, timeToSignChange: ${timeToSignChange.toFixed(2)} days`);
 
       // Only consider it perfecting if it happens BEFORE Moon leaves the sign
-      // Use strict < to ensure aspect perfects while still in sign, not at the cusp
       if (timeToExact < timeToSignChange) {
         return {
           willPerfect: true,
           aspectType: aspect.name,
           timeToExact: timeToExact * 24 // convert to hours
         };
+      } else {
+        console.log(`  But will perfect AFTER sign change`);
       }
+    } else if (currentOrb < 0.5) {
+      // If we're already very close to exact (within 0.5°), consider it perfecting now
+      return {
+        willPerfect: true,
+        aspectType: aspect.name,
+        timeToExact: 0
+      };
     }
   }
 
@@ -176,6 +208,11 @@ export function calculateVoidOfCourseMoon(
   let nextAspectPlanet: string | null = null;
   let nextAspectType: string | null = null;
 
+  console.log('=== VOC MOON DEBUG ===');
+  console.log('Moon position:', moon.position);
+  console.log('Moon sign:', signChange.currentSign);
+  console.log('Degrees until sign change:', signChange.degreesUntilNextSign);
+
   for (const planetKey of traditionalPlanets) {
     const planet = planets[planetKey];
     if (!planet) continue;
@@ -188,6 +225,13 @@ export function calculateVoidOfCourseMoon(
       signChange.degreesUntilNextSign
     );
 
+    console.log(`Checking ${planetKey}:`, {
+      position: planet.position,
+      willPerfect: aspectInfo.willPerfect,
+      aspectType: aspectInfo.aspectType,
+      timeToExact: aspectInfo.timeToExact
+    });
+
     if (aspectInfo.willPerfect) {
       willMakeAspect = true;
       nextAspectPlanet = planetKey;
@@ -195,6 +239,9 @@ export function calculateVoidOfCourseMoon(
       break; // Found an applying aspect
     }
   }
+
+  console.log('Final VOC status:', !willMakeAspect);
+  console.log('=====================');
 
   const isVoid = !willMakeAspect;
   const effectiveInCurrentSign = VOC_EXCEPTION_SIGNS.includes(signChange.currentSign);

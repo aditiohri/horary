@@ -146,24 +146,6 @@ export function calculateAspectMotion(
 
   const isPerfect = currentOrb <= 1;
 
-  // DEBUG: Log Moon aspects to diagnose issues
-  if (aspect.includes('moon')) {
-    console.log('\n=== MOON ASPECT DEBUG ===');
-    console.log('Aspect:', aspect);
-    console.log('Planet 1 (position, speed, retrograde):', planet1Motion.position.toFixed(2), planet1Motion.speed.toFixed(4), planet1Motion.isRetrograde);
-    console.log('Planet 2 (position, speed, retrograde):', planet2Motion.position.toFixed(2), planet2Motion.speed.toFixed(4), planet2Motion.isRetrograde);
-    console.log('Target angle:', targetAngle);
-    console.log('Current separation:', separation.toFixed(2));
-    console.log('Future separation:', futureSeparation.toFixed(2));
-    console.log('Current diff from target:', (separation - targetAngle).toFixed(2));
-    console.log('Future diff from target:', (futureSeparation - targetAngle).toFixed(2));
-    console.log('Crossed exact?', crossedExact);
-    console.log('Current orb:', currentOrb.toFixed(2), '°');
-    console.log('Future orb:', futureOrb.toFixed(2), '°');
-    console.log('Result: APPLYING?', isApplying, 'SEPARATING?', isSeparating);
-    console.log('========================\n');
-  }
-
   let timeToExact: number | undefined;
   let timeSinceExact: number | undefined;
 
@@ -311,23 +293,9 @@ export function analyzeMoonAspects(
     (aspect) => aspect.point1Key === "moon" || aspect.point2Key === "moon"
   );
 
-  console.log('\n=== ANALYZING MOON ASPECTS ===');
-  console.log('Total Moon aspects found:', moonAspects.length);
-  moonAspects.forEach(aspect => {
-    console.log(`  ${aspect.point1Key} ${aspect.aspectKey} ${aspect.point2Key}:`,
-      aspect.isApplying ? 'APPLYING' : aspect.isSeparating ? 'SEPARATING' : 'STABLE',
-      `(orb: ${aspect.currentOrb.toFixed(2)}°)`,
-      aspect.isFaded ? '[FADED]' : ''
-    );
-  });
-
   // Separate applying and separating aspects
   const separatingAspects = moonAspects.filter((a) => a.isSeparating);
   const applyingAspects = moonAspects.filter((a) => a.isApplying);
-
-  console.log('Separating aspects:', separatingAspects.length);
-  console.log('Applying aspects:', applyingAspects.length);
-  console.log('==============================\n');
 
   // Find the closest separating aspect (smallest orb = most recent)
   // Include faded aspects to show what just influenced the question

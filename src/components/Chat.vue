@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, nextTick, computed } from "vue";
+import { ref, nextTick, computed, watch, onMounted } from "vue";
 import {
   generateHoraryReading,
   continueHoraryConversation,
@@ -151,8 +151,13 @@ function formatMessageContent(content: string): string {
     .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
     .replace(/\*(.*?)\*/g, "<em>$1</em>");
 }
-// Auto-generate initial reading when component mounts
-generateInitialReading();
+
+// Auto-generate initial reading when reading prop is available
+watch(() => props.reading, (newReading) => {
+  if (newReading && !hasInitialReading.value) {
+    generateInitialReading();
+  }
+}, { immediate: true });
 </script>
 
 <template>

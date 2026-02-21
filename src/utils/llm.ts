@@ -60,7 +60,7 @@ function formatChartForLLMWithMotion(reading: HoraryReading): string {
   formattedData += `\n### House Cusps & Rulers:\n`;
   chartData.cusps.forEach((cusp, index) => {
     const { sign, degree } = degreesToSignAndDegree(cusp);
-    const ruler = getSignRuler(sign);
+    const ruler = getSignRuler(sign.toLowerCase() as any);
     const rulerPlanet = chartData.planets[ruler];
 
     if (rulerPlanet) {

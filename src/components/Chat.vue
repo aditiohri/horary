@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, nextTick, computed, watch, onMounted } from "vue";
+import { ref, nextTick, computed, watch } from "vue";
 import {
   generateHoraryReading,
   continueHoraryConversation,
@@ -27,7 +27,6 @@ const generateInitialReading = async () => {
   if (hasInitialReading.value) return;
 
   isLoading.value = true;
-  console.log(props.reading);
   try {
     const reading = await generateHoraryReading(props.reading);
     if (reading) {

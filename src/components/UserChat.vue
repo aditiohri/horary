@@ -21,6 +21,10 @@ const props = defineProps<{
   selectedReading?: StoredReading | null;
 }>();
 
+const emit = defineEmits<{
+  'new-reading': [];
+}>();
+
 const { saveReading, updateReading } = useReadingStorage();
 
 const chartData = ref<QuestionData | null>(null);
@@ -30,7 +34,6 @@ const activeTab = ref<'wheel' | 'data'>('wheel');
 
 const handleChartCalculated = async (data: QuestionData) => {
   chartData.value = data;
-
 
   showConversation.value = true;
   activeTab.value = 'wheel'; // Start with chart wheel view
@@ -81,12 +84,9 @@ const renderChart = async (data: QuestionData) => {
     // Larger on desktop (up to 800px), responsive on mobile
     const chartSize = Math.min(containerWidth - 20, 800);
 
-    console.log('Container width:', containerWidth);
-    console.log('Chart size being created:', chartSize);
-
     // Create new chart within our container
     const radix = new Chart("paper", chartSize, chartSize, {
-      DEBUG: true,
+      DEBUG: false,
       SYMBOL_SUN: "sun",
       SYMBOL_MOON: "moon",
       SYMBOL_MERCURY: "mercury",
@@ -176,6 +176,10 @@ const fixRetrogradeSymbols = (planets: any) => {
 };
 
 const startNewReading = () => {
+  // Emit event to parent to clear selected reading
+  emit('new-reading');
+
+  // Reset local state
   chartData.value = null;
   showConversation.value = false;
   currentReadingId.value = null;

@@ -9,6 +9,7 @@ type AppView = 'chat' | 'history';
 
 const currentView = ref<AppView>('chat');
 const selectedHistoryReading = ref<StoredReading | null>(null);
+const chatResetKey = ref(0); // Used to force UserChat component to reset
 const { getStorageStats } = useReadingStorage();
 const { isDark, toggleDarkMode } = useDarkMode();
 
@@ -19,6 +20,8 @@ const showHistory = () => {
 const showChat = () => {
   currentView.value = 'chat';
   selectedHistoryReading.value = null;
+  // Increment key to force UserChat to reset, clearing any existing chart data
+  chatResetKey.value++;
 };
 
 const handleSelectReading = (reading: StoredReading) => {
@@ -65,9 +68,11 @@ const storageStats = getStorageStats();
     </header>
 
     <main class="app-main">
-      <UserChat 
-        v-if="currentView === 'chat'" 
+      <UserChat
+        v-if="currentView === 'chat'"
+        :key="chatResetKey"
         :selected-reading="selectedHistoryReading"
+        @new-reading="selectedHistoryReading = null"
       />
       <ReadingHistory 
         v-else-if="currentView === 'history'"

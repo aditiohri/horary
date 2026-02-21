@@ -339,21 +339,6 @@ const formatTimeToExact = (days: number | undefined) => {
       </table>
     </div>
 
-    <!-- Houses Section -->
-    <div class="data-section">
-      <h3>House Cusps</h3>
-      <div class="houses-grid">
-        <div
-          v-for="(cusp, idx) in props.chartData.chartData.cusps"
-          :key="idx"
-          class="house-item"
-        >
-          <span class="house-number">{{ idx + 1 }}</span>
-          <span class="house-position">{{ cusp.toFixed(2) }}°</span>
-          <span class="house-sign">{{ getZodiacSign(cusp) }}</span>
-        </div>
-      </div>
-    </div>
   </div>
 </template>
 

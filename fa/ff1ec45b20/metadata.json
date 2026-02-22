@@ -1,0 +1,27 @@
+{
+  "cli_version": "0.4.5",
+  "checkpoint_id": "faff1ec45b20",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "src/components/LLMSettings.vue",
+    "src/types/llm.ts"
+  ],
+  "sessions": [
+    {
+      "metadata": "/fa/ff1ec45b20/0/metadata.json",
+      "transcript": "/fa/ff1ec45b20/0/full.jsonl",
+      "context": "/fa/ff1ec45b20/0/context.md",
+      "content_hash": "/fa/ff1ec45b20/0/content_hash.txt",
+      "prompt": "/fa/ff1ec45b20/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 264,
+    "cache_creation_tokens": 122079,
+    "cache_read_tokens": 1322578,
+    "output_tokens": 3949,
+    "api_call_count": 30
+  }
+}

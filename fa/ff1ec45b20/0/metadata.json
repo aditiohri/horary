@@ -1,0 +1,33 @@
+{
+  "cli_version": "0.4.5",
+  "checkpoint_id": "faff1ec45b20",
+  "session_id": "01ac7bf4-e27a-4564-abb7-949d2e3ea124",
+  "strategy": "manual-commit",
+  "created_at": "2026-02-22T02:32:14.015333Z",
+  "branch": "main",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "src/components/LLMSettings.vue",
+    "src/types/llm.ts"
+  ],
+  "agent": "Claude Code",
+  "turn_id": "34f3924a0ce2",
+  "transcript_identifier_at_start": "c9ca632e-18a2-47ad-830f-fecae0c96e71",
+  "token_usage": {
+    "input_tokens": 264,
+    "cache_creation_tokens": 122079,
+    "cache_read_tokens": 1322578,
+    "output_tokens": 3949,
+    "api_call_count": 30
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-02-22T02:32:13.348107Z",
+    "agent_lines": 839,
+    "human_added": 0,
+    "human_modified": 0,
+    "human_removed": 719,
+    "total_committed": 839,
+    "agent_percentage": 100
+  },
+  "transcript_path": ".claude/projects/-Users-aditiohri-Code-horary/01ac7bf4-e27a-4564-abb7-949d2e3ea124.jsonl"
+}

@@ -2,6 +2,7 @@
 import { ref } from 'vue';
 import UserChat from "./components/UserChat.vue";
 import ReadingHistory from "./components/ReadingHistory.vue";
+import OllamaSettings from "./components/OllamaSettings.vue";
 import { useReadingStorage, type StoredReading } from './utils/storage';
 import { useDarkMode } from './composables/useDarkMode';
 
@@ -12,6 +13,7 @@ const selectedHistoryReading = ref<StoredReading | null>(null);
 const chatResetKey = ref(0); // Used to force UserChat component to reset
 const { getStorageStats } = useReadingStorage();
 const { isDark, toggleDarkMode } = useDarkMode();
+const showSettings = ref(false);
 
 const showHistory = () => {
   currentView.value = 'history';
@@ -56,6 +58,14 @@ const storageStats = getStorageStats();
             </button>
           </nav>
           <button
+            @click="showSettings = true"
+            class="settings-button"
+            aria-label="Settings"
+            title="Ollama Settings"
+          >
+            ⚙️
+          </button>
+          <button
             @click="toggleDarkMode"
             class="dark-mode-toggle"
             :aria-label="isDark ? 'Switch to light mode' : 'Switch to dark mode'"
@@ -74,12 +84,15 @@ const storageStats = getStorageStats();
         :selected-reading="selectedHistoryReading"
         @new-reading="selectedHistoryReading = null"
       />
-      <ReadingHistory 
+      <ReadingHistory
         v-else-if="currentView === 'history'"
         @select-reading="handleSelectReading"
         @close="showChat"
       />
     </main>
+
+    <!-- Settings Modal -->
+    <OllamaSettings v-model="showSettings" />
   </div>
 </template>
 
@@ -243,6 +256,31 @@ body {
   background: rgba(255, 255, 255, 0.3);
 }
 
+/* Settings Button */
+.settings-button {
+  background: var(--color-bg-tertiary);
+  border: 1px solid var(--color-border);
+  border-radius: 0.5rem;
+  padding: 0.5rem;
+  cursor: pointer;
+  font-size: 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  width: 2.5rem;
+  height: 2.5rem;
+}
+
+.settings-button:hover {
+  background: var(--color-bg-hover);
+  transform: scale(1.05);
+}
+
+.settings-button:active {
+  transform: scale(0.95);
+}
+
 /* Dark Mode Toggle */
 .dark-mode-toggle {
   background: var(--color-bg-tertiary);
@@ -292,6 +330,7 @@ body {
     font-size: 0.8125rem;
   }
 
+  .settings-button,
   .dark-mode-toggle {
     width: 2.25rem;
     height: 2.25rem;
@@ -332,6 +371,7 @@ body {
     font-size: 0.8125rem;
   }
 
+  .settings-button,
   .dark-mode-toggle {
     width: 2.5rem;
     height: 2.5rem;

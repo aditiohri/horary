@@ -297,11 +297,23 @@ function formatChartForLLMWithMotion(reading: HoraryReading): string {
   return formattedData;
 }
 
-const openai = new OpenAI({
-  apiKey: "ollama",
-  dangerouslyAllowBrowser: true,
-  baseURL: "http://localhost:11434/v1/",
-});
+import { loadSettings } from "./ollama";
+
+// Create OpenAI client with settings from localStorage
+function createOpenAIClient() {
+  const settings = loadSettings();
+  return new OpenAI({
+    apiKey: "ollama",
+    dangerouslyAllowBrowser: true,
+    baseURL: settings.baseUrl,
+  });
+}
+
+// Get the current model from settings
+function getCurrentModel(): string {
+  const settings = loadSettings();
+  return settings.model;
+}
 
 // Enhanced system prompt with comprehensive traditional horary principles
 const HORARY_SYSTEM_PROMPT = `You are an expert horary astrologer following the traditional methodology of William Lilly and classical horary practice. Your role is to provide accurate, compassionate readings based on the moment a sincere question is asked.
@@ -738,11 +750,36 @@ function formatChartForLLM(reading: HoraryReading): string {
   return formattedData;
 }
 
+// Helper function to format LLM errors for user display
+function formatLLMError(error: any): string {
+  const errorMessage = error?.message || String(error);
+
+  // Connection refused - Ollama not running
+  if (errorMessage.includes('ECONNREFUSED') || errorMessage.includes('Failed to fetch')) {
+    return 'Ollama server not running. Please start Ollama and try again.';
+  }
+
+  // 404 - Model not found
+  if (errorMessage.includes('404') || errorMessage.includes('not found')) {
+    return 'Model not found. Please check your model name in settings or pull the model first.';
+  }
+
+  // Timeout
+  if (errorMessage.includes('timeout') || errorMessage.includes('aborted')) {
+    return 'Connection timeout. Please check your Ollama server or increase timeout in settings.';
+  }
+
+  // Generic error
+  return `Error: ${errorMessage}`;
+}
+
 // Updated LLM generation function
 export const generateHoraryReading = async (
   reading: HoraryReading
 ): Promise<string | null> => {
   try {
+    const openai = createOpenAIClient();
+    const model = getCurrentModel();
     const formattedChart = formatChartForLLMWithMotion(reading);
 
     const prompt = `${formattedChart}
@@ -763,7 +800,7 @@ Follow your judgment process:
 Proceed directly with your traditional horary judgment. No need to ask me to confirm the chart data - everything is provided above.`;
 
     const response = await openai.chat.completions.create({
-      model: "llama3.2:latest",
+      model,
       messages: [
         { role: "system", content: HORARY_SYSTEM_PROMPT },
         { role: "user", content: prompt },
@@ -775,7 +812,7 @@ Proceed directly with your traditional horary judgment. No need to ask me to con
     return response.choices[0].message.content;
   } catch (error) {
     console.error("Error generating horary reading:", error);
-    return null;
+    throw new Error(formatLLMError(error));
   }
 };
 
@@ -786,6 +823,8 @@ export const continueHoraryConversation = async (
   newMessage: string
 ): Promise<string | null> => {
   try {
+    const openai = createOpenAIClient();
+    const model = getCurrentModel();
     const formattedChart = formatChartForLLM(reading);
 
     // Build the conversation with context
@@ -800,7 +839,7 @@ export const continueHoraryConversation = async (
     ];
 
     const response = await openai.chat.completions.create({
-      model: "llama3.2:latest",
+      model,
       messages,
       temperature: 0.7,
       max_tokens: 1500,
@@ -809,21 +848,24 @@ export const continueHoraryConversation = async (
     return response.choices[0].message.content;
   } catch (error) {
     console.error("Error in horary conversation:", error);
-    return null;
+    throw new Error(formatLLMError(error));
   }
 };
 
 // Simple text generation for other purposes
 export const generateText = async (prompt: string): Promise<string | null> => {
   try {
+    const openai = createOpenAIClient();
+    const model = getCurrentModel();
+
     const response = await openai.chat.completions.create({
-      model: "llama3.2:latest",
+      model,
       messages: [{ role: "user", content: prompt }],
     });
 
     return response.choices[0].message.content;
   } catch (error) {
     console.error("Error generating text:", error);
-    return null;
+    throw new Error(formatLLMError(error));
   }
 };

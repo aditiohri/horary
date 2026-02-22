@@ -748,6 +748,7 @@ const formatTimeToExact = (days: number | undefined) => {
   font-size: 0.75rem;
   font-weight: 600;
   text-transform: uppercase;
+  word-break: break-word;
 }
 
 .applying-badge {
@@ -847,6 +848,7 @@ const formatTimeToExact = (days: number | undefined) => {
   font-size: 0.75rem;
   font-weight: 600;
   text-transform: uppercase;
+  word-break: break-word;
 }
 
 .dignity-score {
@@ -943,6 +945,7 @@ const formatTimeToExact = (days: number | undefined) => {
   font-size: 0.75rem;
   font-weight: 600;
   text-transform: uppercase;
+  word-break: break-word;
 }
 
 /* House type badges */
@@ -1286,6 +1289,10 @@ const formatTimeToExact = (days: number | undefined) => {
   }
 
   /* Part of Fortune mobile adjustments */
+  .pof-icon {
+    font-size: 1.5rem;
+  }
+
   .pof-info p {
     font-size: 0.85rem;
     margin-bottom: 0.5rem;

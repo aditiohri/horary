@@ -10,6 +10,7 @@ interface ConversationMessage {
   role: "user" | "assistant";
   content: string;
   timestamp: Date;
+  isError?: boolean;
 }
 
 const props = defineProps<{
@@ -21,6 +22,25 @@ const currentMessage = ref("");
 const isLoading = ref(false);
 const hasInitialReading = ref(false);
 const conversationContainer = ref<HTMLElement>();
+
+// Format error message with actionable guidance
+function formatErrorMessage(error: any): string {
+  const errorMessage = error?.message || String(error);
+
+  if (errorMessage.includes('Ollama server not running')) {
+    return `Unable to connect to Ollama server. Please ensure Ollama is running on your system. You can check your connection settings by clicking the settings button (⚙️) in the header.`;
+  }
+
+  if (errorMessage.includes('Model not found')) {
+    return `The selected model was not found. Please check your model settings by clicking the settings button (⚙️) in the header, or pull the model using the Ollama CLI.`;
+  }
+
+  if (errorMessage.includes('timeout')) {
+    return `Connection timeout. The Ollama server is not responding. Please check your settings (⚙️) or try increasing the timeout value.`;
+  }
+
+  return `Error: ${errorMessage}. Please check your Ollama settings (⚙️) and ensure the server is running.`;
+}
 
 // Generate initial reading
 const generateInitialReading = async () => {
@@ -38,13 +58,13 @@ const generateInitialReading = async () => {
       hasInitialReading.value = true;
       await scrollToBottom();
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error generating initial reading:", error);
     messages.value.push({
       role: "assistant",
-      content:
-        "I apologize, but I encountered an error while analyzing your chart. Please try again.",
+      content: formatErrorMessage(error),
       timestamp: new Date(),
+      isError: true,
     });
   } finally {
     isLoading.value = false;
@@ -87,20 +107,14 @@ const sendMessage = async () => {
         content: response,
         timestamp: new Date(),
       });
-    } else {
-      messages.value.push({
-        role: "assistant",
-        content:
-          "I apologize, but I encountered an error. Please try rephrasing your question.",
-        timestamp: new Date(),
-      });
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error in conversation:", error);
     messages.value.push({
       role: "assistant",
-      content: "I apologize, but I encountered an error. Please try again.",
+      content: formatErrorMessage(error),
       timestamp: new Date(),
+      isError: true,
     });
   } finally {
     isLoading.value = false;
@@ -176,7 +190,7 @@ watch(() => props.reading, (newReading) => {
         <div
           v-for="(message, index) in messages"
           :key="index"
-          :class="['message', message.role]">
+          :class="['message', message.role, { 'error-message': message.isError }]">
           <div class="message-content">
             <div
               class="message-text"
@@ -314,6 +328,12 @@ watch(() => props.reading, (newReading) => {
   color: #2c3e50;
   border: 1px solid #e2e8f0;
   border-bottom-left-radius: 0.25rem;
+}
+
+.message.error-message .message-text {
+  background: #fef2f2;
+  border-color: #fecaca;
+  color: #991b1b;
 }
 
 .message-time {

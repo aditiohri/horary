@@ -28,7 +28,7 @@ const props = defineProps<ChartProps>();
 .chart-container {
   background: var(--color-bg-secondary);
   border-radius: 1rem;
-  padding: 1.5rem;
+  padding: 1rem;
   box-shadow: var(--shadow-md);
   width: 100%;
   overflow: hidden;
@@ -39,7 +39,7 @@ const props = defineProps<ChartProps>();
   min-height: 300px;
   border: 1px solid var(--color-border);
   border-radius: 0.5rem;
-  padding: 0.5rem;
+  padding: 0.25rem;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -85,13 +85,13 @@ const props = defineProps<ChartProps>();
 
 @media (max-width: 640px) {
   .chart-container {
-    padding: 0;
+    padding: 0.5rem;
     background: transparent;
     box-shadow: none;
   }
 
   .chart-content {
-    padding: 0;
+    padding: 0.25rem;
   }
 }
 </style>

@@ -260,6 +260,8 @@ onMounted(loadReadings);
   color: #6b7280;
   border-radius: 0.5rem;
   transition: background-color 0.2s;
+  min-width: 44px;
+  min-height: 44px;
 }
 
 .close-button:hover {
@@ -368,11 +370,13 @@ onMounted(loadReadings);
 .delete-button {
   background: none;
   border: none;
-  padding: 0.25rem;
+  padding: 0.5rem;
   cursor: pointer;
   color: #6b7280;
   border-radius: 0.25rem;
   transition: color 0.2s;
+  min-width: 44px;
+  min-height: 44px;
 }
 
 .delete-button:hover {

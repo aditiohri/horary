@@ -81,8 +81,10 @@ const renderChart = async (data: QuestionData) => {
 
     // Calculate responsive chart size
     const containerWidth = paper.parentElement?.clientWidth || 600;
+    console.log('Chart container width:', containerWidth);
     // Larger on desktop (up to 800px), responsive on mobile
-    const chartSize = Math.min(containerWidth - 20, 800);
+    const chartSize = Math.min(containerWidth - 40, 800);
+    console.log('Calculated chart size:', chartSize);
 
     // Create new chart within our container
     const radix = new Chart("paper", chartSize, chartSize, {
@@ -426,7 +428,7 @@ watch(activeTab, async (newTab) => {
 
 .reading-layout {
   display: grid;
-  grid-template-columns: 1.5fr 1fr;
+  grid-template-columns: 2fr 1fr;
   gap: 1.5rem;
   height: 100%;
 }
@@ -531,8 +533,29 @@ watch(activeTab, async (newTab) => {
   transition: background-color 0.3s ease;
 }
 
-/* Tablet and mobile layout */
-@media (max-width: 1024px) {
+/* Tablet layout */
+@media (max-width: 1024px) and (min-width: 769px) {
+  .reading-layout {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  .content-area {
+    padding: 1rem;
+  }
+
+  .welcome-message {
+    padding: 2rem 1rem;
+  }
+
+  .welcome-features {
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+  }
+}
+
+/* Mobile layout */
+@media (max-width: 768px) {
   .reading-layout {
     grid-template-columns: 1fr;
     gap: 1rem;

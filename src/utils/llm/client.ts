@@ -24,10 +24,10 @@ function createOllamaClient(settings: LLMSettings): OpenAI {
 function createFreeTierClient(): OpenAI {
   // Determine base URL based on environment
   // In dev: use netlify dev's function server on port 8888
-  // In production: use relative path to Netlify functions
+  // In production: use full URL with current origin
   const baseURL = import.meta.env.DEV
     ? 'http://localhost:8888/.netlify/functions'
-    : '/.netlify/functions';
+    : `${window.location.origin}/.netlify/functions`;
 
   return new OpenAI({
     apiKey: 'free-tier-placeholder', // Dummy key - real one is in Netlify function

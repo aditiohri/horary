@@ -1,0 +1,42 @@
+{
+  "cli_version": "0.4.5",
+  "checkpoint_id": "f7a142fb6f72",
+  "strategy": "manual-commit",
+  "branch": "feature/anthropic-integration",
+  "checkpoints_count": 1,
+  "files_touched": [
+    ".env.example",
+    ".gitignore",
+    "GROQ_MIGRATION.md",
+    "IMPLEMENTATION_SUMMARY.md",
+    "netlify.toml",
+    "netlify/functions/llm-proxy.ts",
+    "package-lock.json",
+    "package.json",
+    "src/components/Chat.vue",
+    "src/components/LLMSettings.vue",
+    "src/composables/useLLMSettings.ts",
+    "src/types/llm.ts",
+    "src/utils/environment.ts",
+    "src/utils/llm.ts",
+    "src/utils/llm/client.ts",
+    "src/utils/llm/freeTier.ts",
+    "src/utils/llm/storage.ts"
+  ],
+  "sessions": [
+    {
+      "metadata": "/f7/a142fb6f72/0/metadata.json",
+      "transcript": "/f7/a142fb6f72/0/full.jsonl",
+      "context": "/f7/a142fb6f72/0/context.md",
+      "content_hash": "/f7/a142fb6f72/0/content_hash.txt",
+      "prompt": "/f7/a142fb6f72/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 264,
+    "cache_creation_tokens": 122079,
+    "cache_read_tokens": 1322578,
+    "output_tokens": 3949,
+    "api_call_count": 30
+  }
+}

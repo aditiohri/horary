@@ -1,0 +1,48 @@
+{
+  "cli_version": "0.4.5",
+  "checkpoint_id": "f7a142fb6f72",
+  "session_id": "01ac7bf4-e27a-4564-abb7-949d2e3ea124",
+  "strategy": "manual-commit",
+  "created_at": "2026-02-22T22:28:56.626606Z",
+  "branch": "feature/anthropic-integration",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "src/utils/environment.ts",
+    "src/utils/llm.ts",
+    ".env.example",
+    "package-lock.json",
+    "src/components/Chat.vue",
+    "src/composables/useLLMSettings.ts",
+    "GROQ_MIGRATION.md",
+    "src/utils/llm/freeTier.ts",
+    "src/utils/llm/storage.ts",
+    "IMPLEMENTATION_SUMMARY.md",
+    "netlify.toml",
+    "netlify/functions/llm-proxy.ts",
+    "package.json",
+    ".gitignore",
+    "src/components/LLMSettings.vue",
+    "src/types/llm.ts",
+    "src/utils/llm/client.ts"
+  ],
+  "agent": "Claude Code",
+  "turn_id": "34f3924a0ce2",
+  "transcript_identifier_at_start": "c9ca632e-18a2-47ad-830f-fecae0c96e71",
+  "token_usage": {
+    "input_tokens": 264,
+    "cache_creation_tokens": 122079,
+    "cache_read_tokens": 1322578,
+    "output_tokens": 3949,
+    "api_call_count": 30
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-02-22T22:28:55.953117Z",
+    "agent_lines": 16832,
+    "human_added": 0,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 16832,
+    "agent_percentage": 100
+  },
+  "transcript_path": ".claude/projects/-Users-aditiohri-Code-horary/01ac7bf4-e27a-4564-abb7-949d2e3ea124.jsonl"
+}

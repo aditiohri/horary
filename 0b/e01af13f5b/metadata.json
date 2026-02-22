@@ -3,7 +3,7 @@
   "checkpoint_id": "0be01af13f5b",
   "strategy": "manual-commit",
   "branch": "main",
-  "checkpoints_count": 1,
+  "checkpoints_count": 6,
   "files_touched": [
     "src/components/ChartDataView.vue",
     "src/utils/__tests__/aspectMotion.test.ts",
@@ -25,13 +25,20 @@
       "context": "/0b/e01af13f5b/0/context.md",
       "content_hash": "/0b/e01af13f5b/0/content_hash.txt",
       "prompt": "/0b/e01af13f5b/0/prompt.txt"
+    },
+    {
+      "metadata": "/0b/e01af13f5b/1/metadata.json",
+      "transcript": "/0b/e01af13f5b/1/full.jsonl",
+      "context": "/0b/e01af13f5b/1/context.md",
+      "content_hash": "/0b/e01af13f5b/1/content_hash.txt",
+      "prompt": "/0b/e01af13f5b/1/prompt.txt"
     }
   ],
   "token_usage": {
-    "input_tokens": 264,
-    "cache_creation_tokens": 122079,
-    "cache_read_tokens": 1322578,
-    "output_tokens": 3949,
-    "api_call_count": 30
+    "input_tokens": 12032,
+    "cache_creation_tokens": 684797,
+    "cache_read_tokens": 10899950,
+    "output_tokens": 9786,
+    "api_call_count": 123
   }
 }

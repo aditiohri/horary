@@ -402,20 +402,6 @@ watch(
           </p>
         </div>
 
-        <div v-else-if="localProvider === 'openrouter'" class="help-section">
-          <p class="form-help">
-            OpenRouter provides access to 290+ models. Many models are free to use!
-            Browse models at <a href="https://openrouter.ai/models" target="_blank" rel="noopener noreferrer" class="help-link">openrouter.ai/models</a>
-          </p>
-        </div>
-
-        <div v-else-if="localProvider === 'anthropic'" class="help-section">
-          <p class="form-help">
-            Using Claude directly from Anthropic provides the best quality interpretations.
-            See pricing at <a href="https://console.anthropic.com/settings/plans" target="_blank" rel="noopener noreferrer" class="help-link">console.anthropic.com</a>
-          </p>
-        </div>
-
         <div v-else-if="localProvider === 'openrouter-free'" class="help-section">
           <h4 style="margin-top: 0; color: var(--color-text-primary);">Free Tier with Groq</h4>
           <p class="form-help">

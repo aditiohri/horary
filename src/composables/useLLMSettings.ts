@@ -109,66 +109,6 @@ async function testProviderConnection(
           error: 'Cannot reach Netlify function. Run "npm run dev" to start the local server.',
         };
       }
-    } else if (provider === 'openrouter' || provider === 'anthropic') {
-      // Type guard for cloud providers
-      if (settings.provider === 'ollama') {
-        return { status: 'error', error: 'Invalid settings for cloud provider' };
-      }
-
-      // Validate API key format
-      const validation = validateApiKey(provider, settings.apiKey || '');
-      if (!validation.valid) {
-        return {
-          status: 'error',
-          error: validation.error,
-        };
-      }
-
-      // Test API key by making a lightweight request
-      const config = getProviderConfig(provider);
-      let testUrl = '';
-      let headers: HeadersInit = {
-        'Content-Type': 'application/json',
-      };
-
-      if (provider === 'openrouter') {
-        testUrl = 'https://openrouter.ai/api/v1/models';
-        headers['Authorization'] = `Bearer ${settings.apiKey}`;
-      } else if (provider === 'anthropic') {
-        // For Anthropic, we'll just validate the format since testing requires a full API call
-        return {
-          status: 'success',
-          message: 'API key format is valid',
-        };
-      }
-
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), settings.timeout);
-
-      const response = await fetch(testUrl, {
-        method: 'GET',
-        headers,
-        signal: controller.signal,
-      });
-
-      clearTimeout(timeoutId);
-
-      if (response.ok) {
-        return {
-          status: 'success',
-          message: `Successfully authenticated with ${config.name}`,
-        };
-      } else if (response.status === 401) {
-        return {
-          status: 'error',
-          error: 'Invalid API key',
-        };
-      } else {
-        return {
-          status: 'error',
-          error: `Server responded with status ${response.status}`,
-        };
-      }
     }
 
     return {

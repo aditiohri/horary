@@ -20,22 +20,6 @@ export function getDefaultSettings(provider: LLMProvider): LLMSettings {
         timeout: DEFAULT_TIMEOUT,
       };
 
-    case 'openrouter':
-      return {
-        provider: 'openrouter',
-        apiKey: '',
-        model: config.defaultModel,
-        timeout: DEFAULT_TIMEOUT,
-      };
-
-    case 'anthropic':
-      return {
-        provider: 'anthropic',
-        apiKey: '',
-        model: config.defaultModel,
-        timeout: DEFAULT_TIMEOUT,
-      };
-
     case 'openrouter-free':
       return {
         provider: 'openrouter-free',

@@ -18,51 +18,6 @@ function createOllamaClient(settings: LLMSettings): OpenAI {
 }
 
 /**
- * Create OpenAI-compatible client for OpenRouter
- */
-function createOpenRouterClient(settings: LLMSettings): OpenAI {
-  if (settings.provider !== 'openrouter') {
-    throw new Error('Invalid provider for OpenRouter client');
-  }
-
-  if (!settings.apiKey) {
-    throw new Error('OpenRouter API key is required. Please add your API key in Settings.');
-  }
-
-  return new OpenAI({
-    apiKey: settings.apiKey,
-    dangerouslyAllowBrowser: true,
-    baseURL: 'https://openrouter.ai/api/v1',
-    defaultHeaders: {
-      'HTTP-Referer': window.location.origin,
-      'X-Title': 'Horary Astrology App',
-    },
-  });
-}
-
-/**
- * Create Anthropic client via OpenRouter
- * Since Anthropic doesn't have an OpenAI-compatible endpoint,
- * we route Anthropic requests through OpenRouter for simplicity
- */
-function createAnthropicClient(settings: LLMSettings): never {
-  if (settings.provider !== 'anthropic') {
-    throw new Error('Invalid provider for Anthropic client');
-  }
-
-  if (!settings.apiKey) {
-    throw new Error('Anthropic API key is required. Please add your API key in Settings.');
-  }
-
-  // For now, recommend using Anthropic models via OpenRouter
-  // Users can get Claude models on OpenRouter with: anthropic/claude-3-5-sonnet
-  console.warn('Direct Anthropic API support requires @anthropic-ai/sdk. Consider using Anthropic models via OpenRouter instead.');
-
-  // Fallback: create a client that will fail gracefully with a helpful message
-  throw new Error('Direct Anthropic API not yet supported. Please use OpenRouter provider with model "anthropic/claude-3-5-sonnet" to access Claude models.');
-}
-
-/**
  * Create free tier client that uses Netlify function as proxy
  * The Netlify function keeps the API key server-side for security
  */
@@ -93,12 +48,6 @@ export function createLLMClient(settings?: LLMSettings): OpenAI {
   switch (activeSettings.provider) {
     case 'ollama':
       return createOllamaClient(activeSettings);
-
-    case 'openrouter':
-      return createOpenRouterClient(activeSettings);
-
-    case 'anthropic':
-      return createAnthropicClient(activeSettings);
 
     case 'openrouter-free':
       return createFreeTierClient();

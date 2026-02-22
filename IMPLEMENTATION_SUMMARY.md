@@ -1,240 +1,247 @@
-# Open Router Integration Fix & Free Tier Implementation
+# LLM Provider System - Current State
 
-## Summary
+## Overview
 
-Successfully implemented both Phase 1 (fixing Open Router) and Phase 2 (adding free tier with usage limits). The app now:
+The horary astrology app uses a streamlined multi-provider LLM system with two options:
+1. **Ollama (Local)** - For local development only, completely free and private
+2. **Free Tier (Groq)** - For deployed sites, using owner's API key via Netlify function
 
-1. **Works with Open Router on deployed sites** - Fixed the legacy code that was preventing Open Router from working
-2. **Provides a free tier for new users** - No API key required initially, with fair usage limits
-3. **Keeps API keys secure** - Uses Netlify serverless functions to keep the owner's API key server-side
+**Recent Changes:**
+- ✅ Removed OpenRouter and Anthropic providers (preserved in `feature/anthropic-integration` branch)
+- ✅ Optimized HORARY_SYSTEM_PROMPT (reduced from ~4000 to ~2000-2500 tokens)
+- ✅ Set free tier limit to 10 requests/hour for fair usage
 
-## What Was Changed
+## Architecture
 
-### Phase 1: Fixed Open Router Integration
+### Provider Types
 
-**Files Modified:**
-- `/src/utils/llm.ts` - Migrated from legacy Ollama-only client to new multi-provider system
-  - Removed `createOpenAIClient()` and local `getCurrentModel()` functions
-  - Updated imports to use `/src/utils/llm/client.ts`
-  - Updated all three generation functions: `generateHoraryReading()`, `continueHoraryConversation()`, `generateText()`
+**1. Ollama (Local Development Only)**
+- Runs on `http://localhost:11434`
+- Only available when `import.meta.env.DEV === true`
+- Users pull and run models locally
+- No API key required
+- Completely private and offline-capable
 
-**Impact:** Open Router now works properly in production. Users can select it in Settings and use their own API keys.
+**2. Free Tier (Groq via Netlify Function)**
+- Uses Groq's API for deployed sites
+- Owner's API key stored in Netlify environment variable
+- Proxied through `/netlify/functions/llm-proxy.ts`
+- Client-side usage tracking (localStorage-based)
+- **Limits:** 10 requests/hour, 10M tokens/day
 
-### Phase 2: Free Tier Implementation
+### Security Model
 
-**New Files Created:**
-- `/src/utils/llm/freeTier.ts` - Usage tracking module (localStorage-based)
-  - `checkQuota()` - Validates user is within limits
-  - `recordUsage()` - Records token usage after API calls
-  - `getUsageStats()` - Returns usage stats for UI display
-  - Daily limit: 100,000 tokens
-  - Hourly limit: 3 requests
+**API Key Protection:**
+- Owner's Groq API key stored in `GROQ_FREE_TIER_KEY` environment variable
+- Never exposed to client-side code
+- Serverless function proxies requests
+- CORS protection limits access to approved domains
 
-- `/netlify/functions/llm-proxy.ts` - Serverless function that proxies requests
-  - Keeps owner's API key secure on server-side
-  - CORS protection (only allows requests from approved domains)
-  - Error handling and validation
+**Usage Tracking:**
+- Client-side tracking via localStorage (`free_tier_usage` key)
+- Quotas checked before each request
+- Usage recorded after successful completion
+- Resets: daily (midnight) for tokens, hourly for requests
 
-- `.env.example` - Template for environment variables
+**Known Limitation:** Client-side tracking can be bypassed by clearing localStorage. This is acceptable for a demo/trial tier. For production with authentication, move tracking server-side.
 
-**Files Modified:**
-- `/src/types/llm.ts` - Added free tier types
-  - `FreeTierUsage`, `FreeTierLimits`, `FreeTierProviderSettings`
-  - Added 'openrouter-free' to provider configs
+## File Structure
 
-- `/src/utils/llm/client.ts` - Added free tier client creation
-  - `createFreeTierClient()` - Uses Netlify function endpoint
-  - Routes to `http://localhost:8888/.netlify/functions/llm-proxy` in dev
-  - Routes to `/.netlify/functions/llm-proxy` in production
+### Core LLM Files
 
-- `/src/utils/llm.ts` - Added quota checking
-  - Checks quotas before API calls when using free tier
-  - Records usage after successful API calls
-  - Shows user-friendly error messages when limits are reached
+**`/src/types/llm.ts`**
+- Type definitions for providers and settings
+- Only `'ollama'` and `'openrouter-free'` providers
+- Provider configurations and defaults
 
-- `/src/components/LLMSettings.vue` - Added free tier UI
-  - Usage stats display (daily tokens, hourly requests)
-  - Warning banner when approaching limits
-  - Help section explaining free tier limits
-  - Hides API key field for free tier
+**`/src/utils/llm/client.ts`**
+- Client factory: `createLLMClient()`
+- Creates OpenAI-compatible clients based on provider
+- `createOllamaClient()` - Local Ollama connection
+- `createFreeTierClient()` - Netlify function proxy
 
-- `/src/utils/llm/storage.ts` - Updated defaults
-  - Added `openrouter-free` case to `getDefaultSettings()`
+**`/src/utils/llm/storage.ts`**
+- Settings persistence to localStorage
+- Defaults: Ollama for local dev, Groq free tier for deployed sites
+- Migration from legacy Ollama-only settings
 
-- `/src/utils/environment.ts` - Updated default provider
-  - Deployed sites now default to `openrouter-free` instead of `openrouter`
-  - Local dev still defaults to `ollama`
+**`/src/utils/llm/freeTier.ts`**
+- Usage tracking and quota management
+- `checkQuota()` - Validates before requests
+- `recordUsage()` - Tracks tokens after requests
+- `getUsageStats()` - Returns stats for UI display
+- Limits: 10 requests/hour, 10M tokens/day
 
-**Build Configuration:**
-- `package.json` - Updated scripts and dependencies
-  - Added `netlify-cli` and `@netlify/functions` as dev dependencies
-  - Updated `dev` script to use `netlify dev`
-  - Added `dev:vite` for direct Vite usage
+**`/src/utils/llm.ts`**
+- Main LLM generation functions
+- `generateHoraryReading()` - Initial chart reading
+- `continueHoraryConversation()` - Follow-up questions
+- Integrates quota checking for free tier
+- Contains optimized `HORARY_SYSTEM_PROMPT` (~2000-2500 tokens)
 
-- `netlify.toml` - Added function configuration
-  - Added `functions` directory configuration
-  - Added `[dev]` section for local development
-  - Added `[functions]` section for esbuild bundling
+### UI Components
 
-- `.gitignore` - Added `.env` and `.env.local`
+**`/src/components/LLMSettings.vue`**
+- Settings modal for LLM configuration
+- Provider selection (Ollama or Free Tier)
+- Usage stats display for free tier
+- Connection testing
+- Model selection
 
-## Next Steps for Deployment
+**`/src/components/Chat.vue`**
+- Chat interface with markdown rendering
+- Uses `marked` library for formatting
+- DOMPurify for sanitization
 
-### 1. Set Up Environment Variable in Netlify
+### Serverless Function
 
-**In Netlify Dashboard:**
-1. Go to: Site settings → Environment variables
-2. Add a new variable:
-   - **Key:** `GROQ_FREE_TIER_KEY`
-   - **Value:** Your Groq API key (get one from https://console.groq.com/keys)
-3. Click "Save"
+**`/netlify/functions/llm-proxy.ts`**
+- Proxies requests to Groq API
+- Uses `GROQ_FREE_TIER_KEY` from environment
+- CORS validation
+- Error handling
+- Endpoint: `/.netlify/functions/llm-proxy`
 
-**Note:** Groq's free tier is extremely generous (14,400 requests/day) and requires no credit card. Perfect for a free tier!
+### Environment & Configuration
 
-### 2. Update Allowed Origins in Serverless Function
+**`.env.example`**
+```bash
+GROQ_FREE_TIER_KEY=gsk_your_key_here
+```
 
-**File:** `/netlify/functions/llm-proxy.ts`
+**`netlify.toml`**
+- Function directory configuration
+- Build settings
+- Dev server configuration
 
-Update line ~19 with your actual production domain:
+**`package.json`**
+- `npm run dev` - Runs Netlify dev server (includes functions)
+- `npm run dev:vite` - Runs Vite only (no functions)
+
+## Deployment Checklist
+
+### 1. Set Environment Variable in Netlify
+
+1. Get free Groq API key from https://console.groq.com/keys
+2. Go to Netlify: Site settings → Environment variables
+3. Add: `GROQ_FREE_TIER_KEY` = your API key
+4. Save and redeploy
+
+### 2. Verify Allowed Origins
+
+In `/netlify/functions/llm-proxy.ts`, ensure your production domain is listed:
 
 ```typescript
 const allowedOrigins = [
   'http://localhost:5173',
-  'http://localhost:8888',
-  'https://your-actual-domain.netlify.app',  // ← Update this
+  'https://your-actual-domain.netlify.app',  // Update this!
 ];
 ```
 
 ### 3. Test Locally
 
-**Create `.env` file:**
 ```bash
+# Create .env file
 cp .env.example .env
-# Edit .env and add your actual API key
-```
+# Add your Groq API key to .env
 
-**Start development server:**
-```bash
+# Start dev server (includes Netlify functions)
 npm run dev
+
+# Test at http://localhost:5173
 ```
 
-This will:
-- Start Vite dev server on http://localhost:5173
-- Start Netlify functions server on http://localhost:8888
-- Proxy requests to `/.netlify/functions/llm-proxy`
-
-**Test the free tier:**
-1. Clear your localStorage to simulate a new user
-2. Open the app (should default to free tier)
-3. Generate a chart reading
-4. Check Settings → LLM Settings to see usage stats
-5. Make 3+ requests quickly to test hourly limit
-
-### 4. Deploy to Netlify
+### 4. Deploy
 
 ```bash
-git add .
-git commit -m "Implement free tier and fix Open Router integration"
 git push
+# Netlify auto-deploys
 ```
-
-Netlify will automatically:
-- Build the app
-- Deploy the serverless function
-- Use the environment variable you set
-
-### 5. Verify Production Deployment
-
-After deployment:
-1. Visit your production URL
-2. Open browser DevTools → Network tab
-3. Generate a chart reading
-4. Verify the request goes to `/.netlify/functions/llm-proxy`
-5. Check that it completes successfully
-6. Verify usage stats are tracked in Settings
 
 ## How It Works
 
-### For New Users (No API Key)
+### New User Flow (Deployed Site)
 
-1. User visits app on deployed site
-2. App detects no saved settings
-3. Defaults to `openrouter-free` provider
-4. User generates a reading:
-   - App checks quota (localStorage)
-   - If within limits, makes request to `/.netlify/functions/llm-proxy`
-   - Serverless function uses **your** API key (from environment variable)
-   - Response returned to user
-   - Usage recorded in localStorage
-5. User sees usage stats in Settings
-6. After hitting limits, user is prompted to add their own API key
+1. User visits site
+2. App detects no saved settings → defaults to `openrouter-free`
+3. User generates reading:
+   - App checks quota in localStorage
+   - If under limits, sends request to `/.netlify/functions/llm-proxy`
+   - Function forwards to Groq API with owner's key
+   - Response returned, usage recorded
+4. User sees usage stats in Settings
+5. After hitting limits, prompted to add own API key
 
-### For Users With API Keys
+### Local Development Flow
 
-1. User adds their own OpenRouter API key in Settings
-2. Switches to `openrouter` provider (not `openrouter-free`)
-3. Requests go directly to OpenRouter API with their key
-4. No quota limits
-5. No usage tracking
+1. User runs `npm run dev`
+2. App detects `import.meta.env.DEV === true`
+3. Defaults to Ollama provider
+4. User must have Ollama running locally
+5. No usage tracking, unlimited requests
 
-### Security
+## Free Tier Models (Groq)
 
-- ✅ Owner's API key is **never** exposed to client-side code
-- ✅ CORS protection prevents unauthorized domains from using the function
-- ✅ Quota limits prevent abuse
-- ⚠️ Client-side quota tracking can be bypassed by clearing localStorage (acceptable for demo/trial mode)
-
-**For production with authentication:** Consider moving quota tracking to server-side per authenticated user.
-
-## Free Models Available (via Groq)
-
-The free tier provides access to Groq's lightning-fast models:
-- `llama-3.3-70b-versatile` (default) - High-quality 70B parameter model
+- `llama-3.3-70b-versatile` (default) - High-quality, 70B parameters
 - `llama-3.1-8b-instant` - Faster, smaller model
-- `mixtral-8x7b-32768` - Long context window
+- `mixtral-8x7b-32768` - Large context window
 
-These are served through Groq's infrastructure with extremely fast response times (typically <1 second).
+**Response time:** Typically <1 second (Groq infrastructure is very fast)
+
+## Prompt Optimization
+
+The `HORARY_SYSTEM_PROMPT` in `/src/utils/llm.ts` has been optimized:
+
+**Before:** ~366 lines, ~4000 tokens
+**After:** ~170 lines, ~2000-2500 tokens
+
+**Changes:**
+- Condensed verbose examples (3 dispositor examples → 1)
+- Shortened reception section
+- Combined timing techniques
+- Made section headers more concise
+- Preserved all critical horary astrology concepts
 
 ## Troubleshooting
 
 ### "Server configuration error - API key not set"
-
-- The `GROQ_FREE_TIER_KEY` environment variable is not set in Netlify
-- Go to Netlify dashboard → Environment variables and add it
-- Get a free API key from https://console.groq.com/keys
-
-### "Forbidden - unauthorized origin"
-
-- The request is coming from a domain not in the allowed origins list
-- Update `/netlify/functions/llm-proxy.ts` line ~19 with your production domain
+- Add `GROQ_FREE_TIER_KEY` in Netlify dashboard
+- For local: add to `.env` file
 
 ### "Free tier limit reached"
+- User hit 10 requests/hour or 10M tokens/day
+- Prompt them to add own API key
+- For testing: clear localStorage
 
-- User has hit daily token limit (100k) or hourly request limit (3)
-- They should add their own API key to continue
-- For testing: clear localStorage to reset quotas
+### Netlify function 404
+- Verify `netlify.toml` has `functions = "netlify/functions"`
+- Check function exists at `/netlify/functions/llm-proxy.ts`
+- Review Netlify build logs for errors
 
-### Netlify function not found (404)
+### "Forbidden" error
+- Update allowed origins in `/netlify/functions/llm-proxy.ts`
+- Add your production domain to the list
 
-- Make sure `netlify.toml` has `functions = "netlify/functions"` in `[build]` section
-- Verify the function file exists at `/netlify/functions/llm-proxy.ts`
-- Check Netlify build logs for function compilation errors
+## Future Enhancements
 
-## Migration Notes
+**Anthropic Integration:**
+- Preserved in `feature/anthropic-integration` git branch
+- Can be merged back if needed in future
+- Provides access to Claude models
 
-### Existing Users
+**Server-Side Tracking:**
+- Move usage tracking from localStorage to database
+- Track per authenticated user
+- More robust quota enforcement
 
-Users with existing Ollama settings will continue to use Ollama (if on local dev). Users with existing OpenRouter settings will keep their settings. Only **new users without saved settings** will default to free tier.
-
-### Rollback
-
-If you need to rollback the free tier:
-1. Change `/src/utils/environment.ts` line 27 back to `'openrouter'`
-2. Remove or disable the Netlify function
-3. Redeploy
+**Additional Providers:**
+- Easy to add new providers via the multi-provider system
+- Add to `LLMProvider` type
+- Implement client factory function
+- Update UI and storage
 
 ## Questions?
 
-- Free tier limits too low? Adjust in `/src/utils/llm/freeTier.ts` (line 11-13)
-- Want to add more free models? Update `/src/types/llm.ts` (line 95)
-- Need different quota reset periods? Modify logic in `/src/utils/llm/freeTier.ts`
+- **Adjust free tier limits:** Edit `/src/utils/llm/freeTier.ts` (lines 11-17)
+- **Add more models:** Update `/src/types/llm.ts` provider configs
+- **Change quota logic:** Modify `/src/utils/llm/freeTier.ts` functions

@@ -63,6 +63,28 @@ function createAnthropicClient(settings: LLMSettings): never {
 }
 
 /**
+ * Create free tier client that uses Netlify function as proxy
+ * The Netlify function keeps the API key server-side for security
+ */
+function createFreeTierClient(): OpenAI {
+  // Determine base URL based on environment
+  // In dev: use netlify dev's function server on port 8888
+  // In production: use relative path to Netlify functions
+  const baseURL = import.meta.env.DEV
+    ? 'http://localhost:8888/.netlify/functions'
+    : '/.netlify/functions';
+
+  return new OpenAI({
+    apiKey: 'free-tier-placeholder', // Dummy key - real one is in Netlify function
+    dangerouslyAllowBrowser: true,
+    baseURL: `${baseURL}/llm-proxy`,
+    defaultHeaders: {
+      'Content-Type': 'application/json',
+    },
+  });
+}
+
+/**
  * Unified client factory - creates the appropriate client based on settings
  */
 export function createLLMClient(settings?: LLMSettings): OpenAI {
@@ -77,6 +99,9 @@ export function createLLMClient(settings?: LLMSettings): OpenAI {
 
     case 'anthropic':
       return createAnthropicClient(activeSettings);
+
+    case 'openrouter-free':
+      return createFreeTierClient();
 
     default:
       throw new Error(`Unknown provider: ${(activeSettings as any).provider}`);

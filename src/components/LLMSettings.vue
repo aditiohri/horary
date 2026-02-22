@@ -5,6 +5,7 @@ import type { LLMProvider } from '../types/llm';
 import { PROVIDER_CONFIGS } from '../types/llm';
 import { getProviderConfig } from '../utils/llmProviders';
 import { isLocalDevelopment, canUseOllama } from '../utils/environment';
+import { getUsageStats } from '../utils/llm/freeTier';
 
 const props = defineProps<{
   modelValue: boolean;
@@ -43,6 +44,14 @@ const canOllama = canUseOllama();
 // Current provider config
 const currentProviderConfig = computed(() => getProviderConfig(localProvider.value));
 
+// Free tier usage stats
+const usageStats = computed(() => {
+  if (localProvider.value === 'openrouter-free') {
+    return getUsageStats();
+  }
+  return null;
+});
+
 // Watch for changes to detect unsaved state
 watch([localProvider, localBaseUrl, localApiKey, localModel, localTimeout], () => {
   const savedBaseUrl = settings.provider === 'ollama' ? settings.baseUrl : '';
@@ -64,6 +73,10 @@ watch(localProvider, (newProvider) => {
   if (newProvider === 'ollama') {
     localBaseUrl.value = 'http://localhost:11434/v1/';
     localApiKey.value = '';
+  } else if (newProvider === 'openrouter-free') {
+    // Free tier doesn't need API key or base URL
+    localApiKey.value = '';
+    localBaseUrl.value = '';
   } else {
     localApiKey.value = '';
   }
@@ -201,8 +214,37 @@ watch(
           </p>
         </div>
 
+        <!-- Free Tier Usage Stats -->
+        <div v-if="localProvider === 'openrouter-free' && usageStats" class="usage-stats">
+          <h3>Usage This Period</h3>
+          <div class="usage-stat">
+            <span class="stat-label">Hourly Requests:</span>
+            <span class="stat-value">
+              {{ usageStats.hourlyRequestsUsed }} / 10
+            </span>
+          </div>
+          <div class="usage-stat">
+            <span class="stat-label">Daily Tokens:</span>
+            <span class="stat-value">
+              {{ usageStats.dailyTokensUsed.toLocaleString() }} / 10,000,000
+              ({{ usageStats.dailyTokensPercentUsed.toFixed(1) }}%)
+            </span>
+          </div>
+          <div class="usage-stat">
+            <span class="stat-label">Total Requests:</span>
+            <span class="stat-value">{{ usageStats.totalRequests }}</span>
+          </div>
+          <div class="usage-stat">
+            <span class="stat-label">Total Tokens Used:</span>
+            <span class="stat-value">{{ usageStats.totalTokensUsed.toLocaleString() }}</span>
+          </div>
+          <div v-if="usageStats.dailyTokensPercentUsed >= 80" class="usage-warning">
+            ⚠️ You've used {{ usageStats.dailyTokensPercentUsed.toFixed(0) }}% of your daily quota. Consider adding your own API key for unlimited usage.
+          </div>
+        </div>
+
         <!-- Cloud providers: API Key -->
-        <div v-if="currentProviderConfig.requiresApiKey" class="form-group">
+        <div v-if="currentProviderConfig.requiresApiKey && localProvider !== 'openrouter-free'" class="form-group">
           <label for="api-key">API Key</label>
           <div class="api-key-input-group">
             <input
@@ -371,6 +413,24 @@ watch(
           <p class="form-help">
             Using Claude directly from Anthropic provides the best quality interpretations.
             See pricing at <a href="https://console.anthropic.com/settings/plans" target="_blank" rel="noopener noreferrer" class="help-link">console.anthropic.com</a>
+          </p>
+        </div>
+
+        <div v-else-if="localProvider === 'openrouter-free'" class="help-section">
+          <h4 style="margin-top: 0; color: var(--color-text-primary);">Free Tier with Groq</h4>
+          <p class="form-help">
+            Try the app with Groq's lightning-fast free tier using our shared API key:
+          </p>
+          <ul style="margin: 0.5rem 0; padding-left: 1.5rem; color: var(--color-text-secondary); font-size: 0.875rem;">
+            <li><strong>10 requests per hour</strong> (fair usage for everyone)</li>
+            <li><strong>10M tokens per day</strong> (very generous)</li>
+            <li><strong>Extremely fast responses</strong> (typically &lt;1 second)</li>
+            <li>Using Llama 3.3 70B (high-quality model)</li>
+          </ul>
+          <p class="form-help" style="margin-top: 0.75rem;">
+            Want even more? Get your own free
+            <a href="https://console.groq.com/keys" target="_blank" rel="noopener noreferrer" class="help-link">Groq API key</a>
+            for the same great performance without sharing limits.
           </p>
         </div>
       </div>
@@ -711,6 +771,57 @@ watch(
 .save-button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+/* Free tier usage stats */
+.usage-stats {
+  padding: 1rem;
+  background: var(--color-bg-tertiary);
+  border-radius: 0.5rem;
+  border: 1px solid var(--color-border);
+}
+
+.usage-stats h3 {
+  margin: 0 0 0.75rem 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.usage-stat {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.usage-stat:last-of-type {
+  border-bottom: none;
+}
+
+.stat-label {
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+}
+
+.stat-value {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.usage-warning {
+  margin-top: 0.75rem;
+  padding: 0.75rem;
+  background: rgba(255, 193, 7, 0.1);
+  border: 1px solid rgba(255, 193, 7, 0.3);
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  color: var(--color-warning);
+  line-height: 1.5;
 }
 
 /* Mobile optimizations */

@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { ref, nextTick, computed, watch } from "vue";
+import { marked } from 'marked';
+import DOMPurify from 'dompurify';
 import {
   generateHoraryReading,
   continueHoraryConversation,
@@ -167,12 +169,22 @@ const questionInfo = computed(() => {
   };
 });
 
-// Helper function to format message content (convert line breaks to HTML)
+// Configure marked for better rendering
+marked.setOptions({
+  breaks: true, // Convert \n to <br>
+  gfm: true, // GitHub flavored markdown
+});
+
+// Helper function to format message content with proper markdown rendering
 function formatMessageContent(content: string): string {
-  return content
-    .replace(/\n/g, "<br>")
-    .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
-    .replace(/\*(.*?)\*/g, "<em>$1</em>");
+  // Convert markdown to HTML
+  const html = marked.parse(content) as string;
+
+  // Sanitize HTML to prevent XSS attacks
+  return DOMPurify.sanitize(html, {
+    ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'b', 'i', 'u', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'ul', 'ol', 'li', 'blockquote', 'code', 'pre'],
+    ALLOWED_ATTR: []
+  });
 }
 
 // Auto-generate initial reading when reading prop is available
@@ -336,8 +348,107 @@ watch(() => props.reading, (newReading) => {
 .message-text {
   padding: 0.75rem 1rem;
   border-radius: 1rem;
-  line-height: 1.5;
+  line-height: 1.6;
   word-wrap: break-word;
+}
+
+/* Markdown formatting within messages */
+.message-text :deep(h1),
+.message-text :deep(h2),
+.message-text :deep(h3),
+.message-text :deep(h4),
+.message-text :deep(h5),
+.message-text :deep(h6) {
+  margin-top: 1em;
+  margin-bottom: 0.5em;
+  font-weight: 600;
+}
+
+.message-text :deep(h1) { font-size: 1.5em; }
+.message-text :deep(h2) { font-size: 1.3em; }
+.message-text :deep(h3) { font-size: 1.1em; }
+.message-text :deep(h4),
+.message-text :deep(h5),
+.message-text :deep(h6) { font-size: 1em; }
+
+.message-text :deep(p) {
+  margin: 0.5em 0;
+}
+
+.message-text :deep(p:first-child) {
+  margin-top: 0;
+}
+
+.message-text :deep(p:last-child) {
+  margin-bottom: 0;
+}
+
+.message-text :deep(ul),
+.message-text :deep(ol) {
+  margin: 0.5em 0;
+  padding-left: 1.5em;
+}
+
+.message-text :deep(li) {
+  margin: 0.25em 0;
+}
+
+.message-text :deep(blockquote) {
+  margin: 0.5em 0;
+  padding-left: 1em;
+  border-left: 3px solid rgba(0, 0, 0, 0.1);
+  font-style: italic;
+}
+
+.message.assistant .message-text :deep(blockquote) {
+  border-left-color: rgba(0, 0, 0, 0.15);
+}
+
+.message.user .message-text :deep(blockquote) {
+  border-left-color: rgba(255, 255, 255, 0.3);
+}
+
+.message-text :deep(code) {
+  padding: 0.2em 0.4em;
+  border-radius: 0.25em;
+  font-size: 0.9em;
+  font-family: 'Courier New', Courier, monospace;
+}
+
+.message.assistant .message-text :deep(code) {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.message.user .message-text :deep(code) {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.message-text :deep(pre) {
+  margin: 0.5em 0;
+  padding: 0.75em;
+  border-radius: 0.5em;
+  overflow-x: auto;
+}
+
+.message.assistant .message-text :deep(pre) {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.message.user .message-text :deep(pre) {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.message-text :deep(pre code) {
+  background: transparent;
+  padding: 0;
+}
+
+.message-text :deep(strong) {
+  font-weight: 600;
+}
+
+.message-text :deep(em) {
+  font-style: italic;
 }
 
 .message.user .message-text {

@@ -297,23 +297,9 @@ function formatChartForLLMWithMotion(reading: HoraryReading): string {
   return formattedData;
 }
 
-import { loadSettings } from "./ollama";
-
-// Create OpenAI client with settings from localStorage
-function createOpenAIClient() {
-  const settings = loadSettings();
-  return new OpenAI({
-    apiKey: "ollama",
-    dangerouslyAllowBrowser: true,
-    baseURL: settings.baseUrl,
-  });
-}
-
-// Get the current model from settings
-function getCurrentModel(): string {
-  const settings = loadSettings();
-  return settings.model;
-}
+import { createLLMClient, getCurrentModel, formatLLMError } from './llm/client';
+import { loadSettings } from './llm/storage';
+import { checkQuota, recordUsage } from './llm/freeTier';
 
 // Enhanced system prompt with comprehensive traditional horary principles
 const HORARY_SYSTEM_PROMPT = `You are an expert horary astrologer following the traditional methodology of William Lilly and classical horary practice. Your role is to provide accurate, compassionate readings based on the moment a sincere question is asked.
@@ -466,18 +452,45 @@ You will receive dignity scores for each planet:
 - Brings parties together through mutual connection/interest
 - The collecting planet shows the common ground
 
-### 10. Reception (How Do They View Each Other?)
+### 10. Reception (How Do Significators View Each Other?)
+
+**CRITICAL: When analyzing reception between house rulers, ALWAYS explicitly state:**
+1. **Which houses** these planets rule
+2. **What those houses represent** in the context of the question
+3. That this reception describes the **relationship dynamic between these significators**
+
+**Example of CORRECT reception analysis:**
+> "Let's examine the reception between the significators. The Sun rules your 1st house (you, the querent) and Saturn rules the 7th house (the other person/quesited).
+>
+> The Sun is in Leo (its own sign) while Saturn is in Aquarius (its own sign). Neither planet is in the other's sign, so there is **no mutual reception** here. This suggests both parties are operating independently, each comfortable in their own territory but not particularly disposed to help or accommodate the other."
+
+**Example of INCORRECT reception analysis (don't do this):**
+> "The Sun is in Leo and Saturn is in Aquarius. Neither is a guest in the other's home, so there's no mutual reception."
+> ❌ This fails to explain WHO the Sun and Saturn represent in this chart!
 
 **Reception Types:**
-- **Mutual Reception**: Planets in each other's dignity signs - Strong connection, mutual benefit
-- **Reception by Exaltation**: One receives the other in exaltation sign - Honor, elevation
-- **Reception in Detriment/Fall**: Dislike, resistance, obstacles
-- **No Reception**: Indifference
+- **Mutual Reception**: Planets in each other's dignity signs
+  - When significators are in mutual reception, **the parties are favorably disposed toward each other**
+  - Example: "Mars (ruling your 1st house/you) is in Libra, while Venus (ruling the 7th house/them) is in Aries. This mutual reception shows you each value what the other brings to the table."
 
-**Interpretation:**
-- Good reception = Favorable disposition toward each other, cooperation
-- Bad reception = Resistance, dislike, obstacles
-- Check if house rulers are in reception to determine attitude
+- **Reception by Exaltation**: One planet in the other's exaltation sign
+  - The receiving planet honors and elevates the other
+  - Example: "Venus (7th house/them) is in Pisces, Jupiter's exaltation sign. This means they hold you (Jupiter ruling the 1st house) in high regard."
+
+- **Reception in Detriment/Fall**: One planet in the other's detriment or fall
+  - Indicates dislike, resistance, or difficulty
+  - Example: "Mars (1st house/you) is in Libra, Venus's sign but Mars's detriment. Venus (7th house/them) may find your approach challenging or uncomfortable."
+
+- **No Reception**: No dignity relationship between the signs
+  - Neutral; neither particularly helpful nor harmful
+  - Example: "The Moon (your 1st house) in Gemini and Mercury (7th house/them) in Sagittarius have no reception. This suggests emotional neutrality or indifference between the parties."
+
+**How to Use Reception in Judgment:**
+- **For relationship questions**: Reception shows how the two people view each other
+- **For job questions**: Reception between 1st house ruler (you) and 10th house ruler (the job/employer) shows mutual fit
+- **For purchase questions**: Reception between 1st house ruler (buyer) and 2nd/4th house ruler (the item) shows desire/suitability
+
+**ALWAYS be explicit about which house rulers you're analyzing and what they represent!**
 
 ### 11. The Moon (Co-Ruler of Every Question)
 
@@ -604,10 +617,37 @@ You will receive dignity scores for each planet:
 9. Determine timing (by sign, orb, house)
 10. Synthesize judgment considering all factors
 
-## Your Response Style:
+## Your Response Structure:
+
+**IMPORTANT: Always structure your reading in this order:**
+
+### 1. Overall Judgment (Put This FIRST)
+Start with a clear, direct answer to the querent's question:
+- Begin with "## Overall Judgment" or "## The Answer"
+- Give a concise 2-3 paragraph summary of your conclusion
+- State whether the matter will succeed, fail, or is uncertain
+- Include key timing if applicable
+- This should be standalone and make sense without reading the analysis
+
+**Example:**
+> ## Overall Judgment
+>
+> Yes, this relationship shows strong potential for success. The significators are in mutual reception and applying to a harmonious trine aspect, which will perfect within approximately 2 weeks. While there may be initial delays due to Saturn's involvement, the fundamental compatibility and forward momentum suggest a positive outcome.
+
+### 2. Detailed Astrological Analysis (Put This SECOND)
+After the judgment, provide your detailed traditional analysis:
+- Chart radicality
+- Significator identification
+- Essential and accidental dignities
+- Aspect analysis (applying/separating)
+- Reception between significators
+- Part of Fortune analysis
+- Timing considerations
+- Reference specific chart factors (e.g., "Mars in Capricorn in the 10th house is Very Strong")
+
+## Your Tone:
 - Be compassionate and respectful
 - Explain your reasoning clearly
-- Reference specific chart factors (e.g., "Mars in Capricorn in the 10th house is Very Strong")
 - Provide timing when chart supports it
 - Acknowledge uncertainty when appropriate
 - Emphasize free will and personal responsibility
@@ -750,35 +790,22 @@ function formatChartForLLM(reading: HoraryReading): string {
   return formattedData;
 }
 
-// Helper function to format LLM errors for user display
-function formatLLMError(error: any): string {
-  const errorMessage = error?.message || String(error);
-
-  // Connection refused - Ollama not running
-  if (errorMessage.includes('ECONNREFUSED') || errorMessage.includes('Failed to fetch')) {
-    return 'Ollama server not running. Please start Ollama and try again.';
-  }
-
-  // 404 - Model not found
-  if (errorMessage.includes('404') || errorMessage.includes('not found')) {
-    return 'Model not found. Please check your model name in settings or pull the model first.';
-  }
-
-  // Timeout
-  if (errorMessage.includes('timeout') || errorMessage.includes('aborted')) {
-    return 'Connection timeout. Please check your Ollama server or increase timeout in settings.';
-  }
-
-  // Generic error
-  return `Error: ${errorMessage}`;
-}
-
 // Updated LLM generation function
 export const generateHoraryReading = async (
   reading: HoraryReading
 ): Promise<string | null> => {
   try {
-    const openai = createOpenAIClient();
+    const settings = loadSettings();
+
+    // Check quota if using free tier
+    if (settings.provider === 'openrouter-free') {
+      const quotaCheck = checkQuota();
+      if (!quotaCheck.allowed) {
+        throw new Error(`Free tier limit reached: ${quotaCheck.reason}. Please add your own API key in Settings to continue.`);
+      }
+    }
+
+    const openai = createLLMClient();
     const model = getCurrentModel();
     const formattedChart = formatChartForLLMWithMotion(reading);
 
@@ -809,6 +836,12 @@ Proceed directly with your traditional horary judgment. No need to ask me to con
       max_tokens: 2000,
     });
 
+    // Record usage for free tier
+    if (settings.provider === 'openrouter-free') {
+      const tokensUsed = response.usage?.total_tokens || 0;
+      recordUsage(tokensUsed);
+    }
+
     return response.choices[0].message.content;
   } catch (error) {
     console.error("Error generating horary reading:", error);
@@ -823,7 +856,17 @@ export const continueHoraryConversation = async (
   newMessage: string
 ): Promise<string | null> => {
   try {
-    const openai = createOpenAIClient();
+    const settings = loadSettings();
+
+    // Check quota if using free tier
+    if (settings.provider === 'openrouter-free') {
+      const quotaCheck = checkQuota();
+      if (!quotaCheck.allowed) {
+        throw new Error(`Free tier limit reached: ${quotaCheck.reason}. Please add your own API key in Settings to continue.`);
+      }
+    }
+
+    const openai = createLLMClient();
     const model = getCurrentModel();
     const formattedChart = formatChartForLLM(reading);
 
@@ -845,6 +888,12 @@ export const continueHoraryConversation = async (
       max_tokens: 1500,
     });
 
+    // Record usage for free tier
+    if (settings.provider === 'openrouter-free') {
+      const tokensUsed = response.usage?.total_tokens || 0;
+      recordUsage(tokensUsed);
+    }
+
     return response.choices[0].message.content;
   } catch (error) {
     console.error("Error in horary conversation:", error);
@@ -855,13 +904,29 @@ export const continueHoraryConversation = async (
 // Simple text generation for other purposes
 export const generateText = async (prompt: string): Promise<string | null> => {
   try {
-    const openai = createOpenAIClient();
+    const settings = loadSettings();
+
+    // Check quota if using free tier
+    if (settings.provider === 'openrouter-free') {
+      const quotaCheck = checkQuota();
+      if (!quotaCheck.allowed) {
+        throw new Error(`Free tier limit reached: ${quotaCheck.reason}. Please add your own API key in Settings to continue.`);
+      }
+    }
+
+    const openai = createLLMClient();
     const model = getCurrentModel();
 
     const response = await openai.chat.completions.create({
       model,
       messages: [{ role: "user", content: prompt }],
     });
+
+    // Record usage for free tier
+    if (settings.provider === 'openrouter-free') {
+      const tokensUsed = response.usage?.total_tokens || 0;
+      recordUsage(tokensUsed);
+    }
 
     return response.choices[0].message.content;
   } catch (error) {

@@ -35,6 +35,14 @@ export function getDefaultSettings(provider: LLMProvider): LLMSettings {
         model: config.defaultModel,
         timeout: DEFAULT_TIMEOUT,
       };
+
+    case 'openrouter-free':
+      return {
+        provider: 'openrouter-free',
+        mode: 'free-tier',
+        model: config.defaultModel,
+        timeout: DEFAULT_TIMEOUT,
+      };
   }
 }
 

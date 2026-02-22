@@ -23,6 +23,6 @@ export function canUseOllama(): boolean {
 /**
  * Gets the default provider based on the current environment
  */
-export function getDefaultProvider(): 'ollama' | 'openrouter' {
-  return isLocalDevelopment() ? 'ollama' : 'openrouter';
+export function getDefaultProvider(): 'ollama' | 'openrouter' | 'openrouter-free' {
+  return isLocalDevelopment() ? 'ollama' : 'openrouter-free';
 }

@@ -42,6 +42,73 @@ async function testProviderConnection(
           error: `Server responded with status ${response.status}`,
         };
       }
+    } else if (provider === 'openrouter-free') {
+      // Test free tier by checking if Netlify function is available
+      const baseURL = import.meta.env.DEV
+        ? 'http://localhost:8888/.netlify/functions'
+        : '/.netlify/functions';
+
+      const testUrl = `${baseURL}/llm-proxy`;
+
+      try {
+        // Make a simple test request (will fail but proves function is reachable)
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), settings.timeout);
+
+        const response = await fetch(testUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: 'llama-3.3-70b-versatile',
+            messages: [{ role: 'user', content: 'test' }],
+            max_tokens: 5,
+          }),
+          signal: controller.signal,
+        });
+
+        clearTimeout(timeoutId);
+
+        // Even if the request fails, if we get a response from the function, it's working
+        // 200 = success, 400 = bad request (function works), 429 = rate limit (function works!), 500 = server error (function exists)
+        if (response.status === 200 || response.status === 400 || response.status === 429 || response.status === 500) {
+          const message = response.status === 429
+            ? 'Free tier is working (rate limit hit, wait a moment before making requests)'
+            : 'Free tier is available and ready to use';
+          return {
+            status: 'success',
+            message,
+          };
+        } else if (response.status === 403) {
+          return {
+            status: 'error',
+            error: 'Access forbidden - check allowed origins',
+          };
+        } else if (response.status === 404) {
+          return {
+            status: 'error',
+            error: 'Netlify function not deployed. Make sure to run "npm run dev" for local testing.',
+          };
+        } else {
+          return {
+            status: 'error',
+            error: `Unexpected response: ${response.status}`,
+          };
+        }
+      } catch (error: any) {
+        if (error.name === 'AbortError') {
+          return {
+            status: 'error',
+            error: 'Connection timeout',
+          };
+        }
+        // Function not available
+        return {
+          status: 'error',
+          error: 'Cannot reach Netlify function. Run "npm run dev" to start the local server.',
+        };
+      }
     } else if (provider === 'openrouter' || provider === 'anthropic') {
       // Type guard for cloud providers
       if (settings.provider === 'ollama') {

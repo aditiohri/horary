@@ -26,3 +26,10 @@ dist-ssr
 # Local Netlify folder
 .netlify
 *.backup
+
+# Environment variables
+.env
+.env.local
+
+# Netlify/Deno artifacts
+deno.lock

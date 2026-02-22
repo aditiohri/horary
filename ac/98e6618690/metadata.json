@@ -1,0 +1,39 @@
+{
+  "cli_version": "0.4.5",
+  "checkpoint_id": "ac98e6618690",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "README.md",
+    "netlify.toml",
+    "package.json",
+    "src/App.vue",
+    "src/components/ChartDataView.vue",
+    "src/components/Chat.vue",
+    "src/components/HoraryChart.vue",
+    "src/components/OllamaSettings.vue",
+    "src/components/ReadingHistory.vue",
+    "src/components/UserChat.vue",
+    "src/composables/useOllamaSettings.ts",
+    "src/types/ollama.ts",
+    "src/utils/llm.ts",
+    "src/utils/ollama.ts"
+  ],
+  "sessions": [
+    {
+      "metadata": "/ac/98e6618690/0/metadata.json",
+      "transcript": "/ac/98e6618690/0/full.jsonl",
+      "context": "/ac/98e6618690/0/context.md",
+      "content_hash": "/ac/98e6618690/0/content_hash.txt",
+      "prompt": "/ac/98e6618690/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 264,
+    "cache_creation_tokens": 122079,
+    "cache_read_tokens": 1322578,
+    "output_tokens": 3949,
+    "api_call_count": 30
+  }
+}

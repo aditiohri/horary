@@ -175,12 +175,25 @@ function getPlanetHouse(planetDegrees: number, cusps: number[]): number {
 export function formatPartOfFortuneForDisplay(pof: PartOfFortuneResult): string {
   const chartType = pof.isDayChart ? 'Day Chart' : 'Night Chart';
   const dispositorName = pof.dispositor.charAt(0).toUpperCase() + pof.dispositor.slice(1);
+  const dispositorSignFormatted = pof.dispositorSign.charAt(0).toUpperCase() + pof.dispositorSign.slice(1);
 
   let output = `**Part of Fortune** (${chartType})\n`;
-  output += `- **Position**: ${pof.formattedPosition} in House ${pof.house}\n`;
-  output += `- **Dispositor**: ${dispositorName} at ${pof.dispositorSign.charAt(0).toUpperCase() + pof.dispositorSign.slice(1)}, `;
-  output += `House ${pof.dispositorHouse}\n`;
-  output += `- **Dispositor Strength**: ${pof.dispositorDignity.strength} (${pof.dispositorDignity.description}, Score: ${pof.dispositorDignity.score})\n`;
+  output += `- **Position**: ${pof.formattedPosition} (${pof.position.toFixed(2)}° absolute) in House ${pof.house}\n`;
+  output += `- **Dispositor**: ${dispositorName} at ${dispositorSignFormatted} (House ${pof.dispositorHouse})\n`;
+  output += `- **Dispositor Essential Dignity**: ${pof.dispositorDignity.strength} - ${pof.dispositorDignity.description} (Score: ${pof.dispositorDignity.score})\n`;
+  output += `- **Interpretation**: The Part of Fortune's dispositor (${dispositorName}) is ${pof.dispositorDignity.strength.toLowerCase()}. `;
+
+  if (pof.dispositorDignity.score >= 4) {
+    output += `This is POSITIVE - the querent has strong resources and capacity to achieve the outcome.\n`;
+  } else if (pof.dispositorDignity.score > 0) {
+    output += `This is moderately supportive - the querent has some resources available.\n`;
+  } else if (pof.dispositorDignity.score === 0) {
+    output += `The dispositor is peregrine (neutral) - fortune depends on other factors.\n`;
+  } else if (pof.dispositorDignity.score >= -4) {
+    output += `This is CONCERNING - the dispositor is weak, limiting the querent's capacity.\n`;
+  } else {
+    output += `This is VERY NEGATIVE - the dispositor is severely debilitated, the querent lacks resources/power to succeed.\n`;
+  }
 
   return output;
 }

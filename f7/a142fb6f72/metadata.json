@@ -3,7 +3,7 @@
   "checkpoint_id": "f7a142fb6f72",
   "strategy": "manual-commit",
   "branch": "feature/anthropic-integration",
-  "checkpoints_count": 1,
+  "checkpoints_count": 10,
   "files_touched": [
     ".env.example",
     ".gitignore",
@@ -30,13 +30,20 @@
       "context": "/f7/a142fb6f72/0/context.md",
       "content_hash": "/f7/a142fb6f72/0/content_hash.txt",
       "prompt": "/f7/a142fb6f72/0/prompt.txt"
+    },
+    {
+      "metadata": "/f7/a142fb6f72/1/metadata.json",
+      "transcript": "/f7/a142fb6f72/1/full.jsonl",
+      "context": "/f7/a142fb6f72/1/context.md",
+      "content_hash": "/f7/a142fb6f72/1/content_hash.txt",
+      "prompt": "/f7/a142fb6f72/1/prompt.txt"
     }
   ],
   "token_usage": {
-    "input_tokens": 264,
-    "cache_creation_tokens": 122079,
-    "cache_read_tokens": 1322578,
-    "output_tokens": 3949,
-    "api_call_count": 30
+    "input_tokens": 1376,
+    "cache_creation_tokens": 787186,
+    "cache_read_tokens": 11449090,
+    "output_tokens": 12889,
+    "api_call_count": 150
   }
 }

@@ -2,7 +2,7 @@
 import { ref } from 'vue';
 import UserChat from "./components/UserChat.vue";
 import ReadingHistory from "./components/ReadingHistory.vue";
-import OllamaSettings from "./components/OllamaSettings.vue";
+import LLMSettings from "./components/LLMSettings.vue";
 import { useReadingStorage, type StoredReading } from './utils/storage';
 import { useDarkMode } from './composables/useDarkMode';
 
@@ -92,7 +92,7 @@ const storageStats = getStorageStats();
     </main>
 
     <!-- Settings Modal -->
-    <OllamaSettings v-model="showSettings" />
+    <LLMSettings v-model="showSettings" />
   </div>
 </template>
 

@@ -3,6 +3,8 @@ import { computed } from 'vue';
 import { extractAspectsWithMotion, analyzeMoonAspects } from '../utils/aspectMotion';
 import { calculateChartDignities, isDayChart } from '../utils/horary/dignities';
 import { calculateVoidOfCourseMoon } from '../utils/horary/voidOfCourseMoon';
+import { calculatePartOfFortune } from '../utils/horary/arabicParts';
+import { calculateChartAccidentalDignities } from '../utils/horary/accidentalDignities';
 
 interface ChartProps {
   chartData: {
@@ -39,15 +41,29 @@ const vocMoon = computed(() => {
   return calculateVoidOfCourseMoon(props.chartData.chartData.planets);
 });
 
-// Calculate essential dignities
-const planetDignities = computed(() => {
-  if (!props.chartData) return {};
+// Calculate Part of Fortune
+const partOfFortune = computed(() => {
+  if (!props.chartData) return null;
 
-  // Determine if it's a day or night chart
+  const ascendant = props.chartData.chartData.planets.ascendant?.position;
+  const sun = props.chartData.chartData.planets.sun?.position;
+  const moon = props.chartData.chartData.planets.moon?.position;
+  const planets = props.chartData.chartData.planets;
+  const cusps = props.chartData.chartData.cusps;
+
+  if (!ascendant || !sun || !moon || !cusps) return null;
+
+  return calculatePartOfFortune(ascendant, sun, moon, planets, cusps);
+});
+
+// Determine if it's a day or night chart (reused by multiple computed properties)
+const isDayChartValue = computed(() => {
+  if (!props.chartData) return undefined;
+
   const sunPosition = props.chartData.chartData.planets.sun?.position;
   const cusps = props.chartData.chartData.cusps;
 
-  if (!sunPosition || !cusps) return {};
+  if (!sunPosition || !cusps) return undefined;
 
   // Find which house the Sun is in
   const normalizedSun = ((sunPosition % 360) + 360) % 360;
@@ -70,8 +86,25 @@ const planetDignities = computed(() => {
     }
   }
 
-  const isDayChartValue = isDayChart(sunHouse);
-  return calculateChartDignities(props.chartData.chartData.planets, isDayChartValue);
+  return isDayChart(sunHouse);
+});
+
+// Calculate essential dignities
+const planetDignities = computed(() => {
+  if (!props.chartData || isDayChartValue.value === undefined) return {};
+  return calculateChartDignities(props.chartData.chartData.planets, isDayChartValue.value);
+});
+
+// Calculate accidental dignities
+const planetAccidentalDignities = computed(() => {
+  if (!props.chartData) return {};
+
+  const planets = props.chartData.chartData.planets;
+  const cusps = props.chartData.chartData.cusps;
+
+  if (!planets || !cusps) return {};
+
+  return calculateChartAccidentalDignities(planets, cusps, isDayChartValue.value);
 });
 
 // Determine day/night chart
@@ -220,6 +253,82 @@ const formatTimeToExact = (days: number | undefined) => {
       </table>
     </div>
 
+    <!-- Accidental Dignities Section -->
+    <div class="data-section">
+      <h3>Accidental Dignities</h3>
+      <table class="data-table dignities-table">
+        <thead>
+          <tr>
+            <th>Planet</th>
+            <th>House Type</th>
+            <th>Speed</th>
+            <th>Light Condition</th>
+            <th>Strength</th>
+            <th>Score</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr
+            v-for="[planet, dignity] in Object.entries(planetAccidentalDignities)"
+            :key="planet"
+            :class="{
+              'very-strong': (dignity as any).strength === 'Very Strong',
+              'strong': (dignity as any).strength === 'Strong',
+              'moderate': (dignity as any).strength === 'Moderate',
+              'neutral': (dignity as any).strength === 'Neutral',
+              'weak': (dignity as any).strength === 'Weak',
+              'very-weak': (dignity as any).strength === 'Very Weak'
+            }"
+          >
+            <td class="planet-name">
+              <span class="planet-symbol">{{ planet }}</span>
+            </td>
+            <td class="house-type">
+              <span class="house-badge" :class="{
+                'angular': (dignity as any).houseType === 'Angular',
+                'succedent': (dignity as any).houseType === 'Succedent',
+                'cadent': (dignity as any).houseType === 'Cadent'
+              }">
+                {{ (dignity as any).houseType }}
+              </span>
+            </td>
+            <td class="speed-status">
+              <span class="speed-badge" :class="{
+                'swift': (dignity as any).speedStatus === 'Swift',
+                'average': (dignity as any).speedStatus === 'Average',
+                'slow': (dignity as any).speedStatus === 'Slow',
+                'retrograde': (dignity as any).speedStatus === 'Retrograde'
+              }">
+                {{ (dignity as any).speedStatus }}
+              </span>
+            </td>
+            <td class="light-condition">
+              <span class="light-badge" :class="{
+                'cazimi': (dignity as any).lightCondition === 'Cazimi',
+                'in-chariot': (dignity as any).lightCondition === 'In Chariot',
+                'combust': (dignity as any).lightCondition === 'Combust',
+                'under-beams': (dignity as any).lightCondition === 'Under Beams',
+                'free': (dignity as any).lightCondition === 'Free',
+                'na': (dignity as any).lightCondition === 'N/A'
+              }">
+                {{ (dignity as any).lightCondition }}
+              </span>
+            </td>
+            <td class="dignity-strength">
+              <span class="strength-badge">{{ (dignity as any).strength }}</span>
+            </td>
+            <td class="dignity-score" :class="{
+              positive: (dignity as any).totalScore > 0,
+              negative: (dignity as any).totalScore < 0,
+              neutral: (dignity as any).totalScore === 0
+            }">
+              {{ (dignity as any).totalScore > 0 ? '+' : '' }}{{ (dignity as any).totalScore }}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
     <!-- Void of Course Moon Section -->
     <div class="data-section voc-section" v-if="vocMoon">
       <h3>Void of Course Moon</h3>
@@ -244,6 +353,64 @@ const formatTimeToExact = (days: number | undefined) => {
         </div>
         <div class="voc-interpretation">
           {{ vocMoon.interpretation }}
+        </div>
+      </div>
+    </div>
+
+    <!-- Part of Fortune Section -->
+    <div class="data-section pof-section" v-if="partOfFortune">
+      <h3>Part of Fortune (Pars Fortunae)</h3>
+      <div class="pof-container">
+        <div class="pof-main-info">
+          <div class="pof-position">
+            <span class="pof-icon">☽⊕</span>
+            <div class="pof-details">
+              <p class="pof-location">
+                <strong>{{ partOfFortune.formattedPosition }}</strong>
+                in House {{ partOfFortune.house }}
+              </p>
+              <p class="pof-chart-type">
+                {{ partOfFortune.isDayChart ? 'Day Chart' : 'Night Chart' }} Formula:
+                {{ partOfFortune.isDayChart ? 'Asc + Moon - Sun' : 'Asc + Sun - Moon' }}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="pof-dispositor">
+          <h4>Dispositor Analysis</h4>
+          <p class="dispositor-info">
+            <strong>Ruler:</strong>
+            <span class="planet-name">{{ partOfFortune.dispositor.charAt(0).toUpperCase() + partOfFortune.dispositor.slice(1) }}</span>
+            at {{ partOfFortune.dispositorSign.charAt(0).toUpperCase() + partOfFortune.dispositorSign.slice(1) }},
+            House {{ partOfFortune.dispositorHouse }}
+          </p>
+          <div class="dispositor-dignity">
+            <span class="strength-badge" :class="{
+              'very-strong': partOfFortune.dispositorDignity.strength === 'Very Strong',
+              'strong': partOfFortune.dispositorDignity.strength === 'Strong',
+              'moderate': partOfFortune.dispositorDignity.strength === 'Moderate',
+              'peregrine': partOfFortune.dispositorDignity.strength === 'Peregrine',
+              'weak': partOfFortune.dispositorDignity.strength === 'Weak',
+              'very-weak': partOfFortune.dispositorDignity.strength === 'Very Weak'
+            }">
+              {{ partOfFortune.dispositorDignity.strength }}
+            </span>
+            <span class="dignity-score" :class="{
+              'positive': partOfFortune.dispositorDignity.score > 0,
+              'negative': partOfFortune.dispositorDignity.score < 0,
+              'neutral': partOfFortune.dispositorDignity.score === 0
+            }">
+              Score: {{ partOfFortune.dispositorDignity.score > 0 ? '+' : '' }}{{ partOfFortune.dispositorDignity.score }}
+            </span>
+          </div>
+          <p class="dispositor-description">{{ partOfFortune.dispositorDignity.description }}</p>
+        </div>
+
+        <div class="pof-interpretation">
+          <p><em>The Part of Fortune represents the body, health, material fortune, and worldly success.
+          Its condition by house, sign, and especially the strength of its dispositor
+          indicates the querent's resources and capacity for achieving the desired outcome.</em></p>
         </div>
       </div>
     </div>
@@ -755,6 +922,100 @@ const formatTimeToExact = (days: number | undefined) => {
   color: white;
 }
 
+.dignities-table tr.neutral {
+  background: transparent;
+}
+
+.dignities-table tr.neutral .strength-badge {
+  background: #9ca3af;
+  color: white;
+}
+
+/* Accidental Dignities Styles */
+.house-type, .speed-status, .light-condition {
+  font-size: 0.85rem;
+}
+
+.house-badge, .speed-badge, .light-badge {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+/* House type badges */
+.house-badge.angular {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.house-badge.succedent {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.house-badge.cadent {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+/* Speed badges */
+.speed-badge.swift {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.speed-badge.average {
+  background: #e5e7eb;
+  color: #374151;
+}
+
+.speed-badge.slow {
+  background: #fed7aa;
+  color: #9a3412;
+}
+
+.speed-badge.retrograde {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+/* Light condition badges */
+.light-badge.cazimi {
+  background: #fef3c7;
+  color: #92400e;
+  border: 2px solid #f59e0b;
+}
+
+.light-badge.in-chariot {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  color: #78350f;
+  border: 2px solid #d97706;
+  font-weight: 600;
+}
+
+.light-badge.combust {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.light-badge.under-beams {
+  background: #fed7aa;
+  color: #9a3412;
+}
+
+.light-badge.free {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.light-badge.na {
+  background: #e5e7eb;
+  color: #6b7280;
+}
+
 /* Void of Course Moon Styles */
 .voc-section {
   margin-bottom: 2rem;
@@ -821,26 +1082,248 @@ const formatTimeToExact = (days: number | undefined) => {
   color: var(--color-text-primary);
 }
 
+/* Part of Fortune Styles */
+.pof-section {
+  margin-bottom: 2rem;
+}
+
+.pof-container {
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.05), rgba(168, 85, 247, 0.05));
+  border: 2px solid #a855f7;
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  transition: all 0.3s ease;
+}
+
+.pof-container:hover {
+  box-shadow: 0 4px 12px rgba(168, 85, 247, 0.15);
+}
+
+.pof-main-info {
+  margin-bottom: 1.5rem;
+}
+
+.pof-position {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.pof-icon {
+  font-size: 2.5rem;
+  color: #a855f7;
+}
+
+.pof-details {
+  flex: 1;
+}
+
+.pof-location {
+  font-size: 1.2rem;
+  margin: 0 0 0.5rem 0;
+  color: var(--color-text-primary);
+}
+
+.pof-location strong {
+  color: #a855f7;
+  font-size: 1.3rem;
+}
+
+.pof-chart-type {
+  font-size: 0.9rem;
+  color: var(--color-text-secondary);
+  margin: 0;
+  font-style: italic;
+}
+
+.pof-dispositor {
+  background: var(--color-bg-secondary);
+  border-radius: 0.5rem;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.pof-dispositor h4 {
+  color: var(--color-text-primary);
+  font-size: 1rem;
+  margin: 0 0 0.75rem 0;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.dispositor-info {
+  font-size: 0.95rem;
+  margin: 0.75rem 0;
+  color: var(--color-text-secondary);
+}
+
+.dispositor-info .planet-name {
+  text-transform: capitalize;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.dispositor-dignity {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  margin: 0.75rem 0;
+  flex-wrap: wrap;
+}
+
+.dispositor-dignity .strength-badge {
+  display: inline-block;
+  padding: 0.35rem 0.75rem;
+  border-radius: 0.25rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.dispositor-dignity .strength-badge.very-strong {
+  background: #10b981;
+  color: white;
+}
+
+.dispositor-dignity .strength-badge.strong {
+  background: #22c55e;
+  color: white;
+}
+
+.dispositor-dignity .strength-badge.moderate {
+  background: #3b82f6;
+  color: white;
+}
+
+.dispositor-dignity .strength-badge.peregrine {
+  background: #6b7280;
+  color: white;
+}
+
+.dispositor-dignity .strength-badge.weak {
+  background: #fb923c;
+  color: white;
+}
+
+.dispositor-dignity .strength-badge.very-weak {
+  background: #ef4444;
+  color: white;
+}
+
+.dispositor-dignity .dignity-score {
+  font-family: monospace;
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+.dispositor-dignity .dignity-score.positive {
+  color: #059669;
+}
+
+.dispositor-dignity .dignity-score.negative {
+  color: #dc2626;
+}
+
+.dispositor-dignity .dignity-score.neutral {
+  color: var(--color-text-tertiary);
+}
+
+.dispositor-description {
+  font-size: 0.9rem;
+  color: var(--color-text-secondary);
+  margin: 0.5rem 0 0 0;
+  font-style: italic;
+}
+
+.pof-interpretation {
+  padding: 1rem;
+  background: rgba(168, 85, 247, 0.08);
+  border-radius: 0.5rem;
+  border-left: 3px solid #a855f7;
+}
+
+.pof-interpretation p {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: var(--color-text-secondary);
+}
+
 /* Responsive */
 @media (max-width: 640px) {
   .chart-data-view {
+    padding: 0.75rem;
+  }
+
+  .data-section {
     padding: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  /* Make tables horizontally scrollable on mobile */
+  .data-table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+    -webkit-overflow-scrolling: touch;
   }
 
   .data-table th,
   .data-table td {
-    padding: 0.5rem;
-    font-size: 0.85rem;
+    padding: 0.4rem;
+    font-size: 0.8rem;
   }
 
+  /* Smaller badges on mobile */
+  .strength-badge,
+  .house-type-badge,
+  .speed-badge,
+  .light-badge {
+    font-size: 0.7rem;
+    padding: 0.2rem 0.4rem;
+  }
+
+  /* Part of Fortune mobile adjustments */
+  .pof-info p {
+    font-size: 0.85rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .pof-dispositor {
+    padding: 0.75rem;
+  }
+
+  .dispositor-details {
+    gap: 0.5rem;
+  }
+
+  .dispositor-item {
+    font-size: 0.8rem;
+  }
+
+  /* VOC Moon mobile */
+  .voc-details p {
+    font-size: 0.85rem;
+    margin-bottom: 0.4rem;
+  }
+
+  /* Aspect tables */
   .aspect-details {
     flex-direction: column;
     align-items: flex-start;
     gap: 0.5rem;
   }
 
-  .houses-grid {
-    grid-template-columns: repeat(2, 1fr);
+  /* Headers */
+  .data-section h3 {
+    font-size: 1.1rem;
+  }
+
+  .chart-type-badge {
+    font-size: 0.7rem;
+    padding: 0.2rem 0.5rem;
   }
 }
 </style>

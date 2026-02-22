@@ -1,6 +1,103 @@
 import { describe, it, expect } from 'vitest';
 import { calculateAspectMotion, getPlanetMotion } from '../aspectMotion';
 
+describe('Aspect Motion - Timing Integration', () => {
+  it('should include timing estimate for applying aspect when cusps are provided', () => {
+    // Moon applying to square Mercury (Moon is retrograde, moving backward)
+    const chartData = {
+      planets: {
+        moon: {
+          position: 170, // Moon at 170°
+          isRetrograde: false,
+        },
+        mercury: {
+          position: 95, // Mercury at 95° retrograde
+          isRetrograde: true,
+        },
+      },
+      cusps: [0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330],
+    };
+
+    const result = calculateAspectMotion(chartData, 'moon square mercury');
+
+    // This test comes from the existing retrograde test - we know it's applying
+    expect(result.isApplying).toBe(true);
+
+    // Should have timing estimate since cusps are provided and it's applying
+    expect(result.timingEstimate).toBeDefined();
+    expect(result.timingEstimate?.signType).toBeDefined();
+    expect(result.timingEstimate?.housePlacement).toBeDefined();
+  });
+
+  it('should NOT include timing estimate when cusps are not provided', () => {
+    const chartData = {
+      planets: {
+        moon: {
+          position: 170,
+          isRetrograde: false,
+        },
+        mercury: {
+          position: 95,
+          isRetrograde: true,
+        },
+      },
+      // No cusps provided
+    };
+
+    const result = calculateAspectMotion(chartData, 'moon square mercury');
+
+    expect(result.isApplying).toBe(true);
+    // No timing estimate without cusps
+    expect(result.timingEstimate).toBeUndefined();
+  });
+
+  it('should NOT include timing estimate for separating aspects', () => {
+    const chartData = {
+      planets: {
+        moon: {
+          position: 120, // Moon at 120°
+          isRetrograde: false,
+        },
+        jupiter: {
+          position: 60, // Jupiter at 60° (perfect sextile)
+          isRetrograde: false,
+        },
+      },
+      cusps: [0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330],
+    };
+
+    const result = calculateAspectMotion(chartData, 'moon sextile jupiter');
+
+    expect(result.isSeparating).toBe(true);
+    // No timing estimate for separating aspects
+    expect(result.timingEstimate).toBeUndefined();
+  });
+
+  it('should calculate timing with correct sign and house types', () => {
+    // Moon at 170° (19° Virgo - mutable), in house 6 (cadent with our test cusps)
+    const chartData = {
+      planets: {
+        moon: {
+          position: 170,
+          isRetrograde: false,
+        },
+        mercury: {
+          position: 95,
+          isRetrograde: true,
+        },
+      },
+      cusps: [0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330],
+    };
+
+    const result = calculateAspectMotion(chartData, 'moon square mercury');
+
+    expect(result.isApplying).toBe(true);
+    expect(result.timingEstimate).toBeDefined();
+    expect(result.timingEstimate?.signType).toBe('mutable'); // Virgo is mutable
+    expect(result.timingEstimate?.housePlacement).toBe('cadent'); // House 6 is cadent
+  });
+});
+
 describe('Aspect Motion - Retrograde Handling', () => {
   it('should correctly determine applying aspect when one planet is retrograde', () => {
     // Simulating a scenario where Moon (direct) is applying to a square with Mercury (retrograde)

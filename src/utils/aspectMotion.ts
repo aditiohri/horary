@@ -1,5 +1,7 @@
 // src/utils/aspect-motion.ts - Simplified version with proper exports
 
+import { calculateTimingEstimate, type TimingEstimate } from './horary/timing';
+
 export interface PlanetData {
   position: number;
   isRetrograde: boolean;
@@ -23,6 +25,7 @@ export interface AspectMotion {
   isFaded?: boolean; // Aspect exists but is outside standard orb (>12°)
   timeToExact?: number;
   timeSinceExact?: number;
+  timingEstimate?: TimingEstimate; // Timing analysis for applying aspects
 }
 
 const AVERAGE_DAILY_MOTION: { [key: string]: number } = {
@@ -79,7 +82,7 @@ export function getPlanetMotion(
 }
 
 export function calculateAspectMotion(
-  chartData: { planets: { [key: string]: PlanetData } },
+  chartData: { planets: { [key: string]: PlanetData }; cusps?: number[] },
   aspect: string
 ): AspectMotion {
   const planet1Motion = getPlanetMotion(chartData, aspect.split(" ")[0]);
@@ -157,6 +160,29 @@ export function calculateAspectMotion(
     }
   }
 
+  // Calculate timing estimate for applying aspects (if cusps provided)
+  let timingEstimate: TimingEstimate | undefined;
+  if (isApplying && chartData.cusps) {
+    // Use the faster-moving planet's position for timing calculation
+    const fasterPlanet = Math.abs(planet1Motion.speed) > Math.abs(planet2Motion.speed)
+      ? planet1Motion
+      : planet2Motion;
+
+    // Determine which house the faster planet is in
+    const houseNumber = getPlanetHouse(fasterPlanet.position, chartData.cusps);
+
+    try {
+      timingEstimate = calculateTimingEstimate(
+        fasterPlanet.position,
+        houseNumber,
+        currentOrb
+      );
+    } catch (error) {
+      // If timing calculation fails, continue without it
+      console.warn('Failed to calculate timing estimate:', error);
+    }
+  }
+
   return {
     aspectKey: aspect.split(" ")[1],
     point1Key: aspect.split(" ")[0],
@@ -167,7 +193,30 @@ export function calculateAspectMotion(
     isPerfect,
     timeToExact,
     timeSinceExact,
+    timingEstimate,
   };
+}
+
+// Helper function to determine planet's house
+function getPlanetHouse(planetDegrees: number, cusps: number[]): number {
+  const normalizedPlanet = ((planetDegrees % 360) + 360) % 360;
+
+  for (let i = 0; i < cusps.length; i++) {
+    const currentCusp = ((cusps[i] % 360) + 360) % 360;
+    const nextCusp = ((cusps[(i + 1) % cusps.length] % 360) + 360) % 360;
+
+    if (nextCusp > currentCusp) {
+      if (normalizedPlanet >= currentCusp && normalizedPlanet < nextCusp) {
+        return i + 1;
+      }
+    } else {
+      if (normalizedPlanet >= currentCusp || normalizedPlanet < nextCusp) {
+        return i + 1;
+      }
+    }
+  }
+
+  return 1; // fallback
 }
 
 // Extended orb for tracking Moon's last aspect (even if faded)
@@ -175,7 +224,7 @@ const MOON_EXTENDED_ORB = 20;
 const MOON_ACTIVE_ORB = 12;
 
 export function extractAspectsWithMotion(
-  chartData: { planets: { [key: string]: PlanetData } },
+  chartData: { planets: { [key: string]: PlanetData }; cusps?: number[] },
   basicAspects: any[]
 ): Array<
   AspectMotion & {
@@ -202,7 +251,7 @@ export function extractAspectsWithMotion(
 
 // Find Moon aspects outside standard orbs (for tracking last separation)
 function findExtendedMoonAspects(
-  chartData: { planets: { [key: string]: PlanetData } }
+  chartData: { planets: { [key: string]: PlanetData }; cusps?: number[] }
 ): Array<
   AspectMotion & {
     point1Label: string;
@@ -343,6 +392,16 @@ export function formatAspectMotionForLLM(aspectMotion: AspectMotion[]): string {
 
     if (aspect.isPerfect) {
       formatted += " **[PERFECT ASPECT]**";
+    }
+
+    // Add timing estimate for applying aspects
+    if (aspect.isApplying && aspect.timingEstimate) {
+      const timing = aspect.timingEstimate;
+      formatted += `\n  → Timing: ${timing.signType} sign + ${timing.housePlacement} house`;
+      formatted += ` → ${timing.suggestedTimeframes.mostLikely.value} ${timing.suggestedTimeframes.mostLikely.unit}`;
+      if (timing.conflictingSignals) {
+        formatted += ` (conflicting signals)`;
+      }
     }
 
     formatted += "\n";

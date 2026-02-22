@@ -7,6 +7,10 @@ import {
   isDayChart as checkIsDayChart
 } from "./horary/dignities";
 import { calculateVoidOfCourseMoon } from "./horary/voidOfCourseMoon";
+import { analyzeReception, formatReceptionForDisplay } from "./horary/reception";
+import { formatTimingForLLM } from "./horary/timing";
+import { calculateChartAccidentalDignities } from "./horary/accidentalDignities";
+import { calculatePartOfFortune, formatPartOfFortuneForDisplay } from "./horary/arabicParts";
 
 // Enhanced format chart for LLM with aspect motion
 function formatChartForLLMWithMotion(reading: HoraryReading): string {
@@ -26,6 +30,9 @@ function formatChartForLLMWithMotion(reading: HoraryReading): string {
   const sunHouse = getPlanetHouse(chartData.planets.sun.position, chartData.cusps);
   const isDayChartValue = checkIsDayChart(sunHouse);
   const dignities = calculateChartDignities(chartData.planets, isDayChartValue);
+
+  // Calculate accidental dignities for all planets
+  const accidentalDignities = calculateChartAccidentalDignities(chartData.planets, chartData.cusps, isDayChartValue);
 
   // Get ascendant for use in house rulers and significator analysis
   const ascendant = chartData.planets.ascendant;
@@ -59,9 +66,15 @@ function formatChartForLLMWithMotion(reading: HoraryReading): string {
       ? ` | ${dignity.description} (${dignity.strength}, Score: ${dignity.score})`
       : '';
 
+    // Get accidental dignity info
+    const accDignity = accidentalDignities[planet];
+    const accDignityInfo = accDignity
+      ? ` | Accidental: ${accDignity.houseType} house, ${accDignity.speedStatus} speed, ${accDignity.lightCondition} (${accDignity.strength}, Score: ${accDignity.totalScore})`
+      : '';
+
     formattedData += `- **${
       planet.charAt(0).toUpperCase() + planet.slice(1)
-    }${rxSymbol}**: ${degree.toFixed(2)}° ${sign} (House ${house})${dignityInfo}\n`;
+    }${rxSymbol}**: ${degree.toFixed(2)}° ${sign} (House ${house})${dignityInfo}${accDignityInfo}\n`;
   });
 
   // Format house rulers (using whole sign houses)
@@ -116,6 +129,18 @@ function formatChartForLLMWithMotion(reading: HoraryReading): string {
         formattedData += " **✱ PERFECT**";
       }
 
+      // Add timing analysis for applying aspects
+      if (aspect.isApplying && aspect.timingEstimate) {
+        const timing = aspect.timingEstimate;
+        formattedData += `\n  **⏱ Timing:** ${timing.signType.charAt(0).toUpperCase() + timing.signType.slice(1)} sign + ${timing.housePlacement.charAt(0).toUpperCase() + timing.housePlacement.slice(1)} house`;
+        formattedData += ` → Expect: ${timing.suggestedTimeframes.fastest.value} ${timing.suggestedTimeframes.fastest.unit}`;
+        formattedData += ` to ${timing.suggestedTimeframes.slowest.value} ${timing.suggestedTimeframes.slowest.unit}`;
+        formattedData += ` (most likely: ${timing.suggestedTimeframes.mostLikely.value} ${timing.suggestedTimeframes.mostLikely.unit})`;
+        if (timing.conflictingSignals) {
+          formattedData += ` ⚠️ (conflicting timing signals)`;
+        }
+      }
+
       formattedData += "\n";
     });
 
@@ -143,6 +168,15 @@ function formatChartForLLMWithMotion(reading: HoraryReading): string {
           formattedData += `, exact in ${asp.timeToExact.toFixed(1)} days`;
         }
         formattedData += ")\n";
+
+        // Add timing estimate for Moon's next aspect if available
+        if (asp.timingEstimate) {
+          const timing = asp.timingEstimate;
+          formattedData += `  **Timing Guidance:** This aspect will perfect in approximately ${timing.suggestedTimeframes.mostLikely.value} ${timing.suggestedTimeframes.mostLikely.unit}`;
+          formattedData += ` (range: ${timing.suggestedTimeframes.fastest.value} ${timing.suggestedTimeframes.fastest.unit}`;
+          formattedData += ` to ${timing.suggestedTimeframes.slowest.value} ${timing.suggestedTimeframes.slowest.unit}).\n`;
+          formattedData += `  ${timing.interpretation}\n`;
+        }
       }
     }
   }
@@ -163,6 +197,20 @@ function formatChartForLLMWithMotion(reading: HoraryReading): string {
   }
 
   formattedData += `- **Interpretation**: ${vocMoon.interpretation}\n`;
+
+  // Add Part of Fortune
+  if (ascendant) {
+    const pof = calculatePartOfFortune(
+      ascendant.position,
+      chartData.planets.sun.position,
+      chartData.planets.moon.position,
+      chartData.planets,
+      chartData.cusps
+    );
+
+    formattedData += `\n### Part of Fortune (Pars Fortunae):\n`;
+    formattedData += formatPartOfFortuneForDisplay(pof);
+  }
 
   // Add significator analysis (which house rulers are involved)
   formattedData += `\n### Significator Analysis:\n`;
@@ -227,6 +275,21 @@ function formatChartForLLMWithMotion(reading: HoraryReading): string {
         } else {
           formattedData += `\n**No Direct Aspect Between Significators** - Look for translation of light or collection of light\n`;
         }
+
+        // Analyze reception between significators
+        formattedData += `\n**Reception Between Significators:**\n`;
+        const reception = analyzeReception(
+          firstHouseRuler as any,
+          querentPlanet.position,
+          seventhHouseRuler as any,
+          quesitedPlanet.position
+        );
+        formattedData += formatReceptionForDisplay(
+          firstHouseRuler,
+          seventhHouseRuler,
+          reception
+        );
+        formattedData += `\n`;
       }
     }
   }
@@ -289,7 +352,50 @@ You will receive dignity scores for each planet:
 
 **Critical Principle**: Strong significators = success likely. Weak significators = lacks power/resources to succeed.
 
-### 5. Accidental Dignities (Planet's Condition by Position)
+### 5. Dispositor Relationships - The "Landlord" Principle
+
+**CRITICAL CONCEPT:** A planet's dispositor is the planet that RULES the SIGN the first planet is in. This creates a landlord/tenant relationship.
+
+**How Dispositors Work:**
+- **Strong Dispositor + Weak Planet**: The weak planet gets HELP from its strong landlord
+- **Weak Dispositor + Strong Planet**: The strong planet is less supported
+- **Dispositor's dignity and house position shows the QUALITY OF SUPPORT available**
+
+**Examples to Clarify:**
+1. **Mercury in Pisces (fall, very weak) with Jupiter in Cancer (exalted, very strong):**
+   - Jupiter RULES Pisces → Jupiter is Mercury's dispositor
+   - Jupiter exalted = STRONG landlord
+   - **Interpretation**: Despite Mercury being in fall, Jupiter (the landlord) is extremely strong and in excellent condition
+   - This HELPS Mercury! The weak tenant has a powerful, generous landlord who can provide support
+   - Think: "I'm staying in a cheap room (Mercury weak), but the building owner (Jupiter) is wealthy and benevolent"
+
+2. **Venus in Aries (detriment, weak) with Mars in Cancer (fall, weak):**
+   - Mars RULES Aries → Mars is Venus's dispositor
+   - Mars in fall = WEAK landlord
+   - **Interpretation**: Venus is weak AND her dispositor Mars is also weak
+   - Venus gets NO help - she's in a bad situation with no support
+   - Think: "I'm in a bad apartment (Venus weak) and the landlord (Mars) is also broke and can't help"
+
+3. **Moon in Virgo (no dignity) with Mercury in Gemini (ruler, strong):**
+   - Mercury RULES Virgo → Mercury is Moon's dispositor
+   - Mercury in rulership = STRONG landlord
+   - **Interpretation**: Moon is peregrine but has a very capable dispositor
+   - Mercury can provide resources and support to help the Moon succeed
+   - Think: "I'm renting (Moon neutral) from a competent, responsible landlord (Mercury strong)"
+
+**Key Rule for Interpretation:**
+- When analyzing a weak planet, ALWAYS check its dispositor's condition
+- A strong dispositor can "rescue" or support a weak planet
+- A weak dispositor leaves a planet without resources, even if the planet itself is okay
+- **DO NOT say** "Jupiter being strong is bad for Mercury" - this is backwards!
+- **CORRECT:** "Mercury is in fall (weak), but Jupiter (dispositor) is exalted (strong), providing powerful support"
+
+**In Part of Fortune Analysis:**
+- The PoF dispositor's strength = querent's capacity/resources to achieve the outcome
+- Strong PoF dispositor = querent HAS the power/resources to succeed
+- Weak PoF dispositor = querent LACKS the capacity, even if they want it
+
+### 6. Accidental Dignities (Planet's Condition by Position)
 
 **House Placement Strength:**
 - **Angular** (1, 4, 7, 10): +5 points - Most powerful, immediate action
@@ -302,10 +408,13 @@ You will receive dignity scores for each planet:
 
 **Combustion (Nearness to Sun):**
 - **Cazimi** (within 17' of Sun): +5 points - "In the heart of the Sun" - VERY powerful
+- **In Chariot** (combust/under beams BUT in own rulership or exaltation): +2 to +3 points - Protected by dignity!
 - **Combust** (within 8° of Sun): -5 points - Weakened, invisible, hidden
 - **Under Sun's Beams** (within 17° of Sun): -4 points - Weakened
 
-### 6. Perfection of Aspects - Will It Happen?
+**Important:** A planet under beams or combust is normally weakened, BUT if it's in its own rulership or exaltation sign, it's "In Chariot" - protected and strengthened by its own dignity!
+
+### 7. Perfection of Aspects - Will It Happen?
 
 **Aspect Application (CRITICAL):**
 - **Applying**: Faster planet moving TOWARD exact aspect → Event WILL happen
@@ -317,7 +426,7 @@ You will receive dignity scores for each planet:
 - Conjunction (0°), Sextile (60°), Square (90°), Trine (120°), Opposition (180°)
 - Use provided orb data to determine if aspect is applying or separating
 
-### 7. Prohibitions & Frustrations (Why Aspects Fail to Perfect)
+### 8. Prohibitions & Frustrations (Why Aspects Fail to Perfect)
 
 **Prohibition:**
 - A third planet makes an aspect to one of the significators BEFORE the main aspect perfects
@@ -333,7 +442,7 @@ You will receive dignity scores for each planet:
 - Faster planet turns retrograde before perfection
 - Indicates: Querent changes their mind or abandons the matter
 
-### 8. Translation & Collection of Light (Bringing Parties Together)
+### 9. Translation & Collection of Light (Bringing Parties Together)
 
 **Translation of Light:**
 - Faster planet separating from one significator, applying to another
@@ -345,7 +454,7 @@ You will receive dignity scores for each planet:
 - Brings parties together through mutual connection/interest
 - The collecting planet shows the common ground
 
-### 9. Reception (How Do They View Each Other?)
+### 10. Reception (How Do They View Each Other?)
 
 **Reception Types:**
 - **Mutual Reception**: Planets in each other's dignity signs - Strong connection, mutual benefit
@@ -358,7 +467,7 @@ You will receive dignity scores for each planet:
 - Bad reception = Resistance, dislike, obstacles
 - Check if house rulers are in reception to determine attitude
 
-### 10. The Moon (Co-Ruler of Every Question)
+### 11. The Moon (Co-Ruler of Every Question)
 
 **Moon's Critical Role:**
 - **Void of Course**: Last aspect made, next won't occur until sign change → "Nothing comes of the matter"
@@ -367,23 +476,81 @@ You will receive dignity scores for each planet:
 - **Moon's Next Aspect**: Shows what happens next (outcome)
 - **Moon's Dignity**: Strong = querent has resources/support. Weak = lacks power/information
 
-### 11. Timing Techniques
+### 12. Part of Fortune (Pars Fortunae)
 
-**By Sign Type:**
-- **Cardinal** (Aries, Cancer, Libra, Capricorn): Days or weeks - FAST
-- **Fixed** (Taurus, Leo, Scorpio, Aquarius): Months or years - SLOW
-- **Mutable** (Gemini, Virgo, Sagittarius, Pisces): Weeks or months - MEDIUM
+**What It Represents:**
+- The Part of Fortune is the most important Arabic Part in horary astrology
+- Represents the body, health, material fortune, worldly success, and general well-being
+- Shows the querent's capacity to achieve the desired outcome
+- Indicates resources, luck, and flow of fortune in the matter
 
-**By Orb:**
-- Degrees from exact aspect = units of time (scaled by sign type)
-- Example: 3° applying in Cardinal sign = 3 days/weeks
+**Calculation:**
+- **Day Chart** (Sun above horizon): Ascendant + Moon - Sun
+- **Night Chart** (Sun below horizon): Ascendant + Sun - Moon
+- You will receive the calculated position with house and sign placement
 
-**By House:**
-- Angular: Quick (days to weeks)
-- Succedent: Moderate (weeks to months)
-- Cadent: Slow (months to years)
+**How to Interpret:**
+1. **House Placement**: Shows WHERE fortune manifests in the matter
+   - 1st house: Personal resources, self-reliance
+   - 2nd house: Material gain, financial resources
+   - 5th house: Creative success, romantic fortune
+   - 7th house: Fortune through partnership
+   - 10th house: Career success, public recognition
+   - etc. (apply traditional house meanings)
 
-### 12. House Rulers = Significators
+2. **Sign Placement**: Shows the QUALITY and NATURE of fortune
+   - Cardinal signs: Quick, active fortune
+   - Fixed signs: Stable, enduring fortune
+   - Mutable signs: Changeable, adaptable fortune
+   - Element shows how fortune flows (fire=enthusiasm, earth=practical, air=mental, water=emotional)
+
+3. **Dispositor Strength** (MOST IMPORTANT):
+   - The dispositor is the planet ruling the sign the Part of Fortune is in
+   - **Strong dispositor** (essential dignity high): Fortune is well-supported, querent has capacity to succeed
+   - **Weak dispositor** (dignity low): Fortune is compromised, querent lacks resources/power
+   - **Dispositor's house**: Shows what supports or hinders fortune
+   - **Aspects to dispositor**: Show how fortune can be accessed or blocked
+
+4. **Aspects to Part of Fortune**:
+   - Benefic aspects (Jupiter, Venus): Support and enhance fortune
+   - Malefic aspects (Mars, Saturn): Challenge or restrict fortune
+   - Check if significators aspect the Part of Fortune
+
+**Judgment Guidance:**
+- If PoF is well-placed (good house, strong dispositor), querent has resources to achieve outcome
+- If PoF is poorly placed (weak dispositor, difficult aspects), querent may lack capacity despite desire
+- PoF strengthens the testimony of the significators when strong
+- PoF undermines the testimony when weak, even if aspects perfect
+
+**Example Interpretation:**
+"The Part of Fortune at 15° Leo in the 5th house is disposed by the Sun in Capricorn (detriment, weak). While the PoF's placement in the 5th house suggests creative and romantic fortune, its dispositor the Sun is weakened by being in detriment. This indicates that while the querent has hope and enthusiasm (Leo), they currently lack the power and authority (Sun weak) to bring about the desired outcome. The querent should work on strengthening their position before expecting success."
+
+### 13. Timing Techniques
+
+**You will receive timing estimates for applying aspects** that combine multiple traditional techniques:
+
+**Sign Type Influence:**
+- **Cardinal** (Aries, Cancer, Libra, Capricorn): Days or weeks - FAST action
+- **Fixed** (Taurus, Leo, Scorpio, Aquarius): Months or years - SLOW, steady
+- **Mutable** (Gemini, Virgo, Sagittarius, Pisces): Weeks or months - MEDIUM speed
+
+**House Type Influence:**
+- **Angular** (1, 4, 7, 10): Quick events (accelerates timing)
+- **Succedent** (2, 5, 8, 11): Moderate pace (neutral timing)
+- **Cadent** (3, 6, 9, 12): Slow manifestation (delays timing)
+
+**Orb Conversion:**
+- Degrees from exact aspect = approximate time units (scaled by sign and house)
+- Smaller orbs = sooner events; larger orbs = later events
+
+**Using Timing Estimates:**
+- Each applying aspect includes a timing range: fastest, most likely, and slowest
+- The range provides context, NOT exact dates
+- Conflicting signals (e.g., cardinal sign + cadent house) mean timing is less certain
+- Always consider the orb (degrees to exact) as the primary timing indicator
+- Use timing estimates to provide general timeframes for when aspects will perfect
+
+### 14. House Rulers = Significators
 
 **For Any Question, Identify:**
 1. **Querent** = Ruler of 1st house (always)
@@ -411,18 +578,19 @@ You will receive dignity scores for each planet:
 - 11th: Friends, hopes, groups
 - 12th: Hidden enemies, institutions, self-undoing
 
-### 13. Judgment Sequence
+### 15. Judgment Sequence
 
 **Step-by-Step Analysis:**
 1. Check radicality (valid for judgment?)
 2. Identify significators (house rulers for querent and quesited)
 3. Assess dignity (are significators strong or weak?)
-4. Check aspects between significators (do they perfect?)
-5. Look for prohibitions/frustrations (will aspect fail?)
-6. Check reception (favorable disposition?)
-7. Consider Moon's role (applying aspect, VOC status)
-8. Determine timing (by sign, orb, house)
-9. Synthesize judgment
+4. Assess Part of Fortune (is dispositor strong? does querent have capacity?)
+5. Check aspects between significators (do they perfect?)
+6. Look for prohibitions/frustrations (will aspect fail?)
+7. Check reception (favorable disposition?)
+8. Consider Moon's role (applying aspect, VOC status)
+9. Determine timing (by sign, orb, house)
+10. Synthesize judgment considering all factors
 
 ## Your Response Style:
 - Be compassionate and respectful
@@ -437,7 +605,9 @@ You will receive dignity scores for each planet:
 - House cusps with rulers
 - Aspects with orbs and motion (applying/separating)
 - Essential dignities with scores
+- Accidental dignities (house type, speed, solar phase)
 - Void of Course Moon status
+- Part of Fortune position with dispositor analysis
 
 ## Important Notes:
 - Only provide readings for sincere, specific questions

@@ -1,0 +1,27 @@
+{
+  "cli_version": "0.4.5",
+  "checkpoint_id": "d191dea7ba7f",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "GROQ_MIGRATION.md",
+    "IMPLEMENTATION_SUMMARY.md"
+  ],
+  "sessions": [
+    {
+      "metadata": "/d1/91dea7ba7f/0/metadata.json",
+      "transcript": "/d1/91dea7ba7f/0/full.jsonl",
+      "context": "/d1/91dea7ba7f/0/context.md",
+      "content_hash": "/d1/91dea7ba7f/0/content_hash.txt",
+      "prompt": "/d1/91dea7ba7f/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 1698,
+    "cache_creation_tokens": 748968,
+    "cache_read_tokens": 14720761,
+    "output_tokens": 14135,
+    "api_call_count": 164
+  }
+}

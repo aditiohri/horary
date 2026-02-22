@@ -15,6 +15,11 @@ interface ConversationMessage {
 
 const props = defineProps<{
   reading: HoraryReading;
+  existingConversation?: Array<{role: string; content: string; timestamp?: string}>;
+}>();
+
+const emit = defineEmits<{
+  conversationUpdate: [conversation: Array<{role: string; content: string; timestamp: Date}>];
 }>();
 
 const messages = ref<ConversationMessage[]>([]);
@@ -56,6 +61,7 @@ const generateInitialReading = async () => {
         timestamp: new Date(),
       });
       hasInitialReading.value = true;
+      emit('conversationUpdate', messages.value);
       await scrollToBottom();
     }
   } catch (error: any) {
@@ -66,6 +72,7 @@ const generateInitialReading = async () => {
       timestamp: new Date(),
       isError: true,
     });
+    emit('conversationUpdate', messages.value);
   } finally {
     isLoading.value = false;
   }
@@ -84,6 +91,7 @@ const sendMessage = async () => {
     content: userMessage,
     timestamp: new Date(),
   });
+  emit('conversationUpdate', messages.value);
 
   await scrollToBottom();
   isLoading.value = true;
@@ -107,6 +115,7 @@ const sendMessage = async () => {
         content: response,
         timestamp: new Date(),
       });
+      emit('conversationUpdate', messages.value);
     }
   } catch (error: any) {
     console.error("Error in conversation:", error);
@@ -116,6 +125,7 @@ const sendMessage = async () => {
       timestamp: new Date(),
       isError: true,
     });
+    emit('conversationUpdate', messages.value);
   } finally {
     isLoading.value = false;
     await scrollToBottom();
@@ -168,7 +178,20 @@ function formatMessageContent(content: string): string {
 // Auto-generate initial reading when reading prop is available
 watch(() => props.reading, (newReading) => {
   if (newReading && !hasInitialReading.value) {
-    generateInitialReading();
+    // If we have an existing conversation, restore it instead of generating new
+    if (props.existingConversation && props.existingConversation.length > 0) {
+      messages.value = props.existingConversation.map((msg) => ({
+        role: msg.role as "user" | "assistant",
+        content: msg.content,
+        timestamp: msg.timestamp ? new Date(msg.timestamp) : new Date(),
+      }));
+      hasInitialReading.value = true;
+      isLoading.value = false;
+      nextTick(() => scrollToBottom());
+    } else {
+      // Generate new reading
+      generateInitialReading();
+    }
   }
 }, { immediate: true });
 </script>

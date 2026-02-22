@@ -190,7 +190,7 @@ const startNewReading = () => {
 // Handle conversation updates for storage
 const handleConversationUpdate = (
   messages: Array<{
-    role: "user" | "assistant";
+    role: string;
     content: string;
     timestamp: Date;
   }>
@@ -198,7 +198,7 @@ const handleConversationUpdate = (
   if (currentReadingId.value) {
     try {
       const conversationData = messages.map((msg) => ({
-        role: msg.role,
+        role: msg.role as "user" | "assistant",
         content: msg.content,
         timestamp: msg.timestamp.toISOString(),
       }));

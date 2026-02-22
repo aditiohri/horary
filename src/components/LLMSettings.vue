@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch, computed } from 'vue';
+import { ref, watch, computed, onMounted, onUnmounted } from 'vue';
 import { useLLMSettings } from '../composables/useLLMSettings';
 import type { LLMProvider } from '../types/llm';
 import { PROVIDER_CONFIGS } from '../types/llm';
@@ -37,6 +37,9 @@ const localTimeout = ref(settings.timeout);
 const hasUnsavedChanges = ref(false);
 const showApiKey = ref(false);
 
+// Reactive trigger for usage stats updates
+const usageStatsVersion = ref(0);
+
 // Environment detection
 const isDevelopment = isLocalDevelopment();
 const canOllama = canUseOllama();
@@ -46,6 +49,9 @@ const currentProviderConfig = computed(() => getProviderConfig(localProvider.val
 
 // Free tier usage stats
 const usageStats = computed(() => {
+  // Depend on usageStatsVersion to trigger re-computation
+  usageStatsVersion.value; // eslint-disable-line no-unused-expressions
+
   if (localProvider.value === 'openrouter-free') {
     return getUsageStats();
   }
@@ -156,6 +162,19 @@ watch(
     }
   }
 );
+
+// Listen for usage updates from API calls
+function handleUsageUpdate() {
+  usageStatsVersion.value++;
+}
+
+onMounted(() => {
+  window.addEventListener('free-tier-usage-updated', handleUsageUpdate);
+});
+
+onUnmounted(() => {
+  window.removeEventListener('free-tier-usage-updated', handleUsageUpdate);
+});
 </script>
 
 <template>

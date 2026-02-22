@@ -109,6 +109,9 @@ export function recordUsage(tokens: number): void {
   usage.lastRequestTime = now;
 
   saveFreeTierUsage(usage);
+
+  // Dispatch custom event to notify UI components
+  window.dispatchEvent(new CustomEvent('free-tier-usage-updated'));
 }
 
 /**

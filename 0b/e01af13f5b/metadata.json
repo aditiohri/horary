@@ -1,0 +1,37 @@
+{
+  "cli_version": "0.4.5",
+  "checkpoint_id": "0be01af13f5b",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "src/components/ChartDataView.vue",
+    "src/utils/__tests__/aspectMotion.test.ts",
+    "src/utils/aspectMotion.ts",
+    "src/utils/horary/__tests__/accidentalDignities.test.ts",
+    "src/utils/horary/__tests__/arabicParts.test.ts",
+    "src/utils/horary/__tests__/reception.test.ts",
+    "src/utils/horary/__tests__/timing.test.ts",
+    "src/utils/horary/accidentalDignities.ts",
+    "src/utils/horary/arabicParts.ts",
+    "src/utils/horary/reception.ts",
+    "src/utils/horary/timing.ts",
+    "src/utils/llm.ts"
+  ],
+  "sessions": [
+    {
+      "metadata": "/0b/e01af13f5b/0/metadata.json",
+      "transcript": "/0b/e01af13f5b/0/full.jsonl",
+      "context": "/0b/e01af13f5b/0/context.md",
+      "content_hash": "/0b/e01af13f5b/0/content_hash.txt",
+      "prompt": "/0b/e01af13f5b/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 264,
+    "cache_creation_tokens": 122079,
+    "cache_read_tokens": 1322578,
+    "output_tokens": 3949,
+    "api_call_count": 30
+  }
+}

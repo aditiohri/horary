@@ -184,9 +184,17 @@ export function calculateEssentialDignities(
     dignities.push('Ruler');
   }
 
-  if (isExactExaltation) {
-    score += DIGNITY_SCORES.exaltation;
-    dignities.push('Exalted');
+  // Show exaltation status
+  if (isExalted) {
+    if (isExactExaltation) {
+      // Within 5° of exact degree - full strength
+      score += DIGNITY_SCORES.exaltation;
+      dignities.push('Exalted');
+    } else {
+      // In exaltation sign but not at exact degree - still exalted, full score
+      score += DIGNITY_SCORES.exaltation;
+      dignities.push('Exalted (sign)');
+    }
   }
 
   if (triplicityRuler) {
@@ -231,9 +239,9 @@ export function calculateEssentialDignities(
 
   return {
     isRuler,
-    isExalted: isExactExaltation,
+    isExalted: isExalted, // Return sign-based exaltation, not just exact degree
     isDetriment,
-    isFall: isExactFall,
+    isFall: isFall, // Return sign-based fall, not just exact degree
     triplicityRuler,
     score,
     description,

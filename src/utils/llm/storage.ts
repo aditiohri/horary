@@ -1,6 +1,6 @@
 import type { LLMSettings, LLMProvider } from '../../types/llm';
 import { PROVIDER_CONFIGS, DEFAULT_TIMEOUT } from '../../types/llm';
-import { getDefaultProvider } from '../environment';
+import { getDefaultProvider, canUseOllama } from '../environment';
 
 const STORAGE_KEY = 'llm_settings';
 const LEGACY_STORAGE_KEY = 'ollama_settings';
@@ -81,6 +81,16 @@ export function loadSettings(): LLMSettings {
 
     if (stored) {
       const parsed = JSON.parse(stored) as LLMSettings;
+
+      // Validate: Ollama can only be used in local development
+      if (parsed.provider === 'ollama' && !canUseOllama()) {
+        console.warn('Ollama cannot be used on deployed sites. Switching to OpenRouter.');
+        // Switch to OpenRouter and save the change
+        const openrouterSettings = getDefaultSettings('openrouter');
+        saveSettings(openrouterSettings);
+        return openrouterSettings;
+      }
+
       // Ensure settings have all required fields
       const defaults = getDefaultSettings(parsed.provider);
       return { ...defaults, ...parsed };
@@ -89,6 +99,13 @@ export function loadSettings(): LLMSettings {
     // Try to migrate legacy settings
     const migrated = migrateLegacySettings();
     if (migrated) {
+      // Also validate migrated settings
+      if (migrated.provider === 'ollama' && !canUseOllama()) {
+        console.warn('Ollama cannot be used on deployed sites. Switching to OpenRouter.');
+        const openrouterSettings = getDefaultSettings('openrouter');
+        saveSettings(openrouterSettings);
+        return openrouterSettings;
+      }
       return migrated;
     }
 

@@ -53,23 +53,126 @@ This application implements comprehensive horary astrology features based on tra
 - Search and manage past readings
 - Geolocation support for chart casting
 
-## Getting Started with Ollama (Local, Free, Private)
+## LLM Configuration
 
-Run a powerful AI locally on your machine - no API keys, no cloud services, completely private:
+This app supports three LLM options to suit different needs:
 
+### Option 1: Ollama (Local) - Best for Privacy
+
+**Pros:**
+- 100% private - runs on your computer
+- Completely free
+- Works offline
+- No API keys needed
+
+**Cons:**
+- Requires local installation
+- Doesn't work on deployed sites (can't connect to localhost remotely)
+- Requires decent hardware (8GB+ RAM recommended)
+
+**Setup:**
 ```bash
 # Install Ollama
 curl https://ollama.ai/install.sh | sh
 
-# Pull the recommended model
+# Pull a model
 ollama pull llama3.2:latest
+
+# Start Ollama (usually auto-starts)
+ollama serve
 
 # Install and run the app
 npm install
 npm run dev
 ```
 
-The app will automatically connect to your local Ollama instance at `http://localhost:11434`.
+After the app starts:
+1. Open Settings (⚙️) in the header
+2. Select "Ollama (Local)"
+3. Test connection
+4. Start asking questions
+
+### Option 2: OpenRouter (Cloud) - Best for Flexibility
+
+**Pros:**
+- Access to 290+ models including Claude, GPT-4, Gemini, and more
+- Many free models available
+- Works on deployed sites
+- One API key for all models
+- Pay only for what you use
+
+**Cons:**
+- Requires API key (free tier available)
+- Internet required
+- Not as private (but we don't store your data)
+
+**Setup:**
+1. Get API key: [https://openrouter.ai/keys](https://openrouter.ai/keys) (free tier available)
+2. Open Settings (⚙️) in the app
+3. Select "OpenRouter"
+4. Paste your API key
+5. Choose a model (try `qwen/qwen-2.5-72b-instruct:free` for free option)
+6. Save
+
+**Recommended models:**
+- `qwen/qwen-2.5-72b-instruct:free` - Free, very capable
+- `deepseek/deepseek-chat:free` - Free, good reasoning
+- `meta-llama/llama-3.1-70b-instruct:free` - Free Meta model
+- `anthropic/claude-3.5-sonnet` - Best quality ($3/1M tokens)
+- Browse all models: [https://openrouter.ai/models](https://openrouter.ai/models)
+
+### Option 3: Anthropic Claude (via OpenRouter) - Best for Quality
+
+**Note:** For Claude models, we recommend using OpenRouter (Option 2) with Anthropic models. This provides the same Claude quality with a simpler setup.
+
+**Using Claude via OpenRouter:**
+1. Get OpenRouter API key: [https://openrouter.ai/keys](https://openrouter.ai/keys)
+2. Open Settings (⚙️) in the app
+3. Select "OpenRouter"
+4. Paste your API key
+5. Choose an Anthropic model:
+   - `anthropic/claude-3.5-sonnet` - Best quality
+   - `anthropic/claude-3-opus-20240229` - Most capable
+   - `anthropic/claude-3-haiku-20240307` - Fastest/cheapest
+
+**Pricing (same as direct Anthropic):**
+- Claude 3.5 Sonnet: $3 per million input tokens
+- Claude 3 Opus: $15 per million input tokens
+- Claude 3 Haiku: $0.25 per million input tokens
+- OpenRouter adds no markup - same price as direct Anthropic
+
+## Privacy & Security
+
+**Your API keys are secure:**
+- Stored only in your browser's localStorage
+- Never sent to our servers (we don't have servers!)
+- Sent directly to your chosen provider (OpenRouter/Anthropic)
+- Clear your browser data to remove them
+
+**Your readings:**
+- Ollama: 100% private, never leaves your computer
+- OpenRouter/Anthropic: Sent to provider's API for processing
+- We don't log, store, or see your readings
+- This is a static site - no backend database
+
+## Deployment
+
+The app works differently when deployed vs local:
+
+**Local (`npm run dev`):**
+- Default: Ollama (free, private)
+- All providers available
+
+**Deployed (Netlify/Vercel):**
+- Ollama unavailable (can't connect to localhost from deployed site)
+- Default: OpenRouter (with free models available)
+- Must use cloud API (OpenRouter or Anthropic)
+
+When deploying, users will need to:
+1. Open Settings (⚙️)
+2. Select OpenRouter or Anthropic
+3. Enter their API key
+4. Save and start using the app
 
 ## Tech Stack
 
@@ -162,14 +265,15 @@ src/
 - ✅ Aspect motion (applying/separating)
 - ✅ Timing estimates
 - ✅ Comprehensive test coverage (173 tests)
-- 🚧 Ollama integration improvements (IN PROGRESS)
+- ✅ Multi-provider LLM support (Ollama, OpenRouter, Anthropic)
+- ✅ Environment-aware provider selection
 - ⏳ Deployment (Netlify)
 
 ### v1.1 - Enhanced Features
-- Multi-provider LLM support (OpenAI, Claude, Groq)
 - Improved chart sizing and UI polish
 - Better mobile experience
 - Enhanced horary prompts with dignity awareness
+- Additional free provider options
 
 ### v1.2 - Astrological Enhancements
 - Outer planets (Uranus, Neptune, Pluto)

@@ -1,0 +1,39 @@
+{
+  "cli_version": "0.4.5",
+  "checkpoint_id": "ad2587019df3",
+  "session_id": "3a4d9798-2e3d-40c2-9a88-2e14822517a8",
+  "strategy": "manual-commit",
+  "created_at": "2026-02-22T22:40:45.970421Z",
+  "branch": "main",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "src/components/LLMSettings.vue",
+    "src/composables/useLLMSettings.ts",
+    "src/types/llm.ts",
+    "src/utils/llm.ts",
+    "src/utils/llm/client.ts",
+    "src/utils/llm/storage.ts"
+  ],
+  "agent": "Claude Code",
+  "turn_id": "e141a100b76a",
+  "transcript_identifier_at_start": "c02a47e5-6f36-4db7-856f-e1766fb4100d",
+  "checkpoint_transcript_start": 648,
+  "transcript_lines_at_start": 648,
+  "token_usage": {
+    "input_tokens": 435,
+    "cache_creation_tokens": 68190,
+    "cache_read_tokens": 3750680,
+    "output_tokens": 558,
+    "api_call_count": 32
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-02-22T22:40:44.62788Z",
+    "agent_lines": 116,
+    "human_added": 0,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 116,
+    "agent_percentage": 100
+  },
+  "transcript_path": ".claude/projects/-Users-aditiohri-Code-horary/3a4d9798-2e3d-40c2-9a88-2e14822517a8.jsonl"
+}

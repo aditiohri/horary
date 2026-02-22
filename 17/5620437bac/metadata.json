@@ -1,0 +1,31 @@
+{
+  "cli_version": "0.4.5",
+  "checkpoint_id": "175620437bac",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "src/composables/useLLMSettings.ts",
+    "src/utils/environment.ts",
+    "src/utils/llm/client.ts",
+    "src/utils/llm/environment.ts",
+    "src/utils/llm/storage.ts",
+    "src/utils/llmProviders.ts"
+  ],
+  "sessions": [
+    {
+      "metadata": "/17/5620437bac/0/metadata.json",
+      "transcript": "/17/5620437bac/0/full.jsonl",
+      "context": "/17/5620437bac/0/context.md",
+      "content_hash": "/17/5620437bac/0/content_hash.txt",
+      "prompt": "/17/5620437bac/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 264,
+    "cache_creation_tokens": 122079,
+    "cache_read_tokens": 1322578,
+    "output_tokens": 3949,
+    "api_call_count": 30
+  }
+}

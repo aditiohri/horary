@@ -1,0 +1,26 @@
+{
+  "cli_version": "0.4.5",
+  "checkpoint_id": "ccd2db774b6c",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "src/utils/horary/dignities.ts"
+  ],
+  "sessions": [
+    {
+      "metadata": "/cc/d2db774b6c/0/metadata.json",
+      "transcript": "/cc/d2db774b6c/0/full.jsonl",
+      "context": "/cc/d2db774b6c/0/context.md",
+      "content_hash": "/cc/d2db774b6c/0/content_hash.txt",
+      "prompt": "/cc/d2db774b6c/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 264,
+    "cache_creation_tokens": 122079,
+    "cache_read_tokens": 1322578,
+    "output_tokens": 3949,
+    "api_call_count": 30
+  }
+}

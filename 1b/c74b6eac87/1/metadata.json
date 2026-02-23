@@ -1,0 +1,35 @@
+{
+  "cli_version": "0.4.5",
+  "checkpoint_id": "1bc74b6eac87",
+  "session_id": "d8c9a0dc-45d8-476e-9d86-3f099f0a1943",
+  "strategy": "manual-commit",
+  "created_at": "2026-02-23T02:15:41.02183Z",
+  "branch": "main",
+  "checkpoints_count": 0,
+  "files_touched": [
+    "ROADMAP.md",
+    "docs/horary-llm-requirements.md"
+  ],
+  "agent": "Claude Code",
+  "turn_id": "ae1a989a5a99",
+  "transcript_identifier_at_start": "763a31cd-68ae-465c-a191-eb2db3f9ef5c",
+  "checkpoint_transcript_start": 302,
+  "transcript_lines_at_start": 302,
+  "token_usage": {
+    "input_tokens": 90,
+    "cache_creation_tokens": 16421,
+    "cache_read_tokens": 667068,
+    "output_tokens": 16,
+    "api_call_count": 8
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-02-23T02:15:40.638888Z",
+    "agent_lines": 0,
+    "human_added": 286,
+    "human_modified": 68,
+    "human_removed": 0,
+    "total_committed": 286,
+    "agent_percentage": 0
+  },
+  "transcript_path": ".claude/projects/-Users-aditiohri-Code-horary/d8c9a0dc-45d8-476e-9d86-3f099f0a1943.jsonl"
+}

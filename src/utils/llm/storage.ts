@@ -78,9 +78,19 @@ export function loadSettings(): LLMSettings {
       if (parsed.provider === 'ollama' && !canUseOllama()) {
         console.warn('Ollama cannot be used on deployed sites. Switching to OpenRouter.');
         // Switch to OpenRouter and save the change
-        const openrouterSettings = getDefaultSettings('openrouter');
+        const openrouterSettings = getDefaultSettings('openrouter-free');
         saveSettings(openrouterSettings);
         return openrouterSettings;
+      }
+
+      // Validate: Check if model is still in the suggested list for this provider
+      const config = PROVIDER_CONFIGS[parsed.provider];
+      const isValidModel = config.suggestedModels.includes(parsed.model) || parsed.model === config.defaultModel;
+
+      if (!isValidModel) {
+        console.warn(`Model "${parsed.model}" is no longer available. Switching to default model "${config.defaultModel}".`);
+        parsed.model = config.defaultModel;
+        saveSettings(parsed);
       }
 
       // Ensure settings have all required fields
@@ -94,7 +104,7 @@ export function loadSettings(): LLMSettings {
       // Also validate migrated settings
       if (migrated.provider === 'ollama' && !canUseOllama()) {
         console.warn('Ollama cannot be used on deployed sites. Switching to OpenRouter.');
-        const openrouterSettings = getDefaultSettings('openrouter');
+        const openrouterSettings = getDefaultSettings('openrouter-free');
         saveSettings(openrouterSettings);
         return openrouterSettings;
       }

@@ -3,7 +3,7 @@
   "checkpoint_id": "8c532e61f31c",
   "strategy": "manual-commit",
   "branch": "main",
-  "checkpoints_count": 1,
+  "checkpoints_count": 2,
   "files_touched": [
     "src/utils/llm.ts"
   ],
@@ -14,13 +14,20 @@
       "context": "/8c/532e61f31c/0/context.md",
       "content_hash": "/8c/532e61f31c/0/content_hash.txt",
       "prompt": "/8c/532e61f31c/0/prompt.txt"
+    },
+    {
+      "metadata": "/8c/532e61f31c/1/metadata.json",
+      "transcript": "/8c/532e61f31c/1/full.jsonl",
+      "context": "/8c/532e61f31c/1/context.md",
+      "content_hash": "/8c/532e61f31c/1/content_hash.txt",
+      "prompt": "/8c/532e61f31c/1/prompt.txt"
     }
   ],
   "token_usage": {
-    "input_tokens": 2169,
-    "cache_creation_tokens": 959291,
-    "cache_read_tokens": 18040238,
-    "output_tokens": 15876,
-    "api_call_count": 205
+    "input_tokens": 3143,
+    "cache_creation_tokens": 1026317,
+    "cache_read_tokens": 18862644,
+    "output_tokens": 18335,
+    "api_call_count": 225
   }
 }

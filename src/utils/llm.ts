@@ -328,7 +328,7 @@ Relationship: 1st=querent, 7th=partner, 5th=romance | Job: 1st=querent, 10th=emp
 - **3rd**: SIBLINGS (brothers/sisters), neighbors, short trips, local travel, communication, early education, vehicles
 - **4th**: Home, real estate, parents (especially father in day charts), land, foundations, endings of matters
 - **5th**: Romance, love affairs, children, pregnancy, pleasure, gambling, creativity, speculation
-- **6th**: Illness, health concerns, employees, daily work, servants, small animals, service
+- **6th**: Illness, health concerns, employees, daily work, servants, small animals, service, colleagues
 - **7th**: Partners (marriage/business), opponents, open enemies, "the other person", contracts
 - **8th**: Death, inheritance, partner's money, shared resources, taxes, fear, transformation
 - **9th**: Long journeys, foreign lands, law, courts, higher education, religion, philosophy, in-laws

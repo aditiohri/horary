@@ -1,0 +1,245 @@
+Implement the following plan:
+
+# Fix Venus in Pisces Dignity Confusion in LLM Prompt
+
+## Context
+
+The horary astrology app uses Llama 3.3 70B via Groq's free tier to generate chart readings. Users are reporting that the LLM incorrectly interprets **Venus in Pisces as being in detriment** when it's actually **exalted** (one of the strongest placements for Venus).
+
+**Root Cause Analysis:**
+After thorough exploration, the issue is **NOT in the data layer** (dignity calculations are correct), but in the **system prompt clarity**. The HORARY_SYSTEM_PROMPT in `/src/utils/llm.ts` has a confusing dispositor example that teaches the LLM to associate Pisces with weakness.
+
+**The Problematic Section (Lines 347-359):**
+```
+### 5. Dispositor Relationships - "Landlord" Principle
+**Example:** Mercury in Pisces (fall, weak) with Jupiter in Cancer (exalted, strong):
+- Jupiter rules Pisces = Mercury's dispositor
+- Jupiter exalted = STRONG landlord helps Mercury
+- **CORRECT**: "Mercury weak BUT Jupiter (dispositor) strong = powerful support"
+- **WRONG**: "Jupiter being strong is bad for Mercury"
+```
+
+**Why This Fails:**
+1. The ONLY extended dispositor example uses Mercury in Pisces (a debilitating position)
+2. This creates a mental pattern: "Pisces = weak"
+3. When Llama sees Venus in Pisces, it applies this learned pattern
+4. It ignores the explicit dignity score showing Venus is exalted (+4)
+5. The prompt doesn't clearly separate "planet's own dignity" from "dispositor influence"
+
+**What Works:**
+- ✅ Dignity calculations are 100% correct (Venus in Pisces = exalted +4)
+- ✅ Chart data formatting clearly shows "Exalted (sign), Score: 4"
+- ✅ Dignity strength guidelines exist
+
+## Goal
+
+Fix the prompt confusion while:
+1. Keeping token count around 2000-2500 (current optimization)
+2. Making it clear enough for Llama 3.3 70B (not Claude)
+3. Only fixing the Venus issue for now (narrow scope)
+4. Not requiring RAG or fine-tuning
+
+## Implementation Plan
+
+### Change 1: Add Essential Dignity Clarity (After Line 340)
+
+**File:** `/src/utils/llm.ts`
+**Location:** After the "Strength Interpretation" section, before "Dispositor Relationships"
+
+**Add this new paragraph:**
+```markdown
+**CRITICAL PRINCIPLE:** A planet's essential dignity (rulership, exaltation, detriment, fall) is determined ONLY by which sign it occupies. This dignity is the planet's PRIMARY strength and does NOT change based on its dispositor or other factors.
+
+- If Venus is in Pisces → Venus is EXALTED (+4) = Strong
+- If Mars is in Capricorn → Mars is EXALTED (+4) = Strong
+- This is true regardless of what the dispositor is doing
+```
+
+**Why:** Explicitly states that essential dignity comes from the sign placement alone, before introducing the dispositor concept.
+
+**Token impact:** +80 tokens
+
+### Change 2: Replace Problematic Dispositor Example (Lines 347-359)
+
+**File:** `/src/utils/llm.ts`
+**Current location:** Lines 347-359
+
+**Replace the entire dispositor section with:**
+```markdown
+### 5. Dispositor Relationships - "Landlord" Principle
+
+**Key:** A planet's dispositor = planet ruling the sign it's in. This is a SECONDARY consideration that shows available support.
+
+**How It Works:**
+- Moon in Virgo (peregrine) with Mercury in Gemini (ruler, strong):
+  - Mercury rules Virgo = Moon's dispositor
+  - Moon has no essential dignity (0), but strong dispositor helps
+  - Interpretation: "Moon neutral, but well-supported by capable Mercury"
+
+**Example with Venus in Pisces (Common Confusion):**
+- Venus in Pisces = EXALTED (+4) = Strong planet
+- Jupiter rules Pisces = Jupiter is Venus's dispositor
+- Venus's exaltation does NOT depend on Jupiter's condition
+- If Jupiter is also strong → Venus has strong support too
+- If Jupiter is weak → Venus is still exalted, just less supported
+
+**Key Rule:** Essential dignity (the planet's own strength) comes FIRST. Dispositor support is a bonus or limitation on top of that baseline.
+```
+
+**Why This Works:**
+1. Uses Moon (neutral example) instead of Mercury (negative example)
+2. Explicitly shows Venus in Pisces as exalted
+3. Clarifies that Venus's exaltation doesn't depend on Jupiter
+4. Separates primary strength (essential dignity) from secondary support (dispositor)
+
+**Token impact:** -50 tokens (more concise)
+
+### Change 3: Simplify Reception Section (Lines 375-391)
+
+**File:** `/src/utils/llm.ts`
+**Current location:** Lines 375-391
+
+**Streamline the reception section (currently verbose):**
+
+Keep the "CRITICAL: state which houses" instruction but remove one of the duplicate reception examples. The section has too many examples that reinforce the same point.
+
+**Remove lines 475-481** (the "Reception by Exaltation" example about Venus in Pisces):
+```markdown
+- **Reception by Exaltation**: One planet in the other's exaltation sign
+  - The receiving planet honors and elevates the other
+  - Example: "Venus (7th house/them) is in Pisces, Jupiter's exaltation sign. This means they hold you (Jupiter ruling the 1st house) in high regard."
+```
+
+**Why:** This example, while trying to be helpful, actually reinforces confusion about Venus in Pisces. It focuses on Jupiter's exaltation sign rather than Venus's own exaltation. Better to remove it entirely.
+
+**Token impact:** -70 tokens
+
+### Change 4: Add Validation Checkpoint (After Line 619)
+
+**File:** `/src/utils/llm.ts`
+**Location:** In the "Judgment Sequence" section after step 3
+
+**Modify step 3:**
+```markdown
+3. Assess dignity (are significators strong or weak?)
+   - Check the dignity SCORE first (4-7 = strong, -4 to -5 = weak)
+   - Venus in Pisces? Score +4 = EXALTED = Strong
+   - Mars in Capricorn? Score +4 = EXALTED = Strong
+```
+
+**Why:** Gives Llama concrete checkpoints to validate dignity interpretations, using the exact scores it receives in the chart data.
+
+**Token impact:** +40 tokens
+
+## Critical Files to Modify
+
+**Single file:**
+- `/src/utils/llm.ts` - Lines 331-491 (HORARY_SYSTEM_PROMPT)
+
+**Specific sections:**
+1. Line ~340: Add essential dignity clarity paragraph (+80 tokens)
+2. Lines 347-359: Replace dispositor example section (-50 tokens)
+3. Lines 475-481: Remove confusing reception example (-70 tokens)
+4. Line ~619: Add validation checkpoint in judgment sequence (+40 tokens)
+
+**Net token change:** ±0 tokens (stays optimized around 2000-2500)
+
+## Testing Strategy
+
+After making changes:
+
+1. **Test Venus in Pisces specifically:**
+   - Create a test chart with Venus at 15° Pisces
+   - Ensure LLM says "Venus is EXALTED in Pisces"
+   - Ensure it doesn't mention detriment
+
+2. **Test other exaltations:**
+   - Mars in Capricorn (exalted at 28°)
+   - Sun in Aries (exalted at 19°)
+   - Moon in Taurus (exalted at 3°)
+
+3. **Test actual detriments:**
+   - Venus in Aries (detriment) - should say weak
+   - Mars in Libra (detriment) - should say weak
+   - Ensure LLM correctly identifies these
+
+4. **Test with real user questions:**
+   - Generate 3-5 readings with various dignity placements
+   - Verify dispositor explanations are clear
+   - Check that essential dignity is mentioned before dispositor support
+
+## Verification Checklist
+
+- [ ] HORARY_SYSTEM_PROMPT updated with 4 changes
+- [ ] Token count still ~2000-2500 (run a counter)
+- [ ] Git commit: "fix: clarify essential dignity in prompt to prevent Venus/Pisces confusion"
+- [ ] Local test: Venus in Pisces shows as exalted
+- [ ] Local test: Mars in Capricorn shows as exalted
+- [ ] Local test: Venus in Aries shows as detriment
+- [ ] Deploy to Netlify
+- [ ] Production test: Generate real reading with Venus in Pisces
+
+## Future Considerations (Not in This Fix)
+
+After this narrow fix is deployed and tested:
+- Monitor user reports for other dignity confusion
+- Consider adding explicit dignity reference table to prompt
+- May need deeper prompt rewrite if Llama continues to struggle
+- Could explore Gemini Flash as alternative free model if needed
+
+For now: Fix the Venus issue, keep it free, see how it performs.
+
+
+If you need specific details from before exiting plan mode (like exact code snippets, error messages, or content you generated), read the full transcript at: /Users/aditiohri/.REDACTED.jsonl
+
+---
+
+i want to refine the prompt further - the response should output the judgement at the beginning of its response, in plain english, with no astrological jargon. then the response should output astrological details. it should always include details about house placements and rulership. i see those details are mentioned in docs/ but are they used in the prompting workflow at all?
+
+---
+
+test it with a Venus in Pisces chart
+
+---
+
+<task-notification>
+<task-id>bfeca17</task-id>
+<tool-use-id>REDACTED</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-aditiohri-Code-horary/tasks/bfeca17.output</output-file>
+<status>completed</status>
+<summary>Background command "Run Venus in Pisces test" completed (exit code 0)</summary>
+</task-notification>
+Read the output file to retrieve the result: /private/tmp/claude-501/-Users-aditiohri-Code-horary/tasks/bfeca17.output
+
+---
+
+<task-notification>
+<task-id>b0342c1</task-id>
+<tool-use-id>REDACTED</tool-use-id>
+<output-file>REDACTED.output</output-file>
+<status>completed</status>
+<summary>Background command "Start dev server to test the app" completed (exit code 0)</summary>
+</task-notification>
+Read the output file to retrieve the result: REDACTED.output
+
+---
+
+[Request interrupted by user for tool use]
+
+---
+
+it's looking great. working well. but i want to let you know that after running npm run dev and starting the server two bugs happened - the groq llama model was not the default. and i saw these server logs: ➜  Local:   http://localhost:5174/
+  ➜  Network: use --host to expose
+(node:59648) [DEP0060] DeprecationWarning: The `util._extend` API is deprecated. Please use Object.assign() instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+Request from ::1: POST /.netlify/functions/llm-proxy/chat/completions
+Groq API error: {
+  error: {
+    message: 'The model `deepseek/deepseek-r1-0528:free` does not exist or you do not have access to it.',
+    type: 'invalid_request_error',
+    code: 'model_not_found'
+  }
+}
+Response with status 404 in 307 ms.
+Request from ::1: POST /.netlify/functions/llm-proxy/chat/completions
+Response with status 200 in 3840 ms.

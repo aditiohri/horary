@@ -509,33 +509,35 @@ Based on question type, provide relevant significators:
 
 ---
 
-## Implementation Priority
+## Implementation Status
 
-**Phase 1: Essential Calculations** (Required for MVP)
+**Phase 1: Essential Calculations** ✅ COMPLETE
 1. ✅ Planetary positions in signs
 2. ✅ House placements
 3. ✅ Retrograde status
 4. ✅ Applying/separating aspects
-5. ⏳ Essential dignities (ruler, exaltation, detriment, fall)
-6. ⏳ Sign rulers for house cusps
-7. ⏳ Void of Course Moon detection
-8. ⏳ Critical degree warnings
+5. ✅ Essential dignities (ruler, exaltation, detriment, fall, triplicities)
+6. ✅ Sign rulers for house cusps
+7. ✅ Void of Course Moon detection with exceptions
+8. ✅ Critical degree warnings
 
-**Phase 2: Traditional Techniques** (High Priority)
-9. Accidental dignities
-10. Reception analysis
-11. Planetary speeds with status
-12. Translation/Collection of light detection
-13. Part of Fortune
-14. Prohibition/frustration detection
+**Phase 2: Traditional Techniques** ✅ COMPLETE
+9. ✅ Accidental dignities (house, speed, combustion, retrograde)
+10. ✅ Reception analysis (mutual reception, dispositorship)
+11. ✅ Planetary speeds with status
+12. ⏳ Translation/Collection of light detection (future)
+13. ✅ Part of Fortune
+14. ⏳ Prohibition/frustration detection (future)
 
 **Phase 3: Advanced Analysis** (Future Enhancement)
 15. Terms and faces
-16. Triplicity rulers
-17. Combustion/cazimi detection
+16. ⏳ Triplicity rulers (partially - day/night implemented)
+17. ✅ Combustion/cazimi detection
 18. Fixed stars
 19. Arabic parts beyond Fortune
 20. Planetary hours
+
+**See [ROADMAP.md](/ROADMAP.md) for current priorities and future features.**
 
 ---
 
@@ -658,67 +660,49 @@ Options:
 
 ---
 
-## Implementation Roadmap
+## Implementation Status Summary
 
-### Sprint 1: Essential Horary Data (Current)
+### ✅ Completed (v0.1 - v0.3)
 
-**Goal:** Give LLM the minimum horary-specific data for accurate readings
+**Core Horary Calculations:**
+1. ✅ `horaryDignities.ts` - Essential dignities (ruler, exaltation, detriment, fall, triplicities)
+2. ✅ `horaryReception.ts` - Mutual reception detection and dispositorship
+3. ✅ `horaryAccidentalDignities.ts` - House placement, speed, combustion, retrograde
+4. ✅ `horaryVoidOfCourseMoon.ts` - VOC Moon detection with exceptions
+5. ✅ `horaryArabicParts.ts` - Part of Fortune calculation
+6. ✅ `horaryTiming.ts` - Timing estimates based on orb, sign type, house type
+7. ✅ `formatChartForLLMWithMotion()` - Complete chart data formatting with all dignities
+8. ✅ Enhanced system prompt with traditional horary methodology
+9. ✅ Two-part response structure (plain English + technical analysis)
+10. ✅ House rulers and significator identification
 
-1. ✅ Moon aspect motion analysis (DONE - we have this!)
-2. Create `horaryDignities.ts`:
-   - Essential dignities (ruler, exaltation, detriment, fall)
-   - Dignity scoring system
-   - Sign rulers lookup table
-3. Create `horarySignificators.ts`:
-   - Question type detection (keywords)
-   - House significator mapping
-   - Natural significator assignment
-4. Update `formatChartForLLM()`:
-   - Include dignity scores for all planets
-   - Show house rulers
-   - Identify querent/quesited significators
-   - Flag radicality concerns
-5. Enhance system prompt:
-   - Add dignity interpretation guidelines
-   - Include significator identification process
-   - Traditional horary rules reference
+**LLM Integration:**
+11. ✅ Groq free tier (Llama 3.3 70B)
+12. ✅ Ollama local model support
+13. ✅ Free tier quota management
+14. ✅ Model validation and stale settings handling
 
-### Sprint 2: Reception & Advanced Techniques
+### 🚧 Current Priorities (See [ROADMAP.md](/ROADMAP.md))
 
-6. Create `horaryReception.ts`:
-   - Mutual reception detection
-   - Dispositorship chains
-   - Reception quality assessment
-7. Create `horaryPerfection.ts`:
-   - Translation of Light detection
-   - Collection of Light detection
-   - Prohibition detection
-   - Frustration detection
-8. Add Part of Fortune calculation
-9. Accidental dignity scoring
+1. **UI/UX Improvements** - Better reading display, chart visualization, mobile optimization
+2. **Copy/Paste Prompt Feature** - Export prompt + chart data for use in other LLMs
+3. **Expanded LLM Support** - OpenAI, Anthropic, Google Gemini, OpenRouter paid tier
 
-### Sprint 3: Polish & Optimization
+### 🔮 Future Enhancements
 
-10. Timing calculations (degree-to-time conversion)
-11. Fixed stars (major ones only)
-12. Complete radicality verification
-13. Question categorization UI
-14. Comprehensive testing with real horary cases
+- Translation of Light and Collection of Light detection
+- Prohibition and Frustration detection
+- Fixed stars integration
+- Terms and Faces dignities
+- Question type auto-detection
+- Educational features (tutorials, glossary)
+
+**For detailed roadmap, see [ROADMAP.md](/ROADMAP.md)**
 
 ---
 
-## Next Steps
+## Resources
 
-**Immediate Actions:**
-
-1. Create `src/utils/horary/dignities.ts` - Essential dignity calculations
-2. Create `src/utils/horary/significators.ts` - Question type → significator mapping
-3. Create `src/utils/horary/radicality.ts` - Chart validity checks
-4. Update `llm.ts` system prompt with dignity knowledge
-5. Update `formatChartForLLMWithMotion()` to include Phase 1 data
-6. Test with sample horary questions
-
-**Resources:**
-- [Astrology-API.io Horary Features](https://astrology-api.io/p/horary)
-- [Traditional Dignities Endpoint Documentation](https://api.astrology-api.io/docs/use-cases)
-- William Lilly's "Christian Astrology" (our methodology reference)
+- [Astrology-API.io Horary Features](https://astrology-api.io/p/horary) - Commercial API benchmark
+- William Lilly's "Christian Astrology" - Traditional methodology reference
+- [ROADMAP.md](/ROADMAP.md) - Current development priorities and future plans

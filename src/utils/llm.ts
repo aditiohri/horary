@@ -339,22 +339,35 @@ Relationship: 1st=querent, 7th=partner, 5th=romance | Job: 1st=querent, 10th=emp
 
 **Rule**: Strong significators = success likely. Weak = lacks resources.
 
+**CRITICAL PRINCIPLE:** A planet's essential dignity (rulership, exaltation, detriment, fall) is determined ONLY by which sign it occupies. This dignity is the planet's PRIMARY strength and does NOT change based on its dispositor or other factors.
+
+- If Venus is in Pisces → Venus is EXALTED (+4) = Strong
+- If Mars is in Capricorn → Mars is EXALTED (+4) = Strong
+- This is true regardless of what the dispositor is doing
+
 ### 4. Accidental Dignities (Position Strength)
 **House:** Angular (1,4,7,10) +5 | Succedent (2,5,8,11) +3 | Cadent (3,6,9,12) +1
 **Speed:** Swift +2 | Retrograde -5
 **Sun:** Cazimi (within 17') +5 | In Chariot (combust BUT in own dignity) +2-3 | Combust (within 8°) -5 | Under Beams (within 17°) -4
 
 ### 5. Dispositor Relationships - "Landlord" Principle
-**Key:** A planet's dispositor = planet ruling the sign it's in.
 
-**Strong Dispositor + Weak Planet**: Weak planet gets HELP from strong landlord
-**Weak Dispositor**: Planet lacks support
+**Key:** A planet's dispositor = planet ruling the sign it's in. This is a SECONDARY consideration that shows available support.
 
-**Example:** Mercury in Pisces (fall, weak) with Jupiter in Cancer (exalted, strong):
-- Jupiter rules Pisces = Mercury's dispositor
-- Jupiter exalted = STRONG landlord helps Mercury
-- **CORRECT**: "Mercury weak BUT Jupiter (dispositor) strong = powerful support"
-- **WRONG**: "Jupiter being strong is bad for Mercury"
+**How It Works:**
+- Moon in Virgo (peregrine) with Mercury in Gemini (ruler, strong):
+  - Mercury rules Virgo = Moon's dispositor
+  - Moon has no essential dignity (0), but strong dispositor helps
+  - Interpretation: "Moon neutral, but well-supported by capable Mercury"
+
+**Example with Venus in Pisces (Common Confusion):**
+- Venus in Pisces = EXALTED (+4) = Strong planet
+- Jupiter rules Pisces = Jupiter is Venus's dispositor
+- Venus's exaltation does NOT depend on Jupiter's condition
+- If Jupiter is also strong → Venus has strong support too
+- If Jupiter is weak → Venus is still exalted, just less supported
+
+**Key Rule:** Essential dignity (the planet's own strength) comes FIRST. Dispositor support is a bonus or limitation on top of that baseline.
 
 **For Part of Fortune:** Strong PoF dispositor = querent HAS capacity to succeed. Weak = LACKS resources.
 
@@ -419,7 +432,10 @@ Use provided timing estimates as context, NOT exact dates.
 ### 11. Judgment Sequence
 1. Check radicality
 2. Identify significators
-3. Assess dignity (strong/weak?)
+3. Assess dignity (are significators strong or weak?)
+   - Check the dignity SCORE first (4-7 = strong, -4 to -5 = weak)
+   - Venus in Pisces? Score +4 = EXALTED = Strong
+   - Mars in Capricorn? Score +4 = EXALTED = Strong
 4. Check Part of Fortune (dispositor strong?)
 5. Check aspects (applying/separating?)
 6. Check prohibitions/frustrations

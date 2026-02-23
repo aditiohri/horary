@@ -448,22 +448,30 @@ Use provided timing estimates as context, NOT exact dates.
 
 **ALWAYS structure readings this way:**
 
-### 1. Overall Judgment (FIRST)
+### 1. Overall Judgment (FIRST) - Plain English Only
 - Begin with "## Overall Judgment"
+- Write in plain, accessible English - NO astrological jargon
+- Avoid terms like: "significator", "applying", "separating", "dignity", "exalted", "dispositor", "reception", "partile", etc.
+- DO use everyday language: "you", "they", "strong position", "favorable connection", "obstacles", "support", "timing suggests"
 - Give clear, direct answer (2-3 paragraphs)
-- State success/failure/uncertain
-- Include timing if applicable
-- Should be standalone
+- State success/failure/uncertain with reasoning anyone can understand
+- Include timing if applicable (e.g., "within 2-3 weeks" not "when Moon applies to Saturn")
+- Should be completely standalone - someone with zero astrology knowledge should understand this section
 
-### 2. Detailed Analysis (SECOND)
-- Chart radicality
-- Significator identification
-- Essential & accidental dignities
-- Aspect analysis
+### 2. Detailed Astrological Analysis (SECOND) - Technical Details
+- Begin with "## Detailed Astrological Analysis"
+- NOW use proper astrological terminology
+- **ALWAYS include house placements and rulerships** - this is critical context
+- Chart radicality (is chart valid for judgment?)
+- Significator identification (which houses represent querent/quesited, and their rulers)
+- Essential & accidental dignities with scores
+- House placement for key planets (e.g., "Mars in the 10th house of career")
+- House rulerships (e.g., "Mars rules your 1st house and is placed in the 10th")
+- Aspect analysis (applying/separating status)
 - Reception between significators
-- Part of Fortune analysis
-- Timing
-- Reference specific factors (e.g., "Mars in Capricorn in 10th is Very Strong")
+- Part of Fortune analysis with dispositor strength
+- Timing calculations
+- Reference specific technical factors (e.g., "Mars in Capricorn (exalted, +4) in 10th house (angular, +5) = Very Strong")
 
 ## Tone:
 Compassionate, clear, acknowledge uncertainty when appropriate. Emphasize free will and personal responsibility.
@@ -615,20 +623,28 @@ export const generateHoraryReading = async (
 
     const prompt = `${formattedChart}
 
-Please provide a traditional horary reading for this question. All chart data including significators, aspects between them, and potential prohibitions/frustrations has been provided above.
+Please provide a traditional horary reading for this question. All chart data including significators, aspects between them, house rulers, and potential prohibitions/frustrations has been provided above.
 
-Follow your judgment process:
+**CRITICAL: Follow the two-part response structure:**
 
-1. **Check radicality**: Is the chart valid for judgment? (Ascendant degree, Moon VOC status - already provided)
-2. **Review significators**: The 1st and 7th house rulers are identified in the Significator Analysis section
-3. **Assess dignity**: Examine the essential dignity scores provided for key significators
-4. **Analyze aspects**: Check the "Aspects Between Significators" section - do they aspect? Is it applying or separating?
-5. **Check for prohibitions/frustrations**: Any retrograde warnings or third planet interference noted?
-6. **Consider reception**: How do the significators receive each other by dignity?
-7. **Moon's role**: Review the Moon's last and next aspects (already identified)
-8. **Provide timing**: Based on aspect orb, sign type, and house placement
+**Part 1 - Overall Judgment (Plain English):**
+Start with your judgment in clear, accessible language that anyone can understand. NO astrological jargon. Give the answer, explain why, include timing. This should make sense to someone who knows nothing about astrology.
 
-Proceed directly with your traditional horary judgment. No need to ask me to confirm the chart data - everything is provided above.`;
+**Part 2 - Detailed Astrological Analysis (Technical):**
+Then provide the technical analysis using proper astrological terminology. ALWAYS reference house placements and rulerships throughout this section.
+
+**Judgment process to follow internally:**
+1. Check radicality (chart validity - Ascendant degree, Moon VOC status)
+2. Review significators (1st and 7th house rulers in Significator Analysis section)
+3. Assess dignity (examine essential dignity scores - Venus in Pisces = +4 exalted, etc.)
+4. Analyze house placements (which houses do key planets occupy and rule?)
+5. Check aspects (applying or separating? Check "Aspects Between Significators")
+6. Check prohibitions/frustrations (retrograde warnings, third planet interference)
+7. Consider reception (how do significators receive each other by dignity?)
+8. Moon's role (review Moon's last and next aspects)
+9. Provide timing (based on aspect orb, sign type, house placement)
+
+Proceed directly with your traditional horary judgment.`;
 
     const response = await openai.chat.completions.create({
       model,

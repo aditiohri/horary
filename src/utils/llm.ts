@@ -11,6 +11,7 @@ import { analyzeReception, formatReceptionForDisplay } from "./horary/reception"
 import { formatTimingForLLM } from "./horary/timing";
 import { calculateChartAccidentalDignities } from "./horary/accidentalDignities";
 import { calculatePartOfFortune, formatPartOfFortuneForDisplay } from "./horary/arabicParts";
+import { analyzeQuestion, formatHouseContextForLLM } from "./horary/houses";
 
 // Enhanced format chart for LLM with aspect motion
 function formatChartForLLMWithMotion(reading: HoraryReading): string {
@@ -294,6 +295,12 @@ function formatChartForLLMWithMotion(reading: HoraryReading): string {
     }
   }
 
+  // Inject question-specific house context (structured context engineering)
+  // Analyzes the natural language question to identify relevant houses and
+  // appends their full meanings so the LLM receives targeted guidance.
+  const houseAnalysis = analyzeQuestion(reading.question);
+  formattedData += formatHouseContextForLLM(reading.question, houseAnalysis);
+
   return formattedData;
 }
 
@@ -319,22 +326,14 @@ const HORARY_SYSTEM_PROMPT = `You are an expert horary astrologer following Will
 - **Querent**: 1st house ruler (always) + Moon (co-significator)
 - **Quesited**: Ruler of house representing what's asked about
 
-**Question Types:**
-Relationship: 1st=querent, 7th=partner, 5th=romance | Job: 1st=querent, 10th=employer, 2nd=income | Lost Object: 2nd=object | Property: 4th=property, 10th=seller
+**Question Types (quick reference):**
+Relationship: 1st=querent, 7th=partner, 5th=romance | Job: 1st=querent, 10th=employer, 2nd=income | Lost Object: 2nd=object | Property: 4th=property, 10th=seller | Sibling: 3rd | Illness: 6th | Travel (long): 9th | Friend: 11th | Hidden enemy: 12th
 
-**House Meanings (Identify correct house for the question):**
-- **1st**: Querent (self), physical body, vitality, personal desires
-- **2nd**: Money, possessions, valuables, income, resources, what you own
-- **3rd**: SIBLINGS (brothers/sisters), neighbors, short trips, local travel, communication, early education, vehicles
-- **4th**: Home, real estate, parents (especially father in day charts), land, foundations, endings of matters
-- **5th**: Romance, love affairs, children, pregnancy, pleasure, gambling, creativity, speculation
-- **6th**: Illness, health concerns, employees, daily work, servants, small animals, service, colleagues
-- **7th**: Partners (marriage/business), opponents, open enemies, "the other person", contracts
-- **8th**: Death, inheritance, partner's money, shared resources, taxes, fear, transformation
-- **9th**: Long journeys, foreign lands, law, courts, higher education, religion, philosophy, in-laws
-- **10th**: Career, reputation, employer, authority figures, mother, honors, public standing
-- **11th**: Friends, hopes, wishes, groups, organizations, benefactors, step-children
-- **12th**: Hidden enemies, self-undoing, isolation, hospitals, prisons, secret affairs, large animals, mysticism
+**House Identification:**
+The chart data includes a "### Relevant House Context" section pre-analyzed for this specific question. It lists the primary and supporting houses with their full traditional meanings, topics, and derivative house notes. Use that section as your primary reference for which house(s) govern the quesited.
+
+Quick reference (full detail is in the chart data):
+1st Querent/body | 2nd Money/possessions | 3rd Siblings/communication/vehicles | 4th Home/father/real estate | 5th Romance/children/gambling | 6th Illness/employees/pets | 7th Partner/opponents/contracts | 8th Death/inheritance/shared resources | 9th Long journeys/law/higher education | 10th Career/employer/reputation | 11th Friends/hopes/groups | 12th Hidden enemies/confinement/self-undoing
 
 ### 3. Essential Dignities (Planet's Condition in Sign)
 **Dignity scores provided:**
@@ -488,7 +487,7 @@ Use provided timing estimates as context, NOT exact dates.
 Compassionate, clear, acknowledge uncertainty when appropriate. Emphasize free will and personal responsibility.
 
 ## Chart Data Provided:
-Planetary positions, house cusps, aspects with orbs/motion, essential/accidental dignities, VOC Moon status, Part of Fortune with dispositor.
+Planetary positions, house cusps, aspects with orbs/motion, essential/accidental dignities, VOC Moon status, Part of Fortune with dispositor, and a "### Relevant House Context" section with question-specific house meanings pre-identified for this reading.
 
 ## Ethics:
 Only read sincere questions. Avoid death/harm predictions. Focus on guidance, not absolute outcomes. Respect the sacred tradition.`;

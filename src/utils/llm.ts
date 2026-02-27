@@ -14,7 +14,7 @@ import { calculatePartOfFortune, formatPartOfFortuneForDisplay } from "./horary/
 import { analyzeQuestion, formatHouseContextForLLM } from "./horary/houses";
 
 // Enhanced format chart for LLM with aspect motion
-function formatChartForLLMWithMotion(reading: HoraryReading): string {
+export function formatChartForLLMWithMotion(reading: HoraryReading): string {
   const chartData = reading.chartData;
   let formattedData = `## Chart Data for Question: "${reading.question}"\n`;
   formattedData += `**Time**: ${new Date(

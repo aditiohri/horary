@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import { extractAspectsWithMotion, analyzeMoonAspects } from '../utils/aspectMotion';
+import { formatChartForLLMWithMotion } from '../utils/llm';
 import { calculateChartDignities, isDayChart } from '../utils/horary/dignities';
 import { calculateVoidOfCourseMoon } from '../utils/horary/voidOfCourseMoon';
 import { calculatePartOfFortune } from '../utils/horary/arabicParts';
@@ -150,6 +151,16 @@ const getZodiacSign = (degrees: number) => {
   return `${degreesInSign.toFixed(2)}° ${signs[signIndex]}`;
 };
 
+// Copy chart data to clipboard
+const copied = ref(false);
+const copyChartData = async () => {
+  if (!props.chartData) return;
+  const text = formatChartForLLMWithMotion(props.chartData as any);
+  await navigator.clipboard.writeText(text);
+  copied.value = true;
+  setTimeout(() => { copied.value = false; }, 2000);
+};
+
 // Helper to format time to exact
 const formatTimeToExact = (days: number | undefined) => {
   if (days === undefined) return '';
@@ -164,7 +175,12 @@ const formatTimeToExact = (days: number | undefined) => {
 <template>
   <div class="chart-data-view" v-if="props.chartData">
     <div class="data-header">
-      <h2>Chart Data</h2>
+      <div class="header-row">
+        <h2>Chart Data</h2>
+        <button class="copy-btn" @click="copyChartData" :class="{ copied }">
+          {{ copied ? 'Copied!' : 'Copy for LLM' }}
+        </button>
+      </div>
       <div class="chart-meta">
         <p class="question">{{ props.chartData.question }}</p>
         <p class="timestamp">
@@ -525,10 +541,39 @@ const formatTimeToExact = (days: number | undefined) => {
   padding-bottom: 1rem;
 }
 
+.header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+
 .data-header h2 {
   color: var(--color-text-primary);
-  margin: 0 0 0.5rem 0;
+  margin: 0;
   font-size: 1.5rem;
+}
+
+.copy-btn {
+  padding: 0.4rem 0.9rem;
+  border-radius: 0.375rem;
+  border: 1px solid var(--color-border-focus);
+  background: var(--color-bg-tertiary);
+  color: var(--color-text-secondary);
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.copy-btn:hover {
+  background: var(--color-border-focus);
+  color: var(--color-text-primary);
+}
+
+.copy-btn.copied {
+  background: #d1fae5;
+  color: #065f46;
+  border-color: #10b981;
 }
 
 .chart-meta {

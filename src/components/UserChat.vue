@@ -87,13 +87,9 @@ const renderChart = async (data: QuestionData) => {
     const chartSize = Math.min(containerWidth - 40, 800);
     console.log('Calculated chart size:', chartSize);
 
-    // Scale up glyphs on small charts so they remain legible on mobile
-    const symbolScale = chartSize < 350 ? 1.5 : chartSize < 500 ? 1.2 : 1;
-
     // Create new chart within our container
     const radix = new Chart("paper", chartSize, chartSize, {
       DEBUG: false,
-      SYMBOL_SCALE: symbolScale,
       SYMBOL_SUN: "sun",
       SYMBOL_MOON: "moon",
       SYMBOL_MERCURY: "mercury",

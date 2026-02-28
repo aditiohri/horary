@@ -169,12 +169,11 @@ body {
 
 /* App container */
 .app-container {
-  min-height: 100vh;
+  height: 100vh;
   display: flex;
   flex-direction: column;
   width: 100%;
-  max-width: 100vw;
-  overflow-x: hidden;
+  overflow: hidden;
 }
 
 /* Header */
@@ -309,6 +308,7 @@ body {
 /* Main content */
 .app-main {
   flex: 1;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   max-width: 1200px;
@@ -316,7 +316,7 @@ body {
   width: 100%;
   padding: 1rem;
   gap: 1rem;
-  overflow-x: hidden;
+  overflow: hidden;
 }
 
 /* Tablet optimizations */

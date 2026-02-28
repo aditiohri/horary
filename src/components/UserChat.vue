@@ -87,9 +87,13 @@ const renderChart = async (data: QuestionData) => {
     const chartSize = Math.min(containerWidth - 40, 800);
     console.log('Calculated chart size:', chartSize);
 
+    // Scale up glyphs on small charts so they remain legible on mobile
+    const symbolScale = chartSize < 350 ? 1.5 : chartSize < 500 ? 1.2 : 1;
+
     // Create new chart within our container
     const radix = new Chart("paper", chartSize, chartSize, {
       DEBUG: false,
+      SYMBOL_SCALE: symbolScale,
       SYMBOL_SUN: "sun",
       SYMBOL_MOON: "moon",
       SYMBOL_MERCURY: "mercury",
@@ -160,20 +164,6 @@ const fixRetrogradeSymbols = (planets: any) => {
         }
       }
 
-      // Handle Mercury's extra path (it has 2 paths when retrograde)
-      if (planetKey === 'mercury' && planetGroup.children.length > 1) {
-        if (!planetData.isRetrograde) {
-          // Remove the second path (the retrograde indicator)
-          planetGroup.children[1]?.remove();
-        } else {
-          // Make the retrograde path red
-          const rxPath = planetGroup.children[1] as SVGPathElement;
-          if (rxPath) {
-            rxPath.setAttribute('stroke', '#dc2626');
-            rxPath.setAttribute('fill', '#dc2626');
-          }
-        }
-      }
     }
   });
 };

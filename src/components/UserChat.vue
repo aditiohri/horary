@@ -31,6 +31,7 @@ const chartData = ref<QuestionData | null>(null);
 const showConversation = ref(false);
 const currentReadingId = ref<string | null>(null);
 const activeTab = ref<'wheel' | 'data'>('wheel');
+const showAbout = ref(false);
 
 const handleChartCalculated = async (data: QuestionData) => {
   chartData.value = data;
@@ -277,29 +278,6 @@ watch(activeTab, async (newTab) => {
           Your question will be analyzed based on the current planetary
           positions and traditional horary principles.
         </p>
-        <div class="welcome-features">
-          <div class="feature">
-            <span class="feature-icon">🌟</span>
-            <div>
-              <h3>Traditional Methods</h3>
-              <p>Using classical horary techniques and planetary dignities</p>
-            </div>
-          </div>
-          <div class="feature">
-            <span class="feature-icon">💫</span>
-            <div>
-              <h3>Interactive Analysis</h3>
-              <p>Ask follow-up questions about your reading</p>
-            </div>
-          </div>
-          <div class="feature">
-            <span class="feature-icon">📚</span>
-            <div>
-              <h3>Reading History</h3>
-              <p>All your readings are saved for future reference</p>
-            </div>
-          </div>
-        </div>
       </div>
 
       <div v-else class="reading-layout">
@@ -349,6 +327,53 @@ watch(activeTab, async (newTab) => {
 
     <div v-if="!chartData" class="input-area">
       <QuestionForm @chart-calculated="handleChartCalculated" />
+    </div>
+
+    <div v-if="!chartData" class="about-section">
+      <button @click="showAbout = !showAbout" class="about-toggle">
+        About this app <span class="about-chevron">{{ showAbout ? '▲' : '▼' }}</span>
+      </button>
+
+      <div v-if="showAbout" class="about-content">
+        <div class="about-features">
+          <div class="feature">
+            <span class="feature-icon">🌟</span>
+            <div>
+              <h3>Traditional Methods</h3>
+              <p>Using classical horary techniques and planetary dignities</p>
+            </div>
+          </div>
+          <div class="feature">
+            <span class="feature-icon">💫</span>
+            <div>
+              <h3>Interactive Analysis</h3>
+              <p>Ask follow-up questions about your reading</p>
+            </div>
+          </div>
+          <div class="feature">
+            <span class="feature-icon">📚</span>
+            <div>
+              <h3>Reading History</h3>
+              <p>All your readings are saved locally for future reference</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="about-card">
+          <h3>🗄️ Local Storage</h3>
+          <p>All readings are stored entirely in your browser's local storage — no reading data is ever sent to or stored on a server. Data persists across sessions until you clear your browser storage. You can export all readings as JSON or delete them individually from the History tab.</p>
+        </div>
+
+        <div class="about-card">
+          <h3>🤖 AI Model &amp; API</h3>
+          <p>Interpretations are powered by <strong>Meta's Llama 3.3 70B</strong> model, served via <strong>Groq's inference API</strong>. Requests are routed through a secure server-side proxy — your browser never communicates with Groq directly, and the API key is never exposed to the client. The free tier allows up to 10 requests per hour.</p>
+        </div>
+
+        <div class="about-card">
+          <h3>🔒 Privacy &amp; Data Control</h3>
+          <p>No account or personal information is required to use this app. Your horary question text is sent to Groq's API for AI interpretation — <a href="https://groq.com/privacy-policy/" target="_blank" rel="noopener">Groq's privacy policy</a> applies to these requests. Location data used for chart calculation is requested by your browser at reading time and is not stored beyond the chart itself. You can delete any or all readings from the History tab at any time.</p>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -424,6 +449,73 @@ watch(activeTab, async (newTab) => {
   color: var(--color-text-secondary);
   font-size: 0.875rem;
   line-height: 1.4;
+}
+
+.about-section {
+  margin-top: 0.75rem;
+  width: 100%;
+}
+
+.about-toggle {
+  width: 100%;
+  background: none;
+  border: 1px solid var(--color-border);
+  border-radius: 0.5rem;
+  padding: 0.6rem 1rem;
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.about-toggle:hover {
+  background: var(--color-bg-tertiary);
+  color: var(--color-text-primary);
+}
+
+.about-chevron {
+  font-size: 0.7rem;
+}
+
+.about-content {
+  padding: 1rem 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.about-features {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+}
+
+.about-card {
+  padding: 1rem;
+  background: var(--color-bg-tertiary);
+  border-radius: 0.75rem;
+  border: 1px solid var(--color-border);
+}
+
+.about-card h3 {
+  margin: 0 0 0.5rem 0;
+  font-size: 0.95rem;
+  color: var(--color-text-primary);
+}
+
+.about-card p {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+}
+
+.about-card a {
+  color: var(--color-accent, #4a90e2);
+  text-decoration: underline;
 }
 
 .reading-layout {

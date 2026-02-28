@@ -117,7 +117,9 @@ function willMoonMakeAspect(
     // Calculate orb from exact aspect
     const currentOrb = Math.abs(currentSepNormalized - aspect.angle);
 
-    if (currentOrb > MOON_ORB) continue; // Not within orb, skip
+    // Do NOT skip based on current orb — the Moon can pick up aspects outside
+    // traditional orb as it travels through the rest of its sign. The sign-change
+    // timing check below (timeToExact < timeToSignChange) is the correct gate.
 
     // Calculate the relative speed (Moon's motion relative to planet)
     const relativeSpeed = moonSpeed - planetSpeed; // degrees per day

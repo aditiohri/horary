@@ -60,10 +60,14 @@ const props = defineProps<ChartProps>();
   position: relative;
 }
 
-/* Ensure the chart SVG is contained and responsive */
+/* Force the SVG to fill the paper container.
+   The library sets fixed pixel width/height on the SVG, but it also
+   adds a matching viewBox, so overriding the dimensions via CSS causes
+   the browser to scale the entire chart proportionally — no clipping. */
 .chart-paper :deep(svg) {
-  max-width: 100%;
-  max-height: 100%;
+  width: 100% !important;
+  height: 100% !important;
+  display: block;
 }
 
 @media (max-width: 768px) {

@@ -25,77 +25,34 @@ const props = defineProps<ChartProps>();
 </template>
 
 <style scoped>
+/* No card wrapper — the chart wheel is self-contained visually. */
 .chart-container {
-  background: var(--color-bg-secondary);
-  border-radius: 1rem;
-  padding: 1rem;
-  box-shadow: var(--shadow-md);
-  width: 100%;
-  overflow: hidden;
-  transition: background-color 0.3s ease;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
 }
 
+/* Container-query context so chart-paper can fill the shorter side. */
 .chart-content {
-  min-height: 300px;
-  border: 1px solid var(--color-border);
-  border-radius: 0.5rem;
-  padding: 0.25rem;
+  flex: 1;
+  min-height: 0;
   display: flex;
   justify-content: center;
   align-items: center;
-  position: relative;
-  width: 100%;
-  overflow: hidden;
-  background: var(--color-bg-secondary);
+  container-type: size;
 }
 
+/* Square that fills whichever dimension is smaller. */
 .chart-paper {
-  width: 100%;
-  height: auto;
-  max-width: 800px;
-  aspect-ratio: 1/1;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  position: relative;
+  width: min(100cqw, 100cqh);
+  height: min(100cqw, 100cqh);
 }
 
-/* Force the SVG to fill the paper container.
-   The library sets fixed pixel width/height on the SVG, but it also
-   adds a matching viewBox, so overriding the dimensions via CSS causes
-   the browser to scale the entire chart proportionally — no clipping. */
+/* SVG fills the paper square; viewBox handles internal scaling. */
 .chart-paper :deep(svg) {
   width: 100% !important;
   height: 100% !important;
   display: block;
-}
-
-@media (max-width: 768px) {
-  .chart-container {
-    padding: 0.5rem;
-  }
-
-  .chart-content {
-    min-height: auto;
-    padding: 0.25rem;
-    border: none;
-  }
-
-  .chart-paper {
-    max-width: 100%;
-    width: 100%;
-  }
-}
-
-@media (max-width: 640px) {
-  .chart-container {
-    padding: 0.5rem;
-    background: transparent;
-    box-shadow: none;
-  }
-
-  .chart-content {
-    padding: 0.25rem;
-  }
 }
 </style>

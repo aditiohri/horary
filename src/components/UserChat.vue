@@ -80,12 +80,8 @@ const renderChart = async (data: QuestionData) => {
       ),
     };
 
-    // Calculate responsive chart size
-    const containerWidth = paper.parentElement?.clientWidth || 600;
-    console.log('Chart container width:', containerWidth);
-    // Larger on desktop (up to 800px), responsive on mobile
-    const chartSize = Math.min(containerWidth - 40, 800);
-    console.log('Calculated chart size:', chartSize);
+    // Render at a fixed resolution; CSS scales the SVG to fill the container.
+    const chartSize = 800;
 
     // Create new chart within our container
     const radix = new Chart("paper", chartSize, chartSize, {
@@ -368,18 +364,20 @@ watch(activeTab, async (newTab) => {
 .user-chat {
   display: flex;
   flex-direction: column;
+  flex: 1;
+  min-height: 0;
   width: 100%;
-  height: 100%;
+  overflow-y: auto;
 }
 
 .content-area {
   flex: 1;
+  min-height: 0;
   overflow-y: auto;
   padding: 1rem;
   background: var(--color-bg-secondary);
   border-radius: 1rem;
   box-shadow: var(--shadow-md);
-  min-height: 300px;
   width: 100%;
   overflow-x: hidden;
   transition: background-color 0.3s ease;
@@ -508,14 +506,15 @@ watch(activeTab, async (newTab) => {
   display: grid;
   grid-template-columns: 2fr 1fr;
   gap: 1.5rem;
-  height: 100%;
+  min-height: 100%;
 }
 
 .chart-section {
   display: flex;
   flex-direction: column;
   gap: 1rem;
-  min-width: 0; /* Prevent overflow */
+  min-width: 0;
+  min-height: 0;
 }
 
 .chart-actions {
@@ -598,7 +597,9 @@ watch(activeTab, async (newTab) => {
 }
 
 .tab-content {
-  min-height: 400px;
+  flex: 1;
+  min-height: 300px;
+  overflow: hidden;
 }
 
 .input-area {

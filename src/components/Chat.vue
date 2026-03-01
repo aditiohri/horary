@@ -250,24 +250,6 @@ watch(() => props.reading, (newReading) => {
     </div>
 
     <div class="conversation-input">
-      <details class="followup-guide">
-        <summary class="followup-guide-toggle">How do follow-ups work?</summary>
-        <div class="followup-guide-content">
-          <p><strong>Same chart</strong> — this reading can answer:</p>
-          <ul>
-            <li><strong>Timing</strong> — "When might this happen?" uses the same significators already in the chart.</li>
-            <li><strong>Related people or things</strong> — Anyone or anything connected to the original matter. The chart uses derivative houses: your boss (10th), the other party in a deal (7th), a friend's finances (11th's 2nd = 12th), and so on.</li>
-            <li><strong>Clarification</strong> — "What did you mean about Saturn?" or "Can you explain the Moon's role?"</li>
-            <li><strong>Unexplored factors</strong> — Planets, aspects, or house rulers from this chart not yet discussed.</li>
-          </ul>
-          <p><strong>Ask Another Question</strong> — start fresh when:</p>
-          <ul>
-            <li>Your question is about a genuinely different topic or area of life.</li>
-            <li>The situation has materially changed since you asked (a new development occurred).</li>
-          </ul>
-          <p class="followup-guide-note">In horary tradition, one chart belongs to one sincere question and all its branches. Re-casting the same question to get a different answer isn't considered valid practice — the original chart stands.</p>
-        </div>
-      </details>
       <div class="input-container">
         <textarea
           v-model="currentMessage"
@@ -290,6 +272,24 @@ watch(() => props.reading, (newReading) => {
           </svg>
         </button>
       </div>
+      <details class="followup-guide">
+        <summary class="followup-guide-toggle">How do follow-ups work?</summary>
+        <div class="followup-guide-content">
+          <p><strong>Same chart</strong> — this reading can answer:</p>
+          <ul>
+            <li><strong>Timing</strong> — "When might this happen?" uses the same significators already in the chart.</li>
+            <li><strong>Related people or things</strong> — Anyone or anything connected to the original matter. The chart uses derivative houses: your boss (10th), the other party in a deal (7th), a friend's finances (11th's 2nd = 12th), and so on.</li>
+            <li><strong>Clarification</strong> — "What did you mean about Saturn?" or "Can you explain the Moon's role?"</li>
+            <li><strong>Unexplored factors</strong> — Planets, aspects, or house rulers from this chart not yet discussed.</li>
+          </ul>
+          <p><strong>Ask Another Question</strong> — start fresh when:</p>
+          <ul>
+            <li>Your question is about a genuinely different topic or area of life.</li>
+            <li>The situation has materially changed since you asked (a new development occurred).</li>
+          </ul>
+          <p class="followup-guide-note">In horary tradition, one chart belongs to one sincere question and all its branches. Re-casting the same question to get a different answer isn't considered valid practice — the original chart stands.</p>
+        </div>
+      </details>
     </div>
   </div>
 </template>
@@ -631,7 +631,7 @@ watch(() => props.reading, (newReading) => {
 }
 
 .followup-guide {
-  margin-bottom: 0.75rem;
+  margin-top: 0.75rem;
   border: 1px solid var(--color-border);
   border-radius: 0.5rem;
   background: var(--color-bg-tertiary);

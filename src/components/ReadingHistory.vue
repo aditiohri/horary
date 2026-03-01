@@ -229,15 +229,15 @@ onMounted(loadReadings);
   display: flex;
   flex-direction: column;
   height: 100%;
-  background: white;
+  background: var(--color-bg-secondary);
   border-radius: 1rem;
   overflow: hidden;
 }
 
 .history-header {
   padding: 1.5rem;
-  border-bottom: 1px solid #e2e8f0;
-  background: #f8fafc;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-bg-tertiary);
 }
 
 .header-top {
@@ -249,7 +249,7 @@ onMounted(loadReadings);
 
 .header-top h2 {
   margin: 0;
-  color: #2c3e50;
+  color: var(--color-text-primary);
 }
 
 .close-button {
@@ -257,7 +257,7 @@ onMounted(loadReadings);
   border: none;
   padding: 0.5rem;
   cursor: pointer;
-  color: #6b7280;
+  color: var(--color-text-secondary);
   border-radius: 0.5rem;
   transition: background-color 0.2s;
   min-width: 44px;
@@ -265,7 +265,7 @@ onMounted(loadReadings);
 }
 
 .close-button:hover {
-  background: #e5e7eb;
+  background: var(--color-bg-hover);
 }
 
 .search-bar {
@@ -275,22 +275,24 @@ onMounted(loadReadings);
 .search-input {
   width: 100%;
   padding: 0.75rem;
-  border: 2px solid #e2e8f0;
+  border: 2px solid var(--color-border);
   border-radius: 0.5rem;
   font-size: 1rem;
   transition: border-color 0.2s;
+  background: var(--color-bg-primary);
+  color: var(--color-text-primary);
 }
 
 .search-input:focus {
   outline: none;
-  border-color: #4a90e2;
+  border-color: var(--color-accent);
 }
 
 .stats {
   display: flex;
   gap: 1rem;
   font-size: 0.875rem;
-  color: #6b7280;
+  color: var(--color-text-secondary);
 }
 
 .history-content {
@@ -302,13 +304,13 @@ onMounted(loadReadings);
 .loading {
   text-align: center;
   padding: 2rem;
-  color: #6b7280;
+  color: var(--color-text-secondary);
 }
 
 .empty-state {
   text-align: center;
   padding: 3rem 1rem;
-  color: #6b7280;
+  color: var(--color-text-secondary);
 }
 
 .empty-icon {
@@ -318,7 +320,7 @@ onMounted(loadReadings);
 
 .empty-state h3 {
   margin: 0 0 0.5rem 0;
-  color: #374151;
+  color: var(--color-text-primary);
 }
 
 .date-group {
@@ -326,12 +328,12 @@ onMounted(loadReadings);
 }
 
 .date-header {
-  color: #4a5568;
+  color: var(--color-text-secondary);
   font-size: 1rem;
   font-weight: 600;
   margin: 0 0 1rem 0;
   padding-bottom: 0.5rem;
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid var(--color-border);
 }
 
 .readings-grid {
@@ -341,8 +343,8 @@ onMounted(loadReadings);
 }
 
 .reading-card {
-  background: white;
-  border: 1px solid #e2e8f0;
+  background: var(--color-bg-tertiary);
+  border: 1px solid var(--color-border);
   border-radius: 0.75rem;
   padding: 1rem;
   cursor: pointer;
@@ -363,7 +365,7 @@ onMounted(loadReadings);
 
 .reading-time {
   font-size: 0.875rem;
-  color: #6b7280;
+  color: var(--color-text-tertiary);
   font-weight: 500;
 }
 
@@ -372,7 +374,7 @@ onMounted(loadReadings);
   border: none;
   padding: 0.5rem;
   cursor: pointer;
-  color: #6b7280;
+  color: var(--color-text-secondary);
   border-radius: 0.25rem;
   transition: color 0.2s;
   min-width: 44px;
@@ -385,7 +387,7 @@ onMounted(loadReadings);
 
 .reading-question {
   font-size: 1rem;
-  color: #2c3e50;
+  color: var(--color-text-primary);
   line-height: 1.4;
   margin-bottom: 0.75rem;
 }
@@ -394,12 +396,12 @@ onMounted(loadReadings);
   display: flex;
   gap: 1rem;
   font-size: 0.75rem;
-  color: #6b7280;
+  color: var(--color-text-tertiary);
 }
 
 .conversation-count {
-  background: #ddd6fe;
-  color: #5b21b6;
+  background: rgba(139, 92, 246, 0.2);
+  color: #a78bfa;
   padding: 0.125rem 0.5rem;
   border-radius: 0.75rem;
 }
@@ -423,7 +425,7 @@ onMounted(loadReadings);
 }
 
 .modal {
-  background: white;
+  background: var(--color-bg-secondary);
   border-radius: 0.75rem;
   padding: 1.5rem;
   max-width: 400px;
@@ -433,12 +435,12 @@ onMounted(loadReadings);
 
 .modal h3 {
   margin: 0 0 0.75rem 0;
-  color: #2c3e50;
+  color: var(--color-text-primary);
 }
 
 .modal p {
   margin: 0 0 1.5rem 0;
-  color: #4a5568;
+  color: var(--color-text-secondary);
   line-height: 1.5;
 }
 
@@ -449,9 +451,9 @@ onMounted(loadReadings);
 }
 
 .cancel-button {
-  background: #f7fafc;
-  color: #4a5568;
-  border: 1px solid #e2e8f0;
+  background: var(--color-bg-tertiary);
+  color: var(--color-text-secondary);
+  border: 1px solid var(--color-border);
   padding: 0.5rem 1rem;
   border-radius: 0.5rem;
   cursor: pointer;
@@ -459,7 +461,7 @@ onMounted(loadReadings);
 }
 
 .cancel-button:hover {
-  background: #e2e8f0;
+  background: var(--color-bg-hover);
 }
 
 .confirm-delete-button {

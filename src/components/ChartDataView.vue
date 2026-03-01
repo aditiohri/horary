@@ -698,7 +698,7 @@ const formatTimeToExact = (days: number | undefined) => {
   background: var(--color-bg-secondary);
   border-radius: 0.5rem;
   padding: 1rem;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--color-border);
 }
 
 .aspect-description {
@@ -709,7 +709,7 @@ const formatTimeToExact = (days: number | undefined) => {
 
 .aspect-description strong {
   text-transform: capitalize;
-  color: #1f2937;
+  color: var(--color-text-primary);
 }
 
 .aspect-details {
@@ -1377,5 +1377,146 @@ const formatTimeToExact = (days: number | undefined) => {
     font-size: 0.7rem;
     padding: 0.2rem 0.5rem;
   }
+}
+
+/* Dark mode overrides for colored status badges */
+:global(.dark) .rx-badge {
+  background: rgba(220, 38, 38, 0.25);
+  color: #fca5a5;
+}
+
+:global(.dark) .direct-badge {
+  color: #6ee7b7;
+}
+
+:global(.dark) .retrograde {
+  background: rgba(220, 38, 38, 0.1);
+}
+
+:global(.dark) .moon-section {
+  background: rgba(251, 191, 36, 0.1);
+  border-color: #d97706;
+}
+
+:global(.dark) .motion.applying {
+  background: rgba(16, 185, 129, 0.2);
+  color: #6ee7b7;
+}
+
+:global(.dark) .motion.separating {
+  background: rgba(59, 130, 246, 0.2);
+  color: #93c5fd;
+}
+
+:global(.dark) .faded-badge {
+  background: rgba(245, 158, 11, 0.2);
+  color: #fcd34d;
+}
+
+:global(.dark) .applying-badge {
+  background: rgba(16, 185, 129, 0.2);
+  color: #6ee7b7;
+}
+
+:global(.dark) .separating-badge {
+  background: rgba(59, 130, 246, 0.2);
+  color: #93c5fd;
+}
+
+:global(.dark) .stable-badge {
+  background: rgba(107, 114, 128, 0.3);
+  color: var(--color-text-secondary);
+}
+
+:global(.dark) .moon-aspect {
+  background: rgba(251, 191, 36, 0.1);
+}
+
+:global(.dark) .copy-btn.copied {
+  background: rgba(16, 185, 129, 0.2);
+  color: #6ee7b7;
+}
+
+:global(.dark) .house-badge.angular {
+  background: rgba(34, 197, 94, 0.2);
+  color: #86efac;
+}
+
+:global(.dark) .house-badge.succedent {
+  background: rgba(59, 130, 246, 0.2);
+  color: #93c5fd;
+}
+
+:global(.dark) .house-badge.cadent {
+  background: rgba(245, 158, 11, 0.2);
+  color: #fcd34d;
+}
+
+:global(.dark) .speed-badge.swift {
+  background: rgba(16, 185, 129, 0.2);
+  color: #6ee7b7;
+}
+
+:global(.dark) .speed-badge.average {
+  background: rgba(107, 114, 128, 0.2);
+  color: #d1d5db;
+}
+
+:global(.dark) .speed-badge.slow {
+  background: rgba(249, 115, 22, 0.2);
+  color: #fdba74;
+}
+
+:global(.dark) .speed-badge.retrograde {
+  background: rgba(220, 38, 38, 0.2);
+  color: #fca5a5;
+}
+
+:global(.dark) .light-badge.cazimi {
+  background: rgba(245, 158, 11, 0.2);
+  color: #fcd34d;
+  border-color: #b45309;
+}
+
+:global(.dark) .light-badge.in-chariot {
+  background: rgba(245, 158, 11, 0.15);
+  color: #fde68a;
+  border-color: #d97706;
+}
+
+:global(.dark) .light-badge.combust {
+  background: rgba(220, 38, 38, 0.2);
+  color: #fca5a5;
+}
+
+:global(.dark) .light-badge.under-beams {
+  background: rgba(249, 115, 22, 0.2);
+  color: #fdba74;
+}
+
+:global(.dark) .light-badge.free {
+  background: rgba(16, 185, 129, 0.2);
+  color: #6ee7b7;
+}
+
+:global(.dark) .light-badge.na {
+  background: rgba(107, 114, 128, 0.2);
+  color: #9ca3af;
+}
+
+:global(.dark) .no-aspect {
+  color: var(--color-text-tertiary);
+}
+
+:global(.dark) .past-time {
+  color: var(--color-text-tertiary);
+}
+
+:global(.dark) .dignity-score.positive {
+  color: #34d399;
+}
+
+:global(.dark) .dignity-score.negative {
+  color: #f87171;
 }
 </style>

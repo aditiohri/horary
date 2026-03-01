@@ -55,4 +55,9 @@ const props = defineProps<ChartProps>();
   height: 100% !important;
   display: block;
 }
+
+/* Invert the chart SVG in dark mode so it's readable on dark backgrounds */
+:global(.dark) .chart-paper :deep(svg) {
+  filter: invert(1) hue-rotate(180deg);
+}
 </style>

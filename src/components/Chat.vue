@@ -250,6 +250,24 @@ watch(() => props.reading, (newReading) => {
     </div>
 
     <div class="conversation-input">
+      <details class="followup-guide">
+        <summary class="followup-guide-toggle">How do follow-ups work?</summary>
+        <div class="followup-guide-content">
+          <p><strong>Same chart</strong> — this reading can answer:</p>
+          <ul>
+            <li><strong>Timing</strong> — "When might this happen?" uses the same significators already in the chart.</li>
+            <li><strong>Related people or things</strong> — Anyone or anything connected to the original matter. The chart uses derivative houses: your boss (10th), the other party in a deal (7th), a friend's finances (11th's 2nd = 12th), and so on.</li>
+            <li><strong>Clarification</strong> — "What did you mean about Saturn?" or "Can you explain the Moon's role?"</li>
+            <li><strong>Unexplored factors</strong> — Planets, aspects, or house rulers from this chart not yet discussed.</li>
+          </ul>
+          <p><strong>Ask Another Question</strong> — start fresh when:</p>
+          <ul>
+            <li>Your question is about a genuinely different topic or area of life.</li>
+            <li>The situation has materially changed since you asked (a new development occurred).</li>
+          </ul>
+          <p class="followup-guide-note">In horary tradition, one chart belongs to one sincere question and all its branches. Re-casting the same question to get a different answer isn't considered valid practice — the original chart stands.</p>
+        </div>
+      </details>
       <div class="input-container">
         <textarea
           v-model="currentMessage"
@@ -610,5 +628,66 @@ watch(() => props.reading, (newReading) => {
   .message-input {
     font-size: 16px; /* Prevents zoom on iOS */
   }
+}
+
+.followup-guide {
+  margin-bottom: 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.5rem;
+  background: var(--color-bg-tertiary);
+  font-size: 0.875rem;
+}
+
+.followup-guide-toggle {
+  padding: 0.5rem 0.75rem;
+  cursor: pointer;
+  color: var(--color-text-secondary);
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  user-select: none;
+}
+
+.followup-guide-toggle::-webkit-details-marker {
+  display: none;
+}
+
+.followup-guide-toggle::before {
+  content: '▸';
+  font-size: 0.75rem;
+  transition: transform 0.15s ease;
+  display: inline-block;
+}
+
+details[open] .followup-guide-toggle::before {
+  transform: rotate(90deg);
+}
+
+.followup-guide-content {
+  padding: 0 0.75rem 0.75rem;
+  color: var(--color-text-secondary);
+}
+
+.followup-guide-content p {
+  margin: 0.5rem 0 0.25rem;
+}
+
+.followup-guide-content ul {
+  margin: 0 0 0.5rem;
+  padding-left: 1.25rem;
+}
+
+.followup-guide-content li {
+  margin: 0.2rem 0;
+}
+
+.followup-guide-note {
+  margin-top: 0.5rem !important;
+  font-style: italic;
+  font-size: 0.8rem;
+  color: var(--color-text-tertiary) !important;
+  border-top: 1px solid var(--color-border);
+  padding-top: 0.5rem;
 }
 </style>

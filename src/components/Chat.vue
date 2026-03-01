@@ -628,6 +628,12 @@ watch(() => props.reading, (newReading) => {
   .message-input {
     font-size: 16px; /* Prevents zoom on iOS */
   }
+
+  .followup-guide-content {
+    max-height: 40vh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
 }
 
 .followup-guide {

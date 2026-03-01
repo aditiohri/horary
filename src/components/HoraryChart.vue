@@ -56,8 +56,12 @@ const props = defineProps<ChartProps>();
   display: block;
 }
 
-/* Invert the chart SVG in dark mode so it's readable on dark backgrounds */
-:global(.dark) .chart-paper :deep(svg) {
-  filter: invert(1) hue-rotate(180deg);
+/* In dark mode apply invert to the container so the white background also
+   inverts to black, giving the chart a proper dark background with visible
+   white lines and aspect connections. No hue-rotate — invert alone produces
+   a readable result. */
+:global(.dark) .chart-paper {
+  background: white;
+  filter: invert(1);
 }
 </style>

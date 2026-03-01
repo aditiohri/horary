@@ -133,8 +133,8 @@ const storageStats = getStorageStats();
 
 /* Dark mode colors */
 :root.dark {
-  --color-bg-primary: #1a202c;
-  --color-bg-secondary: #2d3748;
+  --color-bg-primary: #111827;
+  --color-bg-secondary: #1e293b;
   --color-bg-tertiary: #374151;
   --color-bg-hover: #4a5568;
   --color-bg-active: #4a90e2;

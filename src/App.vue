@@ -3,6 +3,7 @@ import { ref } from 'vue';
 import UserChat from "./components/UserChat.vue";
 import ReadingHistory from "./components/ReadingHistory.vue";
 import LLMSettings from "./components/LLMSettings.vue";
+import HoraryInfoModal from "./components/HoraryInfoModal.vue";
 import { useReadingStorage, type StoredReading } from './utils/storage';
 import { useDarkMode } from './composables/useDarkMode';
 
@@ -14,6 +15,7 @@ const chatResetKey = ref(0); // Used to force UserChat component to reset
 const { getStorageStats } = useReadingStorage();
 const { isDark, toggleDarkMode } = useDarkMode();
 const showSettings = ref(false);
+const showHoraryInfo = ref(false);
 
 const showHistory = () => {
   currentView.value = 'history';
@@ -38,7 +40,14 @@ const storageStats = getStorageStats();
   <div class="app-container">
     <header class="app-header">
       <div class="header-content">
-        <h1>Horary Astrology</h1>
+        <div class="title-group">
+          <h1>Horary Astrology</h1>
+          <button
+            class="info-tag"
+            @click="showHoraryInfo = true"
+            aria-label="Learn more about horary astrology"
+          >Learn more</button>
+        </div>
         <div class="header-actions">
           <nav class="header-nav">
             <button
@@ -93,6 +102,9 @@ const storageStats = getStorageStats();
 
     <!-- Settings Modal -->
     <LLMSettings v-model="showSettings" />
+
+    <!-- Horary Info Modal -->
+    <HoraryInfoModal v-model="showHoraryInfo" />
   </div>
 </template>
 
@@ -198,10 +210,37 @@ body {
   gap: 1rem;
 }
 
+.title-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
 .app-header h1 {
   font-size: 1.5rem;
   color: var(--color-text-primary);
   white-space: nowrap;
+}
+
+.info-tag {
+  background: rgba(74, 144, 226, 0.08);
+  color: var(--color-text-tertiary);
+  border: 1px solid rgba(74, 144, 226, 0.2);
+  border-radius: 9999px;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  padding: 0.15rem 0.55rem;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+  letter-spacing: 0.01em;
+  align-self: center;
+}
+
+.info-tag:hover {
+  background: rgba(74, 144, 226, 0.15);
+  color: var(--color-accent);
+  border-color: rgba(74, 144, 226, 0.35);
 }
 
 .header-actions {
@@ -348,9 +387,12 @@ body {
     flex-wrap: wrap;
   }
 
+  .title-group {
+    flex: 1 1 auto;
+  }
+
   .app-header h1 {
     font-size: 1.125rem;
-    flex: 1 1 auto;
   }
 
   .header-actions {

@@ -282,7 +282,7 @@ watch(() => props.reading, (newReading) => {
   flex-direction: column;
   height: 100%;
   max-height: 80vh;
-  background: white;
+  background: var(--color-bg-secondary);
   border-radius: 1rem;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   overflow: hidden;
@@ -290,25 +290,25 @@ watch(() => props.reading, (newReading) => {
 
 .conversation-header {
   padding: 1.5rem;
-  border-bottom: 1px solid #e2e8f0;
-  background: #f8fafc;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-bg-tertiary);
 }
 
 .conversation-header h3 {
   margin: 0 0 0.5rem 0;
-  color: #2c3e50;
+  color: var(--color-text-primary);
   font-size: 1.25rem;
 }
 
 .question-info .question {
   font-style: italic;
-  color: #4a5568;
+  color: var(--color-text-secondary);
   margin: 0.5rem 0;
   font-size: 1rem;
 }
 
 .question-info .meta {
-  color: #718096;
+  color: var(--color-text-tertiary);
   font-size: 0.875rem;
   margin: 0;
 }
@@ -401,7 +401,7 @@ watch(() => props.reading, (newReading) => {
 }
 
 .message.assistant .message-text :deep(blockquote) {
-  border-left-color: rgba(0, 0, 0, 0.15);
+  border-left-color: var(--color-border);
 }
 
 .message.user .message-text :deep(blockquote) {
@@ -416,7 +416,7 @@ watch(() => props.reading, (newReading) => {
 }
 
 .message.assistant .message-text :deep(code) {
-  background: rgba(0, 0, 0, 0.05);
+  background: rgba(128, 128, 128, 0.15);
 }
 
 .message.user .message-text :deep(code) {
@@ -431,7 +431,7 @@ watch(() => props.reading, (newReading) => {
 }
 
 .message.assistant .message-text :deep(pre) {
-  background: rgba(0, 0, 0, 0.05);
+  background: rgba(128, 128, 128, 0.15);
 }
 
 .message.user .message-text :deep(pre) {
@@ -458,21 +458,21 @@ watch(() => props.reading, (newReading) => {
 }
 
 .message.assistant .message-text {
-  background: #f1f5f9;
-  color: #2c3e50;
-  border: 1px solid #e2e8f0;
+  background: var(--color-bg-tertiary);
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-border);
   border-bottom-left-radius: 0.25rem;
 }
 
 .message.error-message .message-text {
-  background: #fef2f2;
-  border-color: #fecaca;
-  color: #991b1b;
+  background: rgba(220, 38, 38, 0.15);
+  border-color: rgba(220, 38, 38, 0.3);
+  color: var(--color-error);
 }
 
 .message-time {
   font-size: 0.75rem;
-  color: #718096;
+  color: var(--color-text-tertiary);
   margin-top: 0.25rem;
   align-self: flex-end;
 }
@@ -486,8 +486,8 @@ watch(() => props.reading, (newReading) => {
   align-items: center;
   gap: 0.5rem;
   padding: 0.75rem 1rem;
-  background: #f1f5f9;
-  border: 1px solid #e2e8f0;
+  background: var(--color-bg-tertiary);
+  border: 1px solid var(--color-border);
   border-radius: 1rem;
   border-bottom-left-radius: 0.25rem;
 }
@@ -524,14 +524,14 @@ watch(() => props.reading, (newReading) => {
 }
 
 .loading-text {
-  color: #4a5568;
+  color: var(--color-text-secondary);
   font-size: 0.875rem;
 }
 
 .conversation-input {
   padding: 1rem;
-  border-top: 1px solid #e2e8f0;
-  background: white;
+  border-top: 1px solid var(--color-border);
+  background: var(--color-bg-secondary);
 }
 
 .input-container {
@@ -543,7 +543,7 @@ watch(() => props.reading, (newReading) => {
 .message-input {
   flex: 1;
   padding: 0.75rem;
-  border: 2px solid #e2e8f0;
+  border: 2px solid var(--color-border);
   border-radius: 0.5rem;
   font-size: 1rem;
   resize: none;
@@ -551,16 +551,18 @@ watch(() => props.reading, (newReading) => {
   max-height: 120px;
   overflow-y: auto;
   transition: border-color 0.2s ease;
+  background: var(--color-bg-primary);
+  color: var(--color-text-primary);
 }
 
 .message-input:focus {
   outline: none;
-  border-color: #4a90e2;
+  border-color: var(--color-accent);
 }
 
 .message-input:disabled {
-  background: #f7fafc;
-  color: #a0aec0;
+  background: var(--color-bg-tertiary);
+  color: var(--color-text-tertiary);
 }
 
 .send-button {
@@ -583,7 +585,7 @@ watch(() => props.reading, (newReading) => {
 }
 
 .send-button:disabled {
-  background: #cbd5e0;
+  background: var(--color-bg-hover);
   cursor: not-allowed;
 }
 

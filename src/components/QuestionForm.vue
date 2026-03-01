@@ -222,7 +222,7 @@ onMounted(() => {
 <style scoped>
 .question-form-container {
   width: 100%;
-  background: white;
+  background: var(--color-bg-secondary);
   border-radius: 1rem;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   transition: background-color 0.3s ease;
@@ -249,7 +249,7 @@ onMounted(() => {
 textarea {
   width: 100%;
   padding: 0.75rem;
-  border: 2px solid #e2e8f0;
+  border: 2px solid var(--color-border);
   border-radius: 0.5rem;
   font-size: 1rem;
   resize: none;
@@ -257,11 +257,13 @@ textarea {
   min-height: 44px;
   max-height: 120px;
   overflow-y: auto;
+  background: var(--color-bg-primary);
+  color: var(--color-text-primary);
 }
 
 textarea:focus {
   outline: none;
-  border-color: #4a90e2;
+  border-color: var(--color-accent);
 }
 
 textarea.error {
@@ -300,7 +302,8 @@ textarea.error {
 }
 
 .submit-button:disabled {
-  background-color: #cbd5e0;
+  background-color: var(--color-bg-hover);
+  color: var(--color-text-tertiary);
   cursor: not-allowed;
 }
 

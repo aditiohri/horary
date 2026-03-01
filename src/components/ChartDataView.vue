@@ -763,7 +763,7 @@ const formatTimeToExact = (days: number | undefined) => {
 }
 
 .no-aspect {
-  color: #9ca3af;
+  color: var(--color-text-tertiary);
   font-style: italic;
   margin: 0;
 }
@@ -822,7 +822,7 @@ const formatTimeToExact = (days: number | undefined) => {
 }
 
 .past-time {
-  color: #9ca3af;
+  color: var(--color-text-tertiary);
 }
 
 /* Houses Grid */
@@ -903,11 +903,11 @@ const formatTimeToExact = (days: number | undefined) => {
 }
 
 .dignity-score.positive {
-  color: #059669;
+  color: var(--color-success);
 }
 
 .dignity-score.negative {
-  color: #dc2626;
+  color: var(--color-error);
 }
 
 .dignity-score.neutral {
@@ -1267,11 +1267,11 @@ const formatTimeToExact = (days: number | undefined) => {
 }
 
 .dispositor-dignity .dignity-score.positive {
-  color: #059669;
+  color: var(--color-success);
 }
 
 .dispositor-dignity .dignity-score.negative {
-  color: #dc2626;
+  color: var(--color-error);
 }
 
 .dispositor-dignity .dignity-score.neutral {
@@ -1379,144 +1379,134 @@ const formatTimeToExact = (days: number | undefined) => {
   }
 }
 
-/* Dark mode overrides for colored status badges */
-:global(.dark) .rx-badge {
+</style>
+
+<style>
+/* Dark mode overrides for ChartDataView status badges.
+   These selectors use 3-class specificity (0-3-0) which beats the Vue-scoped
+   rules that compile to class + attribute (0-2-0), so these always win. */
+
+.dark .chart-data-view .retrograde {
+  background: rgba(239, 68, 68, 0.18);
+}
+
+.dark .chart-data-view .rx-badge {
   background: rgba(220, 38, 38, 0.25);
   color: #fca5a5;
 }
 
-:global(.dark) .direct-badge {
+.dark .chart-data-view .direct-badge {
   color: #6ee7b7;
 }
 
-:global(.dark) .retrograde {
-  background: rgba(220, 38, 38, 0.1);
+.dark .chart-data-view .moon-section {
+  background: rgba(180, 83, 9, 0.2);
+  border-color: #b45309;
 }
 
-:global(.dark) .moon-section {
-  background: rgba(251, 191, 36, 0.1);
-  border-color: #d97706;
+.dark .chart-data-view .moon-aspect {
+  background: rgba(180, 83, 9, 0.12);
 }
 
-:global(.dark) .motion.applying {
+.dark .chart-data-view .motion.applying {
   background: rgba(16, 185, 129, 0.2);
   color: #6ee7b7;
 }
 
-:global(.dark) .motion.separating {
+.dark .chart-data-view .motion.separating {
   background: rgba(59, 130, 246, 0.2);
   color: #93c5fd;
 }
 
-:global(.dark) .faded-badge {
-  background: rgba(245, 158, 11, 0.2);
-  color: #fcd34d;
-}
-
-:global(.dark) .applying-badge {
+.dark .chart-data-view .applying-badge {
   background: rgba(16, 185, 129, 0.2);
   color: #6ee7b7;
 }
 
-:global(.dark) .separating-badge {
+.dark .chart-data-view .separating-badge {
   background: rgba(59, 130, 246, 0.2);
   color: #93c5fd;
 }
 
-:global(.dark) .stable-badge {
+.dark .chart-data-view .stable-badge {
   background: rgba(107, 114, 128, 0.3);
   color: var(--color-text-secondary);
 }
 
-:global(.dark) .moon-aspect {
-  background: rgba(251, 191, 36, 0.1);
-}
-
-:global(.dark) .copy-btn.copied {
-  background: rgba(16, 185, 129, 0.2);
-  color: #6ee7b7;
-}
-
-:global(.dark) .house-badge.angular {
-  background: rgba(34, 197, 94, 0.2);
-  color: #86efac;
-}
-
-:global(.dark) .house-badge.succedent {
-  background: rgba(59, 130, 246, 0.2);
-  color: #93c5fd;
-}
-
-:global(.dark) .house-badge.cadent {
+.dark .chart-data-view .faded-badge {
   background: rgba(245, 158, 11, 0.2);
   color: #fcd34d;
 }
 
-:global(.dark) .speed-badge.swift {
+.dark .chart-data-view .copy-btn.copied {
   background: rgba(16, 185, 129, 0.2);
   color: #6ee7b7;
 }
 
-:global(.dark) .speed-badge.average {
+.dark .chart-data-view .house-badge.angular {
+  background: rgba(34, 197, 94, 0.2);
+  color: #86efac;
+}
+
+.dark .chart-data-view .house-badge.succedent {
+  background: rgba(59, 130, 246, 0.2);
+  color: #93c5fd;
+}
+
+.dark .chart-data-view .house-badge.cadent {
+  background: rgba(245, 158, 11, 0.2);
+  color: #fcd34d;
+}
+
+.dark .chart-data-view .speed-badge.swift {
+  background: rgba(16, 185, 129, 0.2);
+  color: #6ee7b7;
+}
+
+.dark .chart-data-view .speed-badge.average {
   background: rgba(107, 114, 128, 0.2);
   color: #d1d5db;
 }
 
-:global(.dark) .speed-badge.slow {
+.dark .chart-data-view .speed-badge.slow {
   background: rgba(249, 115, 22, 0.2);
   color: #fdba74;
 }
 
-:global(.dark) .speed-badge.retrograde {
+.dark .chart-data-view .speed-badge.retrograde {
   background: rgba(220, 38, 38, 0.2);
   color: #fca5a5;
 }
 
-:global(.dark) .light-badge.cazimi {
+.dark .chart-data-view .light-badge.cazimi {
   background: rgba(245, 158, 11, 0.2);
   color: #fcd34d;
   border-color: #b45309;
 }
 
-:global(.dark) .light-badge.in-chariot {
+.dark .chart-data-view .light-badge.in-chariot {
   background: rgba(245, 158, 11, 0.15);
   color: #fde68a;
   border-color: #d97706;
 }
 
-:global(.dark) .light-badge.combust {
+.dark .chart-data-view .light-badge.combust {
   background: rgba(220, 38, 38, 0.2);
   color: #fca5a5;
 }
 
-:global(.dark) .light-badge.under-beams {
+.dark .chart-data-view .light-badge.under-beams {
   background: rgba(249, 115, 22, 0.2);
   color: #fdba74;
 }
 
-:global(.dark) .light-badge.free {
+.dark .chart-data-view .light-badge.free {
   background: rgba(16, 185, 129, 0.2);
   color: #6ee7b7;
 }
 
-:global(.dark) .light-badge.na {
+.dark .chart-data-view .light-badge.na {
   background: rgba(107, 114, 128, 0.2);
   color: #9ca3af;
-}
-
-:global(.dark) .no-aspect {
-  color: var(--color-text-tertiary);
-}
-
-:global(.dark) .past-time {
-  color: var(--color-text-tertiary);
-}
-
-:global(.dark) .dignity-score.positive {
-  color: #34d399;
-}
-
-:global(.dark) .dignity-score.negative {
-  color: #f87171;
 }
 </style>

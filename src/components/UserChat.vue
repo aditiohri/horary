@@ -248,7 +248,7 @@ watch(activeTab, async (newTab) => {
 </script>
 
 <template>
-  <div class="user-chat">
+  <div :class="['user-chat', { 'welcome-state': !chartData }]">
     <div class="content-area">
       <div v-if="!chartData" class="welcome-message">
         <h2>Welcome to Horary Astrology</h2>
@@ -702,6 +702,30 @@ watch(activeTab, async (newTab) => {
   .tab-button {
     padding: 0.5rem 1rem;
     font-size: 0.875rem;
+  }
+}
+
+/* Desktop: compact welcome state — no gap between intro text and question form */
+@media (min-width: 769px) {
+  .user-chat.welcome-state {
+    overflow-y: auto;
+  }
+
+  .user-chat.welcome-state .content-area {
+    flex: none;
+    height: auto;
+    overflow-y: visible;
+  }
+
+  .user-chat.welcome-state .welcome-message {
+    padding: 1.5rem 1rem 1rem;
+  }
+
+  .user-chat.welcome-state .input-area {
+    position: relative;
+    bottom: auto;
+    margin-top: 0;
+    padding: 0.5rem 0 0.75rem;
   }
 }
 </style>

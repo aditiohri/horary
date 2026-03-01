@@ -151,6 +151,11 @@ const getZodiacSign = (degrees: number) => {
   return `${degreesInSign.toFixed(2)}° ${signs[signIndex]}`;
 };
 
+// Section detail toggles (mobile: collapsed by default, expanded on demand)
+const showEssentialDetails = ref(false);
+const showAccidentalDetails = ref(false);
+const showAspectsDetails = ref(false);
+
 // Copy chart data to clipboard
 const copied = ref(false);
 const copyChartData = async () => {
@@ -200,7 +205,6 @@ const formatTimeToExact = (days: number | undefined) => {
         <thead>
           <tr>
             <th>Planet</th>
-            <th>Position</th>
             <th>Zodiac</th>
             <th>Status</th>
           </tr>
@@ -214,7 +218,6 @@ const formatTimeToExact = (days: number | undefined) => {
             <td class="planet-name">
               <span class="planet-symbol">{{ planet }}</span>
             </td>
-            <td class="planet-position">{{ (data as any).position.toFixed(2) }}°</td>
             <td class="zodiac-sign">{{ getZodiacSign((data as any).position) }}</td>
             <td class="retrograde-status">
               <span v-if="(data as any).isRetrograde" class="rx-badge">℞ Retrograde</span>
@@ -227,12 +230,17 @@ const formatTimeToExact = (days: number | undefined) => {
 
     <!-- Essential Dignities Section -->
     <div class="data-section">
-      <h3>Essential Dignities <span class="chart-type-badge">{{ chartType }}</span></h3>
-      <table class="data-table dignities-table">
+      <div class="section-header">
+        <h3>Essential Dignities <span class="chart-type-badge">{{ chartType }}</span></h3>
+        <button class="details-toggle" @click="showEssentialDetails = !showEssentialDetails">
+          {{ showEssentialDetails ? '▲ Less' : '▼ Details' }}
+        </button>
+      </div>
+      <table class="data-table dignities-table" :class="{ 'show-details': showEssentialDetails }">
         <thead>
           <tr>
             <th>Planet</th>
-            <th>Dignity</th>
+            <th class="detail-col">Dignity</th>
             <th>Strength</th>
             <th>Score</th>
           </tr>
@@ -253,7 +261,9 @@ const formatTimeToExact = (days: number | undefined) => {
             <td class="planet-name">
               <span class="planet-symbol">{{ planet }}</span>
             </td>
-            <td class="dignity-type">{{ (dignity as any).description }}</td>
+            <td class="dignity-type detail-col">
+              {{ (dignity as any).strength === 'Peregrine' ? '—' : (dignity as any).description }}
+            </td>
             <td class="dignity-strength">
               <span class="strength-badge">{{ (dignity as any).strength }}</span>
             </td>
@@ -271,14 +281,19 @@ const formatTimeToExact = (days: number | undefined) => {
 
     <!-- Accidental Dignities Section -->
     <div class="data-section">
-      <h3>Accidental Dignities</h3>
-      <table class="data-table dignities-table">
+      <div class="section-header">
+        <h3>Accidental Dignities</h3>
+        <button class="details-toggle" @click="showAccidentalDetails = !showAccidentalDetails">
+          {{ showAccidentalDetails ? '▲ Less' : '▼ Details' }}
+        </button>
+      </div>
+      <table class="data-table dignities-table" :class="{ 'show-details': showAccidentalDetails }">
         <thead>
           <tr>
             <th>Planet</th>
-            <th>House Type</th>
-            <th>Speed</th>
-            <th>Light Condition</th>
+            <th class="detail-col">House</th>
+            <th class="detail-col">Speed</th>
+            <th class="detail-col">Light</th>
             <th>Strength</th>
             <th>Score</th>
           </tr>
@@ -299,7 +314,7 @@ const formatTimeToExact = (days: number | undefined) => {
             <td class="planet-name">
               <span class="planet-symbol">{{ planet }}</span>
             </td>
-            <td class="house-type">
+            <td class="house-type detail-col">
               <span class="house-badge" :class="{
                 'angular': (dignity as any).houseType === 'Angular',
                 'succedent': (dignity as any).houseType === 'Succedent',
@@ -308,7 +323,7 @@ const formatTimeToExact = (days: number | undefined) => {
                 {{ (dignity as any).houseType }}
               </span>
             </td>
-            <td class="speed-status">
+            <td class="speed-status detail-col">
               <span class="speed-badge" :class="{
                 'swift': (dignity as any).speedStatus === 'Swift',
                 'average': (dignity as any).speedStatus === 'Average',
@@ -318,7 +333,7 @@ const formatTimeToExact = (days: number | undefined) => {
                 {{ (dignity as any).speedStatus }}
               </span>
             </td>
-            <td class="light-condition">
+            <td class="light-condition detail-col">
               <span class="light-badge" :class="{
                 'cazimi': (dignity as any).lightCondition === 'Cazimi',
                 'in-chariot': (dignity as any).lightCondition === 'In Chariot',
@@ -455,9 +470,9 @@ const formatTimeToExact = (days: number | undefined) => {
     </div>
 
     <!-- Moon Aspects - Applying -->
-    <div class="data-section moon-section" v-if="moonAnalysis">
+    <div class="data-section moon-section" v-if="moonAnalysis || (vocMoon && !vocMoon.isVoid && vocMoon.lastAspect)">
       <h3>Moon's Next Aspect (Applying)</h3>
-      <div v-if="moonAnalysis.nextApplyingAspect" class="aspect-highlight">
+      <div v-if="moonAnalysis && moonAnalysis.nextApplyingAspect" class="aspect-highlight">
         <div class="aspect-description">
           <strong>{{ moonAnalysis.nextApplyingAspect.point1Label }}</strong>
           {{ moonAnalysis.nextApplyingAspect.aspectLabel }}
@@ -471,19 +486,35 @@ const formatTimeToExact = (days: number | undefined) => {
           </span>
         </div>
       </div>
+      <div v-else-if="vocMoon && !vocMoon.isVoid && vocMoon.lastAspect" class="aspect-highlight">
+        <div class="aspect-description">
+          <strong>Moon</strong>
+          will {{ vocMoon.lastAspectType }}
+          <strong>{{ vocMoon.lastAspectPlanet?.toUpperCase() }}</strong>
+        </div>
+        <div class="aspect-details">
+          <span class="motion applying">APPLYING</span>
+          <span class="time-info">Before leaving {{ vocMoon.currentSign }}</span>
+        </div>
+      </div>
       <p v-else class="no-aspect">No applying aspect found</p>
     </div>
 
     <!-- All Aspects Section -->
     <div class="data-section">
-      <h3>All Aspects with Motion</h3>
-      <table class="data-table aspects-table">
+      <div class="section-header">
+        <h3>All Aspects with Motion</h3>
+        <button class="details-toggle" @click="showAspectsDetails = !showAspectsDetails">
+          {{ showAspectsDetails ? '▲ Less' : '▼ Details' }}
+        </button>
+      </div>
+      <table class="data-table aspects-table" :class="{ 'show-details': showAspectsDetails }">
         <thead>
           <tr>
             <th>Aspect</th>
-            <th>Orb</th>
+            <th class="detail-col">Orb</th>
             <th>Motion</th>
-            <th>Time</th>
+            <th class="detail-col">Time</th>
           </tr>
         </thead>
         <tbody>
@@ -501,14 +532,14 @@ const formatTimeToExact = (days: number | undefined) => {
               <span class="aspect-symbol">{{ aspect.aspectKey }}</span>
               <strong>{{ aspect.point2Key }}</strong>
             </td>
-            <td class="aspect-orb">{{ aspect.currentOrb.toFixed(2) }}°</td>
+            <td class="aspect-orb detail-col">{{ aspect.currentOrb.toFixed(2) }}°</td>
             <td class="aspect-motion">
               <span v-if="aspect.isApplying" class="badge applying-badge">Applying</span>
               <span v-else-if="aspect.isSeparating" class="badge separating-badge">Separating</span>
               <span v-else class="badge stable-badge">Stable</span>
               <span v-if="aspect.isPerfect" class="perfect-indicator">★</span>
             </td>
-            <td class="aspect-time">
+            <td class="aspect-time detail-col">
               <span v-if="aspect.timeToExact">
                 {{ formatTimeToExact(aspect.timeToExact) }}
               </span>
@@ -604,6 +635,41 @@ const formatTimeToExact = (days: number | undefined) => {
   margin: 0 0 1rem 0;
   padding-bottom: 0.5rem;
   border-bottom: 1px solid var(--color-border-focus);
+}
+
+/* Section header row: title + optional toggle button */
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--color-border-focus);
+}
+
+.section-header h3 {
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+
+.details-toggle {
+  display: none; /* hidden on desktop — all columns always visible */
+  font-size: 0.75rem;
+  padding: 0.2rem 0.6rem;
+  border: 1px solid var(--color-border-focus);
+  border-radius: 0.25rem;
+  background: var(--color-bg-tertiary);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: background 0.15s, color 0.15s;
+}
+
+.details-toggle:hover {
+  background: var(--color-border-focus);
+  color: var(--color-text-primary);
 }
 
 /* Tables */
@@ -1310,23 +1376,36 @@ const formatTimeToExact = (days: number | undefined) => {
     margin-bottom: 1rem;
   }
 
-  /* Make tables horizontally scrollable on mobile */
+  /* Tables: no forced horizontal scroll; let column hiding do the work */
   .data-table {
-    display: block;
-    overflow-x: auto;
-    white-space: nowrap;
-    -webkit-overflow-scrolling: touch;
+    width: 100%;
+    overflow-x: auto; /* fallback safety net */
   }
 
   .data-table th,
   .data-table td {
-    padding: 0.4rem;
-    font-size: 0.8rem;
+    padding: 0.4rem 0.5rem;
+    font-size: 0.82rem;
+  }
+
+  /* Show the per-section toggle button on mobile */
+  .details-toggle {
+    display: inline-block;
+  }
+
+  /* Hide detail columns by default on mobile */
+  .data-table .detail-col {
+    display: none;
+  }
+
+  /* Reveal them when the user taps "Details" */
+  .data-table.show-details .detail-col {
+    display: table-cell;
   }
 
   /* Smaller badges on mobile */
   .strength-badge,
-  .house-type-badge,
+  .house-badge,
   .speed-badge,
   .light-badge {
     font-size: 0.7rem;
@@ -1361,7 +1440,7 @@ const formatTimeToExact = (days: number | undefined) => {
     margin-bottom: 0.4rem;
   }
 
-  /* Aspect tables */
+  /* Aspect highlight details */
   .aspect-details {
     flex-direction: column;
     align-items: flex-start;
@@ -1369,8 +1448,9 @@ const formatTimeToExact = (days: number | undefined) => {
   }
 
   /* Headers */
-  .data-section h3 {
-    font-size: 1.1rem;
+  .data-section h3,
+  .section-header h3 {
+    font-size: 1rem;
   }
 
   .chart-type-badge {

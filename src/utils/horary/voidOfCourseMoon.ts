@@ -116,16 +116,6 @@ function willMoonMakeAspect(
     // traditional orb as it travels through the rest of its sign. The sign-change
     // timing check below (timeToExact < timeToSignChange) is the correct gate.
 
-    // Calculate the relative speed (Moon's motion relative to planet)
-    const relativeSpeed = moonSpeed - planetSpeed; // degrees per day
-
-    // Calculate how the angular separation changes
-    // We need to determine if the aspect is applying (getting more exact)
-    // by checking if the separation is moving TOWARD the aspect angle
-
-    // Target separation for exact aspect
-    const targetSep = aspect.angle;
-
     // Check if we're approaching the exact aspect
     // We do this by seeing if a small time step brings us closer
     const timeStep = 0.1; // 0.1 days ahead

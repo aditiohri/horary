@@ -1,4 +1,3 @@
-import { OpenAI } from "openai";
 import horaryBasePrompt from '../prompts/horary-base.md?raw';
 import horaryFollowupPrompt from '../prompts/horary-followup.md?raw';
 import { analyzeMoonAspects, extractAspectsWithMotion } from "./aspectMotion";
@@ -10,7 +9,6 @@ import {
 } from "./horary/dignities";
 import { calculateVoidOfCourseMoon } from "./horary/voidOfCourseMoon";
 import { analyzeReception, formatReceptionForDisplay } from "./horary/reception";
-import { formatTimingForLLM } from "./horary/timing";
 import { calculateChartAccidentalDignities } from "./horary/accidentalDignities";
 import { calculatePartOfFortune, formatPartOfFortuneForDisplay } from "./horary/arabicParts";
 import { analyzeQuestion, formatHouseContextForLLM } from "./horary/houses";

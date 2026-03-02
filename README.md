@@ -28,7 +28,7 @@ This application implements comprehensive horary astrology features based on tra
 
 ### Chart Calculations
 - 7 classical planets (Sun, Moon, Mercury, Venus, Mars, Jupiter, Saturn)
-- House cusps (Placidus system)
+- House cusps (whole sign house system)
 - Major aspects (conjunction, sextile, square, trine, opposition) with accurate orbs
 - Retrograde motion detection
 - Extended Moon aspect tracking (12-20° with "faded" status)

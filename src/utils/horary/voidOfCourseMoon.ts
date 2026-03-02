@@ -23,9 +23,6 @@ const TRADITIONAL_ASPECTS = [
   { name: 'opposition', angle: 180 }
 ];
 
-// Traditional orbs for Moon aspects
-const MOON_ORB = 12; // degrees
-
 // Signs where VOC Moon is still effective
 const VOC_EXCEPTION_SIGNS: Sign[] = ['taurus', 'cancer', 'sagittarius', 'pisces'];
 
@@ -102,8 +99,6 @@ function willMoonMakeAspect(
 
   // Calculate future positions when Moon leaves sign
   const timeToSignChange = degreesUntilSignChange / moonSpeed; // in days
-  const futureMoonPos = ((moonPos + (moonSpeed * timeToSignChange)) % 360 + 360) % 360;
-  const futurePlanetPos = ((planetPos + (planetSpeed * timeToSignChange)) % 360 + 360) % 360;
 
   // Normalize current positions
   const normalizedMoon = ((moonPos % 360) + 360) % 360;

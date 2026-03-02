@@ -64,6 +64,7 @@ const generateInitialReading = async () => {
       });
       hasInitialReading.value = true;
       emit('conversationUpdate', messages.value);
+      isLoading.value = false;
       await scrollToLatestMessageTop();
     }
   } catch (error: any) {

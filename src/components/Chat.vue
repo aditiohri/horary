@@ -13,6 +13,7 @@ interface ConversationMessage {
   content: string;
   timestamp: Date;
   isError?: boolean;
+  isStreaming?: boolean;
 }
 
 const props = defineProps<{
@@ -54,29 +55,47 @@ const generateInitialReading = async () => {
   if (hasInitialReading.value) return;
 
   isLoading.value = true;
+
+  // Add a streaming placeholder message right away
+  const streamingIndex = messages.value.length;
+  messages.value.push({
+    role: "assistant",
+    content: "",
+    timestamp: new Date(),
+    isStreaming: true,
+  });
+
   try {
-    const reading = await generateHoraryReading(props.reading);
-    if (reading) {
-      messages.value.push({
-        role: "assistant",
-        content: reading,
-        timestamp: new Date(),
-      });
+    let firstChunk = true;
+    const reading = await generateHoraryReading(props.reading, (chunk: string) => {
+      if (firstChunk) {
+        firstChunk = false;
+        isLoading.value = false;
+        scrollToLatestMessageTop();
+      }
+      messages.value[streamingIndex].content += chunk;
+      scrollToBottomIfNear();
+    });
+
+    if (!reading) {
+      messages.value.splice(streamingIndex, 1);
+    } else {
       hasInitialReading.value = true;
-      emit('conversationUpdate', messages.value);
-      isLoading.value = false;
-      await scrollToLatestMessageTop();
     }
+    emit('conversationUpdate', messages.value);
   } catch (error: any) {
     console.error("Error generating initial reading:", error);
-    messages.value.push({
+    messages.value[streamingIndex] = {
       role: "assistant",
       content: formatErrorMessage(error),
       timestamp: new Date(),
       isError: true,
-    });
+    };
     emit('conversationUpdate', messages.value);
   } finally {
+    if (messages.value[streamingIndex]) {
+      messages.value[streamingIndex].isStreaming = false;
+    }
     isLoading.value = false;
   }
 };
@@ -99,39 +118,55 @@ const sendMessage = async () => {
   await scrollToBottom();
   isLoading.value = true;
 
-  try {
-    // Get conversation history (excluding the chart data message)
-    const history = messages.value.slice(1).map((msg) => ({
-      role: msg.role,
-      content: msg.content,
-    }));
+  // Snapshot history before adding the streaming placeholder
+  const history = messages.value.slice(1).map((msg) => ({
+    role: msg.role as "user" | "assistant",
+    content: msg.content,
+  }));
 
+  // Add streaming placeholder
+  const streamingIndex = messages.value.length;
+  messages.value.push({
+    role: "assistant",
+    content: "",
+    timestamp: new Date(),
+    isStreaming: true,
+  });
+
+  try {
+    let firstChunk = true;
     const response = await continueHoraryConversation(
       props.reading,
       history,
-      userMessage
+      userMessage,
+      (chunk: string) => {
+        if (firstChunk) {
+          firstChunk = false;
+          isLoading.value = false;
+        }
+        messages.value[streamingIndex].content += chunk;
+        scrollToBottomIfNear();
+      }
     );
 
-    if (response) {
-      messages.value.push({
-        role: "assistant",
-        content: response,
-        timestamp: new Date(),
-      });
-      emit('conversationUpdate', messages.value);
+    if (!response) {
+      messages.value.splice(streamingIndex, 1);
     }
+    emit('conversationUpdate', messages.value);
   } catch (error: any) {
     console.error("Error in conversation:", error);
-    messages.value.push({
+    messages.value[streamingIndex] = {
       role: "assistant",
       content: formatErrorMessage(error),
       timestamp: new Date(),
       isError: true,
-    });
+    };
     emit('conversationUpdate', messages.value);
   } finally {
+    if (messages.value[streamingIndex]) {
+      messages.value[streamingIndex].isStreaming = false;
+    }
     isLoading.value = false;
-    await scrollToLatestMessageTop();
   }
 };
 
@@ -142,6 +177,14 @@ const scrollToBottom = async () => {
     conversationContainer.value.scrollTop =
       conversationContainer.value.scrollHeight;
   }
+};
+
+// Scroll to bottom only if user is already near the bottom (during streaming)
+const scrollToBottomIfNear = () => {
+  const el = conversationContainer.value;
+  if (!el) return;
+  const isNearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 120;
+  if (isNearBottom) el.scrollTop = el.scrollHeight;
 };
 
 // Scroll to the top of the most recently added message
@@ -201,6 +244,20 @@ function formatMessageContent(content: string): string {
   });
 }
 
+// Render message content: raw escaped text with cursor during streaming,
+// full markdown after streaming completes.
+function renderMessage(message: ConversationMessage): string {
+  if (message.isStreaming) {
+    const escaped = message.content
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/\n/g, '<br>');
+    return escaped + '<span class="streaming-cursor"></span>';
+  }
+  return formatMessageContent(message.content);
+}
+
 // Auto-generate initial reading when reading prop is available
 watch(() => props.reading, (newReading) => {
   if (newReading && !hasInitialReading.value) {
@@ -243,12 +300,12 @@ watch(() => props.reading, (newReading) => {
           <div class="message-content">
             <div
               class="message-text"
-              v-html="formatMessageContent(message.content)"></div>
-            <div class="message-time">{{ formatTime(message.timestamp) }}</div>
+              v-html="renderMessage(message)"></div>
+            <div v-if="!message.isStreaming" class="message-time">{{ formatTime(message.timestamp) }}</div>
           </div>
         </div>
 
-        <div v-if="isLoading" class="message assistant">
+        <div v-if="isLoading && !messages.some(m => m.isStreaming)" class="message assistant">
           <div class="message-content">
             <div class="loading-indicator">
               <div class="loading-dots">
@@ -557,6 +614,21 @@ watch(() => props.reading, (newReading) => {
   40% {
     transform: scale(1);
   }
+}
+
+.streaming-cursor {
+  display: inline-block;
+  width: 2px;
+  height: 1em;
+  background: currentColor;
+  vertical-align: text-bottom;
+  margin-left: 1px;
+  animation: blink-cursor 0.8s step-end infinite;
+}
+
+@keyframes blink-cursor {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0; }
 }
 
 .loading-text {

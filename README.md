@@ -4,7 +4,9 @@ A modern web application for horary astrology readings, combining traditional as
 
 ## Live Demo
 
-Coming soon - deployment in progress.
+**[horary-chat.netlify.app](https://horary-chat.netlify.app)**
+
+Uses a shared Groq API key — if you hit rate limits, try again later or run the app locally.
 
 ## About
 
@@ -41,7 +43,8 @@ This application implements comprehensive horary astrology features based on tra
 - House cusps display
 
 ### AI-Powered Readings
-- Integration with local Ollama LLM (free, private, runs on your machine)
+- Groq cloud AI on the deployed site (no setup required)
+- Local Ollama support for developers running the app locally
 - Traditional horary interpretation following William Lilly's principles
 - Follow-up conversation support
 - Context-aware responses using complete chart data
@@ -55,20 +58,23 @@ This application implements comprehensive horary astrology features based on tra
 
 ## LLM Configuration
 
-This app supports three LLM options to suit different needs:
+### Option 1: Groq Free Tier (Built-in — no setup needed)
 
-### Option 1: Ollama (Local) - Best for Privacy
+The deployed app at horary-chat.netlify.app uses Groq automatically. No API key or account required from you.
 
-**Pros:**
-- 100% private - runs on your computer
-- Completely free
-- Works offline
-- No API keys needed
+Readings are routed through a serverless Netlify function that holds the Groq key server-side. The default model is `llama-3.3-70b-versatile`.
 
-**Cons:**
-- Requires local installation
-- Doesn't work on deployed sites (can't connect to localhost remotely)
-- Requires decent hardware (8GB+ RAM recommended)
+**If you're self-hosting**, you'll need your own Groq key:
+1. Get a free API key at [console.groq.com/keys](https://console.groq.com/keys) (no credit card required)
+2. Copy `.env.example` to `.env` and add your key:
+   ```
+   GROQ_FREE_TIER_KEY=gsk_your-key-here
+   ```
+3. Run with `npm run dev` (uses Netlify dev to load env vars and serverless functions)
+
+### Option 2: Ollama (Local) — for developers
+
+Run a model locally on your own machine. Fully private and free, but requires decent hardware (8GB+ RAM) and only works when running the app locally — not on the deployed site.
 
 **Setup:**
 ```bash
@@ -92,95 +98,35 @@ After the app starts:
 3. Test connection
 4. Start asking questions
 
-### Option 2: OpenRouter (Cloud) - Best for Flexibility
-
-**Pros:**
-- Access to 290+ models including Claude, GPT-4, Gemini, and more
-- Many free models available
-- Works on deployed sites
-- One API key for all models
-- Pay only for what you use
-
-**Cons:**
-- Requires API key (free tier available)
-- Internet required
-- Not as private (but we don't store your data)
-
-**Setup:**
-1. Get API key: [https://openrouter.ai/keys](https://openrouter.ai/keys) (free tier available)
-2. Open Settings (⚙️) in the app
-3. Select "OpenRouter"
-4. Paste your API key
-5. Choose a model (try `qwen/qwen-2.5-72b-instruct:free` for free option)
-6. Save
-
-**Recommended models:**
-- `qwen/qwen-2.5-72b-instruct:free` - Free, very capable
-- `deepseek/deepseek-chat:free` - Free, good reasoning
-- `meta-llama/llama-3.1-70b-instruct:free` - Free Meta model
-- `anthropic/claude-3.5-sonnet` - Best quality ($3/1M tokens)
-- Browse all models: [https://openrouter.ai/models](https://openrouter.ai/models)
-
-### Option 3: Anthropic Claude (via OpenRouter) - Best for Quality
-
-**Note:** For Claude models, we recommend using OpenRouter (Option 2) with Anthropic models. This provides the same Claude quality with a simpler setup.
-
-**Using Claude via OpenRouter:**
-1. Get OpenRouter API key: [https://openrouter.ai/keys](https://openrouter.ai/keys)
-2. Open Settings (⚙️) in the app
-3. Select "OpenRouter"
-4. Paste your API key
-5. Choose an Anthropic model:
-   - `anthropic/claude-3.5-sonnet` - Best quality
-   - `anthropic/claude-3-opus-20240229` - Most capable
-   - `anthropic/claude-3-haiku-20240307` - Fastest/cheapest
-
-**Pricing (same as direct Anthropic):**
-- Claude 3.5 Sonnet: $3 per million input tokens
-- Claude 3 Opus: $15 per million input tokens
-- Claude 3 Haiku: $0.25 per million input tokens
-- OpenRouter adds no markup - same price as direct Anthropic
-
 ## Privacy & Security
 
-**Your API keys are secure:**
-- Stored only in your browser's localStorage
-- Never sent to our servers (we don't have servers!)
-- Sent directly to your chosen provider (OpenRouter/Anthropic)
-- Clear your browser data to remove them
+**Groq (deployed site):**
+- Readings are sent through a Netlify serverless function to Groq's API for processing
+- The Groq API key lives only in Netlify's environment — never in client code or browser storage
+- We don't log, store, or see your readings or questions
+- Groq's [privacy policy](https://groq.com/privacy-policy/) applies to data processed by their API
 
-**Your readings:**
-- Ollama: 100% private, never leaves your computer
-- OpenRouter/Anthropic: Sent to provider's API for processing
-- We don't log, store, or see your readings
-- This is a static site - no backend database
+**Ollama (local):**
+- 100% private — everything runs on your machine, nothing leaves your computer
 
 ## Deployment
 
-The app works differently when deployed vs local:
-
 **Local (`npm run dev`):**
-- Default: Ollama (free, private)
-- All providers available
+- Default: Groq (via Netlify dev + serverless function)
+- Ollama also available — switch in Settings (⚙️)
 
-**Deployed (Netlify/Vercel):**
-- Ollama unavailable (can't connect to localhost from deployed site)
-- Default: OpenRouter (with free models available)
-- Must use cloud API (OpenRouter or Anthropic)
-
-When deploying, users will need to:
-1. Open Settings (⚙️)
-2. Select OpenRouter or Anthropic
-3. Enter their API key
-4. Save and start using the app
+**Deployed (Netlify):**
+- Groq is pre-configured — users just open the site and start asking questions
+- Ollama is unavailable (can't connect to localhost from a deployed site)
 
 ## Tech Stack
 
 - **Frontend**: Vue 3 + TypeScript + Vite
 - **Chart Library**: circular-natal-horoscope-js, @astrodraw/astrochart
-- **LLM**: OpenAI SDK (for Ollama compatibility)
+- **LLM**: OpenAI SDK (compatible interface for Ollama and Groq)
 - **Testing**: Vitest (173 passing tests)
-- **Storage**: localStorage (no backend yet)
+- **Hosting**: Netlify (frontend + serverless functions)
+- **Storage**: localStorage (no backend database)
 
 ## Traditional Horary Methodology
 
@@ -200,7 +146,8 @@ The AI assistant uses these traditional rules to interpret your chart and answer
 
 ### Prerequisites
 - Node.js 20+
-- Ollama (for local AI)
+- Netlify CLI (`npm install -g netlify-cli`) — needed to run serverless functions locally
+- A Groq API key (free at [console.groq.com/keys](https://console.groq.com/keys)), or Ollama for fully local dev
 
 ### Local Setup
 
@@ -212,21 +159,25 @@ cd horary
 # Install dependencies
 npm install
 
-# Start development server
+# Copy env file and add your Groq key
+cp .env.example .env
+# Edit .env and set GROQ_FREE_TIER_KEY
+
+# Start development server (Netlify dev handles functions + env vars)
 npm run dev
 ```
 
 ### Running Tests
 
 ```bash
-# Run test suite (173 tests)
+# Single run
+npm run test:run
+
+# Watch mode
 npm test
 
-# Run tests in watch mode
-npm run test:watch
-
-# Run tests with coverage
-npm run test:coverage
+# Browser UI
+npm run test:ui
 ```
 
 ### Project Structure
@@ -253,6 +204,10 @@ src/
 ├── composables/
 │   └── useDarkMode.ts        # Dark mode state management
 └── types/                    # TypeScript definitions
+
+netlify/
+└── functions/
+    └── llm-proxy.ts          # Groq API proxy (serverless)
 ```
 
 ## Roadmap
@@ -265,15 +220,14 @@ src/
 - ✅ Aspect motion (applying/separating)
 - ✅ Timing estimates
 - ✅ Comprehensive test coverage (173 tests)
-- ✅ Multi-provider LLM support (Ollama, OpenRouter, Anthropic)
+- ✅ LLM support (Ollama local + Groq cloud)
 - ✅ Environment-aware provider selection
-- ⏳ Deployment (Netlify)
+- ✅ Deployment (Netlify)
 
 ### v1.1 - Enhanced Features
 - Improved chart sizing and UI polish
 - Better mobile experience
 - Enhanced horary prompts with dignity awareness
-- Additional free provider options
 
 ### v1.2 - Astrological Enhancements
 - Outer planets (Uranus, Neptune, Pluto)
@@ -284,6 +238,7 @@ src/
 
 ### v2.0 - Platform Features
 - User authentication
+- Usage limits for the hosted version
 - Backend + database (Supabase)
 - Cloud storage for readings
 - Cross-device sync
@@ -291,8 +246,8 @@ src/
 
 ## Contributing
 
-This is a personal project currently in active development. Contributions, suggestions, and bug reports are welcome.
+Bug reports and feature requests are welcome — please open a [GitHub Issue](../../issues).
 
 ## License
 
-MIT
+MIT — see [LICENSE](./LICENSE)

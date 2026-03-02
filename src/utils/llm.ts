@@ -430,8 +430,7 @@ function formatChartForLLM(reading: HoraryReading): string {
 
 // Updated LLM generation function
 export const generateHoraryReading = async (
-  reading: HoraryReading,
-  onChunk?: (chunk: string) => void
+  reading: HoraryReading
 ): Promise<string | null> => {
   try {
     const settings = loadSettings();
@@ -473,39 +472,12 @@ Then provide the technical analysis using proper astrological terminology. ALWAY
 
 Proceed directly with your traditional horary judgment.`;
 
-    const messages = [
-      { role: "system" as const, content: horaryBasePrompt },
-      { role: "user" as const, content: prompt },
-    ];
-
-    if (onChunk) {
-      const stream = openai.chat.completions.stream({
-        model,
-        messages,
-        temperature: 0.7,
-        max_tokens: 2000,
-      });
-
-      let fullContent = '';
-      for await (const chunk of stream) {
-        const delta = chunk.choices[0]?.delta?.content ?? '';
-        if (delta) {
-          fullContent += delta;
-          onChunk(delta);
-        }
-      }
-
-      if (settings.provider === 'openrouter-free') {
-        const final = await stream.finalChatCompletion();
-        recordUsage(final.usage?.total_tokens || 0);
-      }
-
-      return fullContent;
-    }
-
     const response = await openai.chat.completions.create({
       model,
-      messages,
+      messages: [
+        { role: "system", content: horaryBasePrompt },
+        { role: "user", content: prompt },
+      ],
       temperature: 0.7,
       max_tokens: 2000,
     });
@@ -527,8 +499,7 @@ Proceed directly with your traditional horary judgment.`;
 export const continueHoraryConversation = async (
   reading: HoraryReading,
   conversationHistory: Array<{ role: "user" | "assistant"; content: string }>,
-  newMessage: string,
-  onChunk?: (chunk: string) => void
+  newMessage: string
 ): Promise<string | null> => {
   try {
     const settings = loadSettings();
@@ -555,31 +526,6 @@ export const continueHoraryConversation = async (
       ...conversationHistory,
       { role: "user" as const, content: newMessage },
     ];
-
-    if (onChunk) {
-      const stream = openai.chat.completions.stream({
-        model,
-        messages,
-        temperature: 0.7,
-        max_tokens: 1500,
-      });
-
-      let fullContent = '';
-      for await (const chunk of stream) {
-        const delta = chunk.choices[0]?.delta?.content ?? '';
-        if (delta) {
-          fullContent += delta;
-          onChunk(delta);
-        }
-      }
-
-      if (settings.provider === 'openrouter-free') {
-        const final = await stream.finalChatCompletion();
-        recordUsage(final.usage?.total_tokens || 0);
-      }
-
-      return fullContent;
-    }
 
     const response = await openai.chat.completions.create({
       model,

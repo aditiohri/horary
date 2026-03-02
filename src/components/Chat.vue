@@ -64,7 +64,7 @@ const generateInitialReading = async () => {
       });
       hasInitialReading.value = true;
       emit('conversationUpdate', messages.value);
-      await scrollToBottom();
+      await scrollToLatestMessageTop();
     }
   } catch (error: any) {
     console.error("Error generating initial reading:", error);
@@ -130,7 +130,7 @@ const sendMessage = async () => {
     emit('conversationUpdate', messages.value);
   } finally {
     isLoading.value = false;
-    await scrollToBottom();
+    await scrollToLatestMessageTop();
   }
 };
 
@@ -140,6 +140,19 @@ const scrollToBottom = async () => {
   if (conversationContainer.value) {
     conversationContainer.value.scrollTop =
       conversationContainer.value.scrollHeight;
+  }
+};
+
+// Scroll to the top of the most recently added message
+const scrollToLatestMessageTop = async () => {
+  await nextTick();
+  if (!conversationContainer.value) return;
+  const messageEls = conversationContainer.value.querySelectorAll('.message');
+  if (messageEls.length > 0) {
+    const lastMessage = messageEls[messageEls.length - 1] as HTMLElement;
+    const containerRect = conversationContainer.value.getBoundingClientRect();
+    const msgRect = lastMessage.getBoundingClientRect();
+    conversationContainer.value.scrollTop += (msgRect.top - containerRect.top);
   }
 };
 
@@ -361,6 +374,10 @@ watch(() => props.reading, (newReading) => {
   max-width: 85%;
   display: flex;
   flex-direction: column;
+}
+
+.message.assistant .message-content {
+  max-width: 100%;
 }
 
 .message-text {

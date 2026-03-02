@@ -23,9 +23,6 @@ const TRADITIONAL_ASPECTS = [
   { name: 'opposition', angle: 180 }
 ];
 
-// Traditional orbs for Moon aspects
-const MOON_ORB = 12; // degrees
-
 // Signs where VOC Moon is still effective
 const VOC_EXCEPTION_SIGNS: Sign[] = ['taurus', 'cancer', 'sagittarius', 'pisces'];
 
@@ -102,8 +99,6 @@ function willMoonMakeAspect(
 
   // Calculate future positions when Moon leaves sign
   const timeToSignChange = degreesUntilSignChange / moonSpeed; // in days
-  const futureMoonPos = ((moonPos + (moonSpeed * timeToSignChange)) % 360 + 360) % 360;
-  const futurePlanetPos = ((planetPos + (planetSpeed * timeToSignChange)) % 360 + 360) % 360;
 
   // Normalize current positions
   const normalizedMoon = ((moonPos % 360) + 360) % 360;
@@ -120,16 +115,6 @@ function willMoonMakeAspect(
     // Do NOT skip based on current orb — the Moon can pick up aspects outside
     // traditional orb as it travels through the rest of its sign. The sign-change
     // timing check below (timeToExact < timeToSignChange) is the correct gate.
-
-    // Calculate the relative speed (Moon's motion relative to planet)
-    const relativeSpeed = moonSpeed - planetSpeed; // degrees per day
-
-    // Calculate how the angular separation changes
-    // We need to determine if the aspect is applying (getting more exact)
-    // by checking if the separation is moving TOWARD the aspect angle
-
-    // Target separation for exact aspect
-    const targetSep = aspect.angle;
 
     // Check if we're approaching the exact aspect
     // We do this by seeing if a small time step brings us closer

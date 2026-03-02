@@ -4,8 +4,6 @@ import {
   getHouseType,
   calculateTimingEstimate,
   formatTimingForLLM,
-  type SignType,
-  type HouseType,
 } from '../timing';
 
 describe('Timing Calculation System', () => {

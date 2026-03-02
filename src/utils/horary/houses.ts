@@ -681,7 +681,7 @@ function ordinalHouse(n: number): string {
  * The returned section header is "### Relevant House Context" so the system prompt
  * can reference it by name.
  */
-export function formatHouseContextForLLM(question: string, analysis: QuestionAnalysis): string {
+export function formatHouseContextForLLM(_question: string, analysis: QuestionAnalysis): string {
   if (analysis.confidence === 'low' && analysis.primaryHouses.length === 0) {
     return `\n### Relevant House Context:\n` +
       `Unable to identify specific house from question. ` +

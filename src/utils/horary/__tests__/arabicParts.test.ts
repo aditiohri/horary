@@ -292,7 +292,6 @@ describe('Arabic Parts Calculator', () => {
 
     it('should handle house determination across 360° boundary', () => {
       // Test PoF in house 12 (330-360/0)
-      const ascendant = 515;  // 515 + 45 - 270 = 290, wraps to 290 - not in last house
       // Let's adjust: we want 350°
       const ascendantAdjusted = 575;  // 575 + 45 - 270 = 350
       const result = calculatePartOfFortune(

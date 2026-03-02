@@ -8,7 +8,7 @@
  * - Cazimi/Combust/Under Beams/In Chariot (relationship to Sun)
  */
 
-import { calculateEssentialDignities, getSignFromDegrees } from './dignities';
+import { getSignFromDegrees } from './dignities';
 
 type Planet = 'sun' | 'moon' | 'mercury' | 'venus' | 'mars' | 'jupiter' | 'saturn';
 type Sign = 'aries' | 'taurus' | 'gemini' | 'cancer' | 'leo' | 'virgo' |
@@ -317,7 +317,7 @@ export function calculateAccidentalDignities(
   isRetrograde: boolean,
   house: number,
   sunPosition: number,
-  isDayChart?: boolean
+  _isDayChart?: boolean
 ): AccidentalDignity {
   // Calculate house placement
   const houseType = getHouseType(house);

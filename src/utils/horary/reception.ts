@@ -102,20 +102,6 @@ function receivesByExaltation(receivingPlanet: Planet, planetInSign: Sign): bool
 }
 
 /**
- * Check if a planet is in a sign of detriment for another planet
- */
-function inDetriment(receivingPlanet: Planet, planetInSign: Sign): boolean {
-  return DETRIMENTS[receivingPlanet].includes(planetInSign);
-}
-
-/**
- * Check if a planet is in a sign of fall for another planet
- */
-function inFall(receivingPlanet: Planet, planetInSign: Sign): boolean {
-  return FALLS[receivingPlanet].sign === planetInSign;
-}
-
-/**
  * Check if a planet is in its OWN detriment sign
  */
 function isInOwnDetriment(planet: Planet, sign: Sign): boolean {
@@ -166,11 +152,6 @@ export function analyzeReception(
   const p2ReceivesP1ByRulership = receivesByRulership(planet2, planet1Sign);
   const p1ReceivesP2ByExaltation = receivesByExaltation(planet1, planet2Sign);
   const p2ReceivesP1ByExaltation = receivesByExaltation(planet2, planet1Sign);
-  const p1InP2Detriment = inDetriment(planet2, planet1Sign);
-  const p2InP1Detriment = inDetriment(planet1, planet2Sign);
-  const p1InP2Fall = inFall(planet2, planet1Sign);
-  const p2InP1Fall = inFall(planet1, planet2Sign);
-
   // Check if planets are in their OWN detriment/fall
   const planet1InOwnDetriment = isInOwnDetriment(planet1, planet1Sign);
   const planet2InOwnDetriment = isInOwnDetriment(planet2, planet2Sign);

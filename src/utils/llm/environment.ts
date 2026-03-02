@@ -26,7 +26,7 @@ export function getDefaultProvider(): LLMProvider {
   }
 
   // In deployed environment, default to OpenRouter (has free models)
-  return 'openrouter';
+  return 'openrouter-free';
 }
 
 /**

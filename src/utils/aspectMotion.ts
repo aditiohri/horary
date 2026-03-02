@@ -121,8 +121,6 @@ export function calculateAspectMotion(
 
   // Check if aspect becomes perfect during the 24-hour period
   // This happens when the orb crosses through 0
-  // Calculate time to exact aspect
-  const relativeApproachSpeed = planet1Motion.speed - planet2Motion.speed;
 
   // Determine if planets are moving toward or away from the aspect angle
   // We need to check if the separation is moving toward the target angle

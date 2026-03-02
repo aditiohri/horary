@@ -4,7 +4,7 @@ import { useLLMSettings } from '../composables/useLLMSettings';
 import type { LLMProvider } from '../types/llm';
 import { PROVIDER_CONFIGS } from '../types/llm';
 import { getProviderConfig } from '../utils/llmProviders';
-import { isLocalDevelopment, canUseOllama } from '../utils/environment';
+import { canUseOllama } from '../utils/environment';
 import { getUsageStats } from '../utils/llm/freeTier';
 
 const props = defineProps<{
@@ -31,7 +31,7 @@ const {
 // Local form state
 const localProvider = ref<LLMProvider>(settings.provider);
 const localBaseUrl = ref(settings.provider === 'ollama' ? settings.baseUrl : 'http://localhost:11434/v1/');
-const localApiKey = ref(settings.provider !== 'ollama' ? settings.apiKey : '');
+const localApiKey = ref('');
 const localModel = ref(settings.model);
 const localTimeout = ref(settings.timeout);
 const hasUnsavedChanges = ref(false);
@@ -41,7 +41,6 @@ const showApiKey = ref(false);
 const usageStatsVersion = ref(0);
 
 // Environment detection
-const isDevelopment = isLocalDevelopment();
 const canOllama = canUseOllama();
 
 // Current provider config
@@ -61,12 +60,11 @@ const usageStats = computed(() => {
 // Watch for changes to detect unsaved state
 watch([localProvider, localBaseUrl, localApiKey, localModel, localTimeout], () => {
   const savedBaseUrl = settings.provider === 'ollama' ? settings.baseUrl : '';
-  const savedApiKey = settings.provider !== 'ollama' ? settings.apiKey : '';
 
   hasUnsavedChanges.value =
     localProvider.value !== settings.provider ||
     localBaseUrl.value !== savedBaseUrl ||
-    localApiKey.value !== savedApiKey ||
+    localApiKey.value !== '' ||
     localModel.value !== settings.model ||
     localTimeout.value !== settings.timeout;
 });
@@ -140,7 +138,7 @@ function handleCancel() {
   // Reset local form to saved settings
   localProvider.value = settings.provider;
   localBaseUrl.value = settings.provider === 'ollama' ? settings.baseUrl : 'http://localhost:11434/v1/';
-  localApiKey.value = settings.provider !== 'ollama' ? settings.apiKey : '';
+  localApiKey.value = '';
   localModel.value = settings.model;
   localTimeout.value = settings.timeout;
   hasUnsavedChanges.value = false;

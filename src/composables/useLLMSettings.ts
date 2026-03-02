@@ -1,6 +1,5 @@
 import { ref, reactive } from 'vue';
 import type { LLMSettings, LLMProvider, ConnectionStatus } from '../types/llm';
-import { getProviderConfig, validateApiKey } from '../utils/llmProviders';
 import { fetchOllamaModels } from '../utils/ollama';
 import { loadSettings, saveSettings } from '../utils/llm/storage';
 

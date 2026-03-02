@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { calculateAspectMotion, getPlanetMotion } from '../aspectMotion';
+import { calculateAspectMotion } from '../aspectMotion';
 
 describe('Aspect Motion - Timing Integration', () => {
   it('should include timing estimate for applying aspect when cusps are provided', () => {

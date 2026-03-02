@@ -494,10 +494,11 @@ watch(() => props.reading, (newReading) => {
 }
 
 .message.assistant .message-text {
-  background: var(--color-bg-tertiary);
+  background: var(--color-bg-secondary);
   color: var(--color-text-primary);
-  border: 1px solid var(--color-border);
-  border-bottom-left-radius: 0.25rem;
+  border-radius: 0;
+  padding-left: 0;
+  padding-right: 0;
 }
 
 .message.error-message .message-text {
@@ -521,11 +522,10 @@ watch(() => props.reading, (newReading) => {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.75rem 1rem;
-  background: var(--color-bg-tertiary);
-  border: 1px solid var(--color-border);
-  border-radius: 1rem;
-  border-bottom-left-radius: 0.25rem;
+  padding: 0.75rem 0;
+  background: var(--color-bg-secondary);
+  border: none;
+  border-radius: 0;
 }
 
 .loading-dots {

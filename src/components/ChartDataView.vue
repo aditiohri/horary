@@ -186,7 +186,7 @@ const formatTimeToExact = (days: number | undefined) => {
       <div class="header-row">
         <h2>Chart Data</h2>
         <button class="copy-btn" @click="copyChartData" :class="{ copied }">
-          {{ copied ? 'Copied!' : 'Copy for LLM' }}
+          {{ copied ? 'Copied!' : 'Copy chart details' }}
         </button>
       </div>
       <div class="chart-meta">

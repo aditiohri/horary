@@ -104,6 +104,9 @@ export function formatChartForLLMWithMotion(reading: HoraryReading): string {
     }
   }
 
+  // Moon analysis — computed here so it's available for both the Moon section and VOC
+  const moonAnalysis = analyzeMoonAspects(aspectsWithMotion);
+
   // Enhanced aspects with motion data
   if (aspectsWithMotion.length > 0) {
     formattedData += `\n### Major Aspects:\n`;
@@ -146,8 +149,6 @@ export function formatChartForLLMWithMotion(reading: HoraryReading): string {
     });
 
     // Special Moon analysis for horary
-    const moonAnalysis = analyzeMoonAspects(aspectsWithMotion);
-
     if (moonAnalysis.lastSeparatingAspect || moonAnalysis.nextApplyingAspect) {
       formattedData += `\n### Moon's Recent & Next Aspects (Crucial for Horary):\n`;
 

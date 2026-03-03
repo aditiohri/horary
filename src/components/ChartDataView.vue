@@ -923,8 +923,10 @@ const formatTimeToExact = (days: number | undefined) => {
 
 /* Essential Dignities Styles */
 .chart-type-badge {
+  display: inline-block;
   font-size: 0.8rem;
   font-weight: normal;
+  white-space: nowrap;
   color: var(--color-text-secondary);
   margin-left: 0.5rem;
   padding: 0.25rem 0.5rem;
@@ -1443,7 +1445,10 @@ const formatTimeToExact = (days: number | undefined) => {
   }
 
   .chart-type-badge {
+    display: block;
     font-size: 0.7rem;
+    margin-left: 0;
+    margin-top: 0.25rem;
     padding: 0.2rem 0.5rem;
   }
 }

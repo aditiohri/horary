@@ -36,10 +36,13 @@ const moonAnalysis = computed(() => {
   return analyzeMoonAspects(aspectsWithMotion.value);
 });
 
-// Calculate Void of Course Moon
+// Calculate Void of Course Moon using the same applying aspect as the Moon section
 const vocMoon = computed(() => {
   if (!props.chartData) return null;
-  return calculateVoidOfCourseMoon(props.chartData.chartData.planets);
+  return calculateVoidOfCourseMoon(
+    props.chartData.chartData.planets,
+    moonAnalysis.value?.nextApplyingAspect ?? null
+  );
 });
 
 // Calculate Part of Fortune
@@ -375,9 +378,6 @@ const formatTimeToExact = (days: number | undefined) => {
         <div class="voc-details">
           <p><strong>Current Sign:</strong> {{ vocMoon.currentSign }} ({{ vocMoon.degreesUntilNextSign.toFixed(1) }}° until {{ vocMoon.nextSign }})</p>
           <p><strong>Time Until Sign Change:</strong> {{ vocMoon.hoursUntilNextSign.toFixed(1) }} hours</p>
-          <p v-if="!vocMoon.isVoid && vocMoon.lastAspect">
-            <strong>Next Aspect:</strong> Moon will {{ vocMoon.lastAspectType }} {{ vocMoon.lastAspectPlanet?.toUpperCase() }} before leaving {{ vocMoon.currentSign }}
-          </p>
           <p v-if="vocMoon.isVoid && vocMoon.effectiveInCurrentSign" class="exception-note">
             Moon is in {{ vocMoon.currentSign }}, an exception sign where VOC Moon is still effective.
           </p>
@@ -386,6 +386,49 @@ const formatTimeToExact = (days: number | undefined) => {
           {{ vocMoon.interpretation }}
         </div>
       </div>
+    </div>
+
+    <!-- Moon Aspects - Separating -->
+    <div class="data-section moon-section" v-if="moonAnalysis">
+      <h3>Moon's Last Aspect (Separating)</h3>
+      <div v-if="moonAnalysis.lastSeparatingAspect" class="aspect-highlight">
+        <div class="aspect-description">
+          <strong>{{ moonAnalysis.lastSeparatingAspect.point1Label }}</strong>
+          {{ moonAnalysis.lastSeparatingAspect.aspectLabel }}
+          <strong>{{ moonAnalysis.lastSeparatingAspect.point2Label }}</strong>
+        </div>
+        <div class="aspect-details">
+          <span class="orb">Orb: {{ moonAnalysis.lastSeparatingAspect.currentOrb.toFixed(2) }}°</span>
+          <span class="motion separating">SEPARATING</span>
+          <span v-if="(moonAnalysis.lastSeparatingAspect as any).isFaded" class="faded-badge">
+            Influence faded
+          </span>
+          <span v-if="moonAnalysis.lastSeparatingAspect.timeSinceExact" class="time-info">
+            Was exact {{ formatTimeToExact(moonAnalysis.lastSeparatingAspect.timeSinceExact) }} ago
+          </span>
+        </div>
+      </div>
+      <p v-else class="no-aspect">No separating aspect found</p>
+    </div>
+
+    <!-- Moon Aspects - Applying -->
+    <div class="data-section moon-section" v-if="moonAnalysis">
+      <h3>Moon's Next Aspect (Applying)</h3>
+      <div v-if="moonAnalysis.nextApplyingAspect" class="aspect-highlight">
+        <div class="aspect-description">
+          <strong>{{ moonAnalysis.nextApplyingAspect.point1Label }}</strong>
+          {{ moonAnalysis.nextApplyingAspect.aspectLabel }}
+          <strong>{{ moonAnalysis.nextApplyingAspect.point2Label }}</strong>
+        </div>
+        <div class="aspect-details">
+          <span class="orb">Orb: {{ moonAnalysis.nextApplyingAspect.currentOrb.toFixed(2) }}°</span>
+          <span class="motion applying">APPLYING</span>
+          <span v-if="moonAnalysis.nextApplyingAspect.timeToExact" class="time-info">
+            Will be exact in {{ formatTimeToExact(moonAnalysis.nextApplyingAspect.timeToExact) }}
+          </span>
+        </div>
+      </div>
+      <p v-else class="no-aspect">No applying aspect found</p>
     </div>
 
     <!-- Part of Fortune Section -->
@@ -444,60 +487,6 @@ const formatTimeToExact = (days: number | undefined) => {
           indicates the querent's resources and capacity for achieving the desired outcome.</em></p>
         </div>
       </div>
-    </div>
-
-    <!-- Moon Aspects - Separating -->
-    <div class="data-section moon-section" v-if="moonAnalysis">
-      <h3>Moon's Last Aspect (Separating)</h3>
-      <div v-if="moonAnalysis.lastSeparatingAspect" class="aspect-highlight">
-        <div class="aspect-description">
-          <strong>{{ moonAnalysis.lastSeparatingAspect.point1Label }}</strong>
-          {{ moonAnalysis.lastSeparatingAspect.aspectLabel }}
-          <strong>{{ moonAnalysis.lastSeparatingAspect.point2Label }}</strong>
-        </div>
-        <div class="aspect-details">
-          <span class="orb">Orb: {{ moonAnalysis.lastSeparatingAspect.currentOrb.toFixed(2) }}°</span>
-          <span class="motion separating">SEPARATING</span>
-          <span v-if="(moonAnalysis.lastSeparatingAspect as any).isFaded" class="faded-badge">
-            Influence faded
-          </span>
-          <span v-if="moonAnalysis.lastSeparatingAspect.timeSinceExact" class="time-info">
-            Was exact {{ formatTimeToExact(moonAnalysis.lastSeparatingAspect.timeSinceExact) }} ago
-          </span>
-        </div>
-      </div>
-      <p v-else class="no-aspect">No separating aspect found</p>
-    </div>
-
-    <!-- Moon Aspects - Applying -->
-    <div class="data-section moon-section" v-if="moonAnalysis || (vocMoon && !vocMoon.isVoid && vocMoon.lastAspect)">
-      <h3>Moon's Next Aspect (Applying)</h3>
-      <div v-if="moonAnalysis && moonAnalysis.nextApplyingAspect" class="aspect-highlight">
-        <div class="aspect-description">
-          <strong>{{ moonAnalysis.nextApplyingAspect.point1Label }}</strong>
-          {{ moonAnalysis.nextApplyingAspect.aspectLabel }}
-          <strong>{{ moonAnalysis.nextApplyingAspect.point2Label }}</strong>
-        </div>
-        <div class="aspect-details">
-          <span class="orb">Orb: {{ moonAnalysis.nextApplyingAspect.currentOrb.toFixed(2) }}°</span>
-          <span class="motion applying">APPLYING</span>
-          <span v-if="moonAnalysis.nextApplyingAspect.timeToExact" class="time-info">
-            Will be exact in {{ formatTimeToExact(moonAnalysis.nextApplyingAspect.timeToExact) }}
-          </span>
-        </div>
-      </div>
-      <div v-else-if="vocMoon && !vocMoon.isVoid && vocMoon.lastAspect" class="aspect-highlight">
-        <div class="aspect-description">
-          <strong>Moon</strong>
-          will {{ vocMoon.lastAspectType }}
-          <strong>{{ vocMoon.lastAspectPlanet?.toUpperCase() }}</strong>
-        </div>
-        <div class="aspect-details">
-          <span class="motion applying">APPLYING</span>
-          <span class="time-info">Before leaving {{ vocMoon.currentSign }}</span>
-        </div>
-      </div>
-      <p v-else class="no-aspect">No applying aspect found</p>
     </div>
 
     <!-- All Aspects Section -->

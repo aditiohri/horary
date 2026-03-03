@@ -110,8 +110,12 @@ export function calculateAspectMotion(
     return normalized;
   };
 
-  const futurePos1 = normalizeDegrees(planet1Motion.position + planet1Motion.speed);
-  const futurePos2 = normalizeDegrees(planet2Motion.position + planet2Motion.speed);
+  // Use a short 0.1-day step to detect applying/separating.
+  // A full-day step overshoots fast Moon aspects (Moon moves ~13°/day),
+  // causing aspects exact within hours to appear separating.
+  const timeStep = 0.1;
+  const futurePos1 = normalizeDegrees(planet1Motion.position + planet1Motion.speed * timeStep);
+  const futurePos2 = normalizeDegrees(planet2Motion.position + planet2Motion.speed * timeStep);
 
   let futureSeparation = Math.abs(futurePos1 - futurePos2);
   if (futureSeparation > 180) futureSeparation = 360 - futureSeparation;
@@ -119,31 +123,8 @@ export function calculateAspectMotion(
   const futureOrb = Math.abs(futureSeparation - targetAngle);
   const currentOrb = Math.abs(separation - targetAngle);
 
-  // Check if aspect becomes perfect during the 24-hour period
-  // This happens when the orb crosses through 0
-
-  // Determine if planets are moving toward or away from the aspect angle
-  // We need to check if the separation is moving toward the target angle
-  const currentDiff = separation - targetAngle;
-  const futureDiff = futureSeparation - targetAngle;
-
-  // If the signs are different, we crossed through the exact aspect
-  const crossedExact = (currentDiff * futureDiff) < 0;
-
-  // If we cross exact, it's applying (even if future orb > current orb)
-  // Otherwise, use the standard comparison
-  let isApplying: boolean;
-  let isSeparating: boolean;
-
-  if (crossedExact) {
-    // Aspect becomes exact during the period - it's applying
-    isApplying = true;
-    isSeparating = false;
-  } else {
-    // Standard calculation
-    isApplying = futureOrb < currentOrb;
-    isSeparating = futureOrb > currentOrb;
-  }
+  const isApplying = futureOrb < currentOrb;
+  const isSeparating = futureOrb > currentOrb;
 
   const isPerfect = currentOrb <= 1;
 
@@ -218,7 +199,7 @@ function getPlanetHouse(planetDegrees: number, cusps: number[]): number {
 }
 
 // Extended orb for tracking Moon's last aspect (even if faded)
-const MOON_EXTENDED_ORB = 20;
+const MOON_EXTENDED_ORB = 30; // Cover the full remaining arc within any sign
 const MOON_ACTIVE_ORB = 12;
 
 export function extractAspectsWithMotion(

@@ -183,15 +183,12 @@ export function formatChartForLLMWithMotion(reading: HoraryReading): string {
   }
 
   // Add Void of Course Moon status (CRITICAL for radicality)
-  const vocMoon = calculateVoidOfCourseMoon(chartData.planets);
+  // Pass the same nextApplyingAspect used for the Moon section to ensure consistency
+  const vocMoon = calculateVoidOfCourseMoon(chartData.planets, moonAnalysis.nextApplyingAspect ?? null);
   formattedData += `\n### Void of Course Moon (Critical for Radicality):\n`;
   formattedData += `- **Status**: ${vocMoon.isVoid ? '⚠️ VOID OF COURSE' : '✓ NOT VOID OF COURSE'}\n`;
   formattedData += `- **Current Sign**: ${vocMoon.currentSign} (${vocMoon.degreesUntilNextSign.toFixed(1)}° until ${vocMoon.nextSign})\n`;
   formattedData += `- **Time Until Sign Change**: ${vocMoon.hoursUntilNextSign.toFixed(1)} hours\n`;
-
-  if (!vocMoon.isVoid && vocMoon.lastAspect) {
-    formattedData += `- **Next Aspect Before Sign Change**: Moon will ${vocMoon.lastAspectType} ${vocMoon.lastAspectPlanet?.toUpperCase()} before leaving ${vocMoon.currentSign}\n`;
-  }
 
   if (vocMoon.isVoid && vocMoon.effectiveInCurrentSign) {
     formattedData += `- **Exception**: Moon is in ${vocMoon.currentSign}, an exception sign where VOC Moon is still effective\n`;

@@ -133,11 +133,23 @@ Quick reference (full detail is in the chart data):
 **Judgment:** Well-placed PoF (strong dispositor) = querent has resources. Poorly placed = lacks capacity despite desire.
 
 ### 10. Timing
-**Sign Type:** Cardinal: days-weeks (fast) | Fixed: months-years (slow) | Mutable: weeks-months (medium)
-**House Type:** Angular: quick | Succedent: moderate | Cadent: slow
-**Orb:** Smaller orb = sooner. Larger = later.
 
-Use provided timing estimates as context, NOT exact dates.
+**Step 1 — Identify the question's natural time scale:**
+Different questions have different inherent scopes. Determine which category applies before touching chart factors:
+- **Immediate** (lost objects, today's events, imminent decisions): base unit = hours to 1-2 days
+- **Near-term** (job offers, short journeys, pending replies, test results): base unit = days to a few weeks
+- **Medium-term** (relationships developing, health recovery, moves, projects): base unit = weeks to months
+- **Long-term** (marriage, major career change, protracted legal matters, fertility): base unit = months to years
+
+**Step 2 — Apply sign and house modifiers within that scale:**
+- **Sign:** Cardinal → faster end of base range | Mutable → middle | Fixed → slower end (or beyond)
+- **House:** Angular → quicker | Succedent → moderate | Cadent → slower
+- **Orb:** Smaller orb = sooner. Larger = later.
+
+**Step 3 — Cross-check with pre-computed chart data:**
+The chart data includes ⏱ Timing sections on applying aspects and aspect orbs expressed in days. Use these as your primary reference; adjust the narrative unit (hours/days/weeks/months) to match the question's natural scope.
+
+**CRITICAL:** The same 5° applying orb means different things depending on the question. It could mean "about 5 days" for a lost-object question and "about 5 months" for a marriage question. Always anchor the time unit to the question's natural scope first, then let sign/house modifiers push faster or slower within that range.
 
 <!-- [ADJUSTABLE: May be simplified to fewer steps for smaller models] -->
 ### 11. Judgment Sequence
@@ -167,7 +179,7 @@ Use provided timing estimates as context, NOT exact dates.
 - Give clear, direct answer (2-3 paragraphs)
 - State success/failure/uncertain with reasoning anyone can understand
 - Give a clear verdict — yes, no, or qualified with specific astrological conditions. Do not hedge with generic practical advice. Every statement must trace back to a named chart factor.
-- Include timing if applicable (e.g., "within 2-3 weeks" not "when Moon applies to Saturn")
+- Include timing calibrated to the question's nature — could be "within a few hours" for urgent matters, "within days" for near-term questions, "within weeks to months" for medium-term situations, or "within months to years" for long-term matters. Always cite the chart factor that supports the timing (e.g., "the 3° applying trine in a cardinal sign suggests resolution within about 3 days").
 - Should be completely standalone - someone with zero astrology knowledge should understand this section
 
 ### 2. Detailed Astrological Analysis (SECOND) - Technical Details

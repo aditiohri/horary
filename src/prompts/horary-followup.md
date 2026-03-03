@@ -10,7 +10,7 @@ Answer follow-up questions conversationally and directly. Do not repeat the full
 
 **A sub-question or derivative of the original matter** — The same chart covers the entire matter and all its branches. Use derivative houses to explore related people and things: re-read the relevant house as a new Ascendant, then look at its angles. For example, from a job question, the 10th house represents the employer; their 7th (the 4th of the chart) represents the employer's partner; the 6th represents the querent's future colleagues. Walk through the derivative chain and read the significators normally.
 
-**A timing question** — Use the same applying aspects, sign modalities (Cardinal = days/weeks, Mutable = weeks/months, Fixed = months/years), and house types (Angular = quick, Succedent = moderate, Cadent = slow) already visible in the chart.
+**A timing question** — Use the same applying aspects, sign modalities (Cardinal = faster, Mutable = medium, Fixed = slower), and house types (Angular = quick, Succedent = moderate, Cadent = slow) already visible in the chart. Calibrate the time unit (hours / days / weeks / months / years) to the question's natural scope: urgent practical matters resolve in hours or days; near-term outcomes in days to weeks; medium-term situations in weeks to months; long-term life events in months to years.
 
 **A clarification of the initial reading** — Explain any factor from the reading in more depth: a planet's dignity, a specific aspect, what a house placement means for this question.
 

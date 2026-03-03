@@ -10,41 +10,31 @@
 
 import { getSignFromDegrees } from './dignities';
 
-type Planet = 'sun' | 'moon' | 'mercury' | 'venus' | 'mars' | 'jupiter' | 'saturn';
 type Sign = 'aries' | 'taurus' | 'gemini' | 'cancer' | 'leo' | 'virgo' |
             'libra' | 'scorpio' | 'sagittarius' | 'capricorn' | 'aquarius' | 'pisces';
-
-// Traditional aspects for VOC calculation
-const TRADITIONAL_ASPECTS = [
-  { name: 'conjunction', angle: 0 },
-  { name: 'sextile', angle: 60 },
-  { name: 'square', angle: 90 },
-  { name: 'trine', angle: 120 },
-  { name: 'opposition', angle: 180 }
-];
 
 // Signs where VOC Moon is still effective
 const VOC_EXCEPTION_SIGNS: Sign[] = ['taurus', 'cancer', 'sagittarius', 'pisces'];
 
-// Average daily motion for planets (degrees per day)
-const DAILY_MOTION = {
-  sun: 1.0,
-  moon: 13.176, // Fastest
-  mercury: 1.5, // Varies widely
-  venus: 1.2,
-  mars: 0.5,
-  jupiter: 0.1,
-  saturn: 0.05
-};
+// Moon's average daily motion (used only for sign-change timing)
+const MOON_DAILY_MOTION = 13.176;
 
 interface PlanetPosition {
   position: number;
   isRetrograde: boolean;
 }
 
-interface VoidOfCourseMoon {
+// Minimal shape of the next applying aspect from aspectMotion
+interface NextApplyingAspect {
+  aspectKey: string;   // e.g. 'opposition', 'sextile'
+  point1Key: string;   // e.g. 'moon'
+  point2Key: string;   // e.g. 'sun'
+  timeToExact?: number; // days until exact
+}
+
+export interface VoidOfCourseMoon {
   isVoid: boolean;
-  lastAspect: string | null; // e.g., "trine Jupiter"
+  lastAspect: string | null; // e.g. "opposition sun" (the upcoming aspect, if any)
   lastAspectPlanet: string | null;
   lastAspectType: string | null;
   currentSign: string;
@@ -67,7 +57,7 @@ function calculateMoonSignChange(moonPosition: number): {
 } {
   const { sign, degreeInSign } = getSignFromDegrees(moonPosition);
   const degreesUntilNextSign = 30 - degreeInSign;
-  const hoursUntilNextSign = (degreesUntilNextSign / DAILY_MOTION.moon) * 24;
+  const hoursUntilNextSign = (degreesUntilNextSign / MOON_DAILY_MOTION) * 24;
 
   const signs: Sign[] = [
     'aries', 'taurus', 'gemini', 'cancer', 'leo', 'virgo',
@@ -87,88 +77,16 @@ function calculateMoonSignChange(moonPosition: number): {
 }
 
 /**
- * Check if Moon will make an aspect to a planet before leaving its current sign
- */
-function willMoonMakeAspect(
-  moonPos: number,
-  planetPos: number,
-  planetSpeed: number,
-  degreesUntilSignChange: number
-): { willPerfect: boolean; aspectType: string | null; timeToExact: number | null } {
-  const moonSpeed = DAILY_MOTION.moon;
-
-  // Calculate future positions when Moon leaves sign
-  const timeToSignChange = degreesUntilSignChange / moonSpeed; // in days
-
-  // Normalize current positions
-  const normalizedMoon = ((moonPos % 360) + 360) % 360;
-  const normalizedPlanet = ((planetPos % 360) + 360) % 360;
-
-  // Check each traditional aspect
-  for (const aspect of TRADITIONAL_ASPECTS) {
-    const currentSep = Math.abs(normalizedMoon - normalizedPlanet);
-    const currentSepNormalized = Math.min(currentSep, 360 - currentSep);
-
-    // Calculate orb from exact aspect
-    const currentOrb = Math.abs(currentSepNormalized - aspect.angle);
-
-    // Do NOT skip based on current orb — the Moon can pick up aspects outside
-    // traditional orb as it travels through the rest of its sign. The sign-change
-    // timing check below (timeToExact < timeToSignChange) is the correct gate.
-
-    // Check if we're approaching the exact aspect
-    // We do this by seeing if a small time step brings us closer
-    const timeStep = 0.1; // 0.1 days ahead
-    const futureMoonSmall = ((normalizedMoon + moonSpeed * timeStep) % 360 + 360) % 360;
-    const futurePlanetSmall = ((normalizedPlanet + planetSpeed * timeStep) % 360 + 360) % 360;
-    const futureSmallSep = Math.abs(futureMoonSmall - futurePlanetSmall);
-    const futureSmallSepNormalized = Math.min(futureSmallSep, 360 - futureSmallSep);
-    const futureSmallOrb = Math.abs(futureSmallSepNormalized - aspect.angle);
-
-    const isApplying = futureSmallOrb < currentOrb;
-
-    console.log(`  ${aspect.name} check:`, {
-      currentOrb: currentOrb.toFixed(2),
-      futureSmallOrb: futureSmallOrb.toFixed(2),
-      applying: isApplying
-    });
-
-    // If aspect is applying, calculate when it will be exact
-    if (isApplying && currentOrb > 0.01) {
-      // Linear approximation: time to exact = currentOrb / rate of orb decrease
-      const orbDecreaseRate = (currentOrb - futureSmallOrb) / timeStep;
-      const timeToExact = currentOrb / orbDecreaseRate;
-
-      console.log(`  Applying ${aspect.name}! timeToExact: ${timeToExact.toFixed(2)} days, timeToSignChange: ${timeToSignChange.toFixed(2)} days`);
-
-      // Only consider it perfecting if it happens BEFORE Moon leaves the sign
-      if (timeToExact < timeToSignChange) {
-        return {
-          willPerfect: true,
-          aspectType: aspect.name,
-          timeToExact: timeToExact * 24 // convert to hours
-        };
-      } else {
-        console.log(`  But will perfect AFTER sign change`);
-      }
-    } else if (currentOrb < 0.5) {
-      // If we're already very close to exact (within 0.5°), consider it perfecting now
-      return {
-        willPerfect: true,
-        aspectType: aspect.name,
-        timeToExact: 0
-      };
-    }
-  }
-
-  return { willPerfect: false, aspectType: null, timeToExact: null };
-}
-
-/**
- * Determine if Moon is Void of Course
+ * Determine if Moon is Void of Course.
+ *
+ * @param planets       Planet positions from the chart
+ * @param nextApplying  The Moon's next applying aspect (from analyzeMoonAspects).
+ *                      Passing this ensures VOC and the Moon aspect sections always
+ *                      use the same calculation.
  */
 export function calculateVoidOfCourseMoon(
-  planets: Record<string, PlanetPosition>
+  planets: Record<string, PlanetPosition>,
+  nextApplying?: NextApplyingAspect | null
 ): VoidOfCourseMoon {
   const moon = planets.moon;
   if (!moon) {
@@ -187,53 +105,26 @@ export function calculateVoidOfCourseMoon(
   }
 
   const signChange = calculateMoonSignChange(moon.position);
+  const daysUntilSignChange = signChange.degreesUntilNextSign / MOON_DAILY_MOTION;
 
-  // Check if Moon will make any aspect before changing signs
-  const traditionalPlanets: Planet[] = ['sun', 'mercury', 'venus', 'mars', 'jupiter', 'saturn'];
-
+  // Determine whether the next applying aspect perfects before the Moon changes sign
   let willMakeAspect = false;
   let nextAspectPlanet: string | null = null;
   let nextAspectType: string | null = null;
 
-  console.log('=== VOC MOON DEBUG ===');
-  console.log('Moon position:', moon.position);
-  console.log('Moon sign:', signChange.currentSign);
-  console.log('Degrees until sign change:', signChange.degreesUntilNextSign);
-
-  for (const planetKey of traditionalPlanets) {
-    const planet = planets[planetKey];
-    if (!planet) continue;
-
-    const speed = planet.isRetrograde ? -DAILY_MOTION[planetKey] : DAILY_MOTION[planetKey];
-    const aspectInfo = willMoonMakeAspect(
-      moon.position,
-      planet.position,
-      speed,
-      signChange.degreesUntilNextSign
-    );
-
-    console.log(`Checking ${planetKey}:`, {
-      position: planet.position,
-      willPerfect: aspectInfo.willPerfect,
-      aspectType: aspectInfo.aspectType,
-      timeToExact: aspectInfo.timeToExact
-    });
-
-    if (aspectInfo.willPerfect) {
+  if (nextApplying && nextApplying.timeToExact !== undefined) {
+    if (nextApplying.timeToExact < daysUntilSignChange) {
       willMakeAspect = true;
-      nextAspectPlanet = planetKey;
-      nextAspectType = aspectInfo.aspectType;
-      break; // Found an applying aspect
+      nextAspectPlanet = nextApplying.point2Key === 'moon'
+        ? nextApplying.point1Key
+        : nextApplying.point2Key;
+      nextAspectType = nextApplying.aspectKey;
     }
   }
-
-  console.log('Final VOC status:', !willMakeAspect);
-  console.log('=====================');
 
   const isVoid = !willMakeAspect;
   const effectiveInCurrentSign = VOC_EXCEPTION_SIGNS.includes(signChange.currentSign);
 
-  // Determine interpretation
   let interpretation = '';
   if (isVoid && !effectiveInCurrentSign) {
     interpretation = '⚠️ Void of Course - "Nothing will come of the matter." Consider waiting or asking a different question.';
@@ -275,7 +166,6 @@ export function formatVOCMoonForDisplay(voc: VoidOfCourseMoon): string {
     }
   } else {
     output += `**Status**: ✓ NOT VOID OF COURSE\n`;
-    output += `**Next Aspect**: Moon will ${voc.lastAspectType} ${voc.lastAspectPlanet?.toUpperCase()} before leaving ${voc.currentSign}\n`;
   }
 
   output += `\n${voc.interpretation}\n`;

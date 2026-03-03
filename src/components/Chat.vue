@@ -488,8 +488,8 @@ watch(() => props.reading, (newReading) => {
 }
 
 .message.user .message-text {
-  background: #4a90e2;
-  color: white;
+  background: var(--color-accent);
+  color: var(--color-text-inverse);
   border-bottom-right-radius: 0.25rem;
 }
 
@@ -536,7 +536,7 @@ watch(() => props.reading, (newReading) => {
 .loading-dots span {
   width: 6px;
   height: 6px;
-  background: #4a90e2;
+  background: var(--color-accent);
   border-radius: 50%;
   animation: loading-bounce 1.4s ease-in-out infinite both;
 }
@@ -602,8 +602,8 @@ watch(() => props.reading, (newReading) => {
 }
 
 .send-button {
-  background: #4a90e2;
-  color: white;
+  background: var(--color-accent);
+  color: var(--color-text-inverse);
   border: none;
   border-radius: 0.5rem;
   padding: 0.75rem;
@@ -617,7 +617,7 @@ watch(() => props.reading, (newReading) => {
 }
 
 .send-button:hover:not(:disabled) {
-  background: #357abd;
+  background: var(--color-accent-hover);
 }
 
 .send-button:disabled {

@@ -267,25 +267,25 @@ textarea:focus {
 }
 
 textarea.error {
-  border-color: #e53e3e;
+  border-color: var(--color-error);
 }
 
 .error-message {
-  color: #e53e3e;
+  color: var(--color-error);
   font-size: 0.875rem;
   margin-top: 0.25rem;
   display: block;
 }
 
 .location-error {
-  color: #e53e3e;
+  color: var(--color-error);
   font-size: 0.875rem;
   margin: 0.25rem 0;
 }
 
 .submit-button {
-  background-color: #4a90e2;
-  color: white;
+  background-color: var(--color-accent);
+  color: var(--color-text-inverse);
   padding: 0.75rem 1.5rem;
   border: none;
   border-radius: 0.5rem;
@@ -298,7 +298,7 @@ textarea.error {
 }
 
 .submit-button:hover:not(:disabled) {
-  background-color: #357abd;
+  background-color: var(--color-accent-hover);
 }
 
 .submit-button:disabled {
@@ -357,7 +357,7 @@ textarea.error {
 
 .datetime-input:focus {
   outline: none;
-  border-color: #4a90e2;
+  border-color: var(--color-accent);
 }
 
 .field-hint {
@@ -399,8 +399,8 @@ textarea.error {
 .refresh-location,
 .get-location-btn {
   padding: 0.5rem 1rem;
-  background: #4a90e2;
-  color: white;
+  background: var(--color-accent);
+  color: var(--color-text-inverse);
   border: none;
   border-radius: 0.375rem;
   font-size: 0.875rem;
@@ -410,7 +410,7 @@ textarea.error {
 
 .refresh-location:hover,
 .get-location-btn:hover {
-  background: #357abd;
+  background: var(--color-accent-hover);
 }
 
 /* Mobile optimizations */

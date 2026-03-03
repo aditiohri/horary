@@ -352,8 +352,8 @@ onMounted(loadReadings);
 }
 
 .reading-card:hover {
-  border-color: #4a90e2;
-  box-shadow: 0 2px 8px rgba(74, 144, 226, 0.1);
+  border-color: var(--color-accent);
+  box-shadow: 0 2px 8px rgba(217, 119, 6, 0.12);
 }
 
 .reading-header {
@@ -382,7 +382,7 @@ onMounted(loadReadings);
 }
 
 .delete-button:hover {
-  color: #ef4444;
+  color: var(--color-error);
 }
 
 .reading-question {
@@ -400,8 +400,8 @@ onMounted(loadReadings);
 }
 
 .conversation-count {
-  background: rgba(139, 92, 246, 0.2);
-  color: #a78bfa;
+  background: rgba(217, 119, 6, 0.15);
+  color: var(--color-accent);
   padding: 0.125rem 0.5rem;
   border-radius: 0.75rem;
 }
@@ -465,7 +465,7 @@ onMounted(loadReadings);
 }
 
 .confirm-delete-button {
-  background: #ef4444;
+  background: var(--color-error);
   color: white;
   border: none;
   padding: 0.5rem 1rem;
@@ -475,7 +475,8 @@ onMounted(loadReadings);
 }
 
 .confirm-delete-button:hover {
-  background: #dc2626;
+  background: var(--color-error);
+  filter: brightness(0.85);
 }
 
 /* Mobile optimizations */

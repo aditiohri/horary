@@ -198,9 +198,16 @@ function getPlanetHouse(planetDegrees: number, cusps: number[]): number {
   return 1; // fallback
 }
 
-// Extended orb for tracking Moon's last aspect (even if faded)
-const MOON_EXTENDED_ORB = 30; // Cover the full remaining arc within any sign
-const MOON_ACTIVE_ORB = 12;
+// Standard orbs per aspect type — mirrors astrology.ts customOrbs.
+// Used as the lower bound so extended detection only adds aspects the
+// standard detector misses (i.e. orb > standard orb for that aspect type).
+const STANDARD_ORB: { [key: string]: number } = {
+  conjunction: 12,
+  opposition: 12,
+  trine: 12,
+  square: 10,
+  sextile: 8,
+};
 
 export function extractAspectsWithMotion(
   chartData: { planets: { [key: string]: PlanetData }; cusps?: number[] },
@@ -222,15 +229,21 @@ export function extractAspectsWithMotion(
     };
   });
 
-  // Add extended Moon aspects (outside standard orbs but within 20°)
-  // This helps track the Moon's last aspect even if influence has faded
-  const extendedMoonAspects = findExtendedMoonAspects(chartData);
+  // Add extended Moon aspects not caught by standard detection.
+  // Cap the search at the degrees remaining in the Moon's current sign so we
+  // only consider aspects that can actually perfect before the sign changes.
+  const moonPos = chartData.planets['moon']?.position ?? 0;
+  const degreesUntilSignChange = 30 - (moonPos % 30);
+  const extendedMoonAspects = findExtendedMoonAspects(chartData, degreesUntilSignChange);
   return [...aspectsWithMotion, ...extendedMoonAspects];
 }
 
-// Find Moon aspects outside standard orbs (for tracking last separation)
+// Find Moon aspects outside standard orbs but within the Moon's remaining sign arc.
+// `maxOrb` should be the degrees the Moon has left in its current sign so that
+// only aspects that can actually perfect before the sign changes are returned.
 function findExtendedMoonAspects(
-  chartData: { planets: { [key: string]: PlanetData }; cusps?: number[] }
+  chartData: { planets: { [key: string]: PlanetData }; cusps?: number[] },
+  maxOrb: number
 ): Array<
   AspectMotion & {
     point1Label: string;
@@ -262,9 +275,12 @@ function findExtendedMoonAspects(
     for (const aspect of aspectTypes) {
       const orb = Math.abs(separation - aspect.angle);
 
-      // Only add if orb is between MOON_ACTIVE_ORB and MOON_EXTENDED_ORB
-      // (aspects within active orb are already detected)
-      if (orb > MOON_ACTIVE_ORB && orb <= MOON_EXTENDED_ORB) {
+      // Lower bound: the standard orb for this aspect type (anything within
+      // that orb is already included by the standard detector).
+      // Upper bound: degrees remaining in the Moon's current sign (only aspects
+      // that can perfect before the sign change matter for void-of-course).
+      const standardOrb = STANDARD_ORB[aspect.name] ?? 12;
+      if (orb > standardOrb && orb <= maxOrb) {
         const aspectString = `moon ${aspect.name} ${planet}`;
         const motionData = calculateAspectMotion(chartData, aspectString);
 
@@ -273,7 +289,7 @@ function findExtendedMoonAspects(
           point1Label: 'moon',
           point2Label: planet,
           aspectLabel: aspect.name,
-          isFaded: true, // Mark as faded (outside active orb)
+          isFaded: true, // Mark as faded (outside standard active orb)
         });
       }
     }

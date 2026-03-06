@@ -306,6 +306,20 @@ import { createLLMClient, getCurrentModel, formatLLMError } from './llm/client';
 import { loadSettings } from './llm/storage';
 import { checkQuota, recordUsage } from './llm/freeTier';
 
+// Strip <think>...</think> blocks that Qwen3 and similar models output as reasoning
+function stripThinkingBlocks(content: string): string {
+  return content.replace(/<think>[\s\S]*?<\/think>\s*/gi, '').trim();
+}
+
+// Prepend /no_think for Qwen models to disable extended reasoning mode,
+// keeping the response focused and the Overall Judgment at the top.
+function adaptSystemPrompt(basePrompt: string, model: string): string {
+  if (model.toLowerCase().includes('qwen')) {
+    return `/no_think\n\n${basePrompt}`;
+  }
+  return basePrompt;
+}
+
 // Interface for chart data structure
 export interface HoraryChartData {
   planets: {
@@ -444,6 +458,7 @@ export const generateHoraryReading = async (
     const openai = createLLMClient();
     const model = getCurrentModel();
     const formattedChart = formatChartForLLMWithMotion(reading);
+    const systemPrompt = adaptSystemPrompt(horaryBasePrompt, model);
 
     const prompt = `${formattedChart}
 
@@ -468,12 +483,12 @@ Then provide the technical analysis using proper astrological terminology. ALWAY
 8. Moon's role (review Moon's last and next aspects)
 9. Provide timing (based on aspect orb, sign type, house placement)
 
-Proceed directly with your traditional horary judgment.`;
+Begin your response immediately with "## Overall Judgment" — no preamble.`;
 
     const response = await openai.chat.completions.create({
       model,
       messages: [
-        { role: "system", content: horaryBasePrompt },
+        { role: "system", content: systemPrompt },
         { role: "user", content: prompt },
       ],
       temperature: 0.7,
@@ -486,7 +501,8 @@ Proceed directly with your traditional horary judgment.`;
       recordUsage(tokensUsed);
     }
 
-    return response.choices[0].message.content;
+    const content = response.choices[0].message.content;
+    return content ? stripThinkingBlocks(content) : content;
   } catch (error) {
     console.error("Error generating horary reading:", error);
     throw new Error(formatLLMError(error));
@@ -513,10 +529,11 @@ export const continueHoraryConversation = async (
     const openai = createLLMClient();
     const model = getCurrentModel();
     const formattedChart = formatChartForLLM(reading);
+    const systemPrompt = adaptSystemPrompt(horaryFollowupPrompt, model);
 
     // Build the conversation with context
     const messages = [
-      { role: "system" as const, content: horaryFollowupPrompt },
+      { role: "system" as const, content: systemPrompt },
       {
         role: "user" as const,
         content: `${formattedChart}\n\nPlease analyze this horary chart.`,
@@ -538,7 +555,8 @@ export const continueHoraryConversation = async (
       recordUsage(tokensUsed);
     }
 
-    return response.choices[0].message.content;
+    const content = response.choices[0].message.content;
+    return content ? stripThinkingBlocks(content) : content;
   } catch (error) {
     console.error("Error in horary conversation:", error);
     throw new Error(formatLLMError(error));

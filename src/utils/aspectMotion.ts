@@ -103,28 +103,29 @@ export function calculateAspectMotion(
 
   const relativeSpeed = Math.abs(planet1Motion.speed - planet2Motion.speed);
 
-  // Normalize future positions to 0-360 range
-  const normalizeDegrees = (deg: number): number => {
-    let normalized = deg % 360;
-    if (normalized < 0) normalized += 360;
-    return normalized;
-  };
+  // Determine applying/separating analytically (no timestep needed).
+  //
+  // signed_sep = p1 - p2 wrapped to (-180, +180].
+  // d(sep)/dt = sign(signed_sep) × (s1 − s2)
+  //
+  // orbSigned = sep − targetAngle: negative means not yet exact, positive means past exact.
+  // The orb is closing toward 0 (applying) when orbSigned × d(sep)/dt < 0.
+  // At orb = 0 exactly the aspect is perfect and about to separate.
+  //
+  // This approach is immune to the overshoot problem that plagued the old
+  // fixed-timestep method: a 0.1-day step moves the Moon ~1.3°, which is
+  // larger than many real orbs and caused tight applying aspects to appear
+  // separating (the Moon would jump past the exact point in the simulation).
+  let signedSep = planet1Motion.position - planet2Motion.position;
+  signedSep = ((signedSep + 180) % 360 + 360) % 360 - 180; // wrap to (-180, +180]
 
-  // Use a short 0.1-day step to detect applying/separating.
-  // A full-day step overshoots fast Moon aspects (Moon moves ~13°/day),
-  // causing aspects exact within hours to appear separating.
-  const timeStep = 0.1;
-  const futurePos1 = normalizeDegrees(planet1Motion.position + planet1Motion.speed * timeStep);
-  const futurePos2 = normalizeDegrees(planet2Motion.position + planet2Motion.speed * timeStep);
-
-  let futureSeparation = Math.abs(futurePos1 - futurePos2);
-  if (futureSeparation > 180) futureSeparation = 360 - futureSeparation;
-
-  const futureOrb = Math.abs(futureSeparation - targetAngle);
+  const dSepDt = Math.sign(signedSep) * (planet1Motion.speed - planet2Motion.speed);
   const currentOrb = Math.abs(separation - targetAngle);
+  const orbSigned = separation - targetAngle; // negative = before exact, positive = after
 
-  const isApplying = futureOrb < currentOrb;
-  const isSeparating = futureOrb > currentOrb;
+  const product = orbSigned * dSepDt;
+  const isApplying = product < 0;
+  const isSeparating = product > 0 || (orbSigned === 0 && dSepDt !== 0);
 
   const isPerfect = currentOrb <= 1;
 

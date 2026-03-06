@@ -71,8 +71,10 @@ export const PROVIDER_CONFIGS: Record<LLMProvider, ProviderConfig> = {
     description: 'Try the app with Groq\'s free tier. Fast responses with generous limits.',
     requiresApiKey: false,
     supportsLocal: false,
-    defaultModel: 'llama-3.3-70b-versatile',
+    defaultModel: 'qwen/qwen3-32b',
     suggestedModels: [
+      'qwen/qwen3-32b',
+      'qwen-2.5-32b',
       'llama-3.3-70b-versatile',
       'llama-3.1-8b-instant',
     ],

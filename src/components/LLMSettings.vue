@@ -428,7 +428,7 @@ onUnmounted(() => {
             <li><strong>10 requests per hour</strong> (fair usage for everyone)</li>
             <li><strong>10M tokens per day</strong> (very generous)</li>
             <li><strong>Extremely fast responses</strong> (typically &lt;1 second)</li>
-            <li>Using Llama 3.3 70B (high-quality model)</li>
+            <li>Default: Qwen 3 32B — Llama 3.3 70B and others also available</li>
           </ul>
           <p class="form-help" style="margin-top: 0.75rem;">
             Want even more? Get your own free

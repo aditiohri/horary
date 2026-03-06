@@ -181,6 +181,30 @@ class ReadingStorage {
 // Create and export a singleton instance
 export const readingStorage = new ReadingStorage();
 
+// Encode a reading into a shareable URL
+export function encodeReadingToUrl(reading: StoredReading): string {
+  const json = JSON.stringify(reading);
+  const encoded = btoa(encodeURIComponent(json));
+  const url = new URL(window.location.href);
+  url.search = "";
+  url.hash = "";
+  url.searchParams.set("share", encoded);
+  return url.toString();
+}
+
+// Decode a shared reading from the current URL's ?share= param
+export function decodeReadingFromUrl(): StoredReading | null {
+  const params = new URLSearchParams(window.location.search);
+  const encoded = params.get("share");
+  if (!encoded) return null;
+  try {
+    const json = decodeURIComponent(atob(encoded));
+    return JSON.parse(json) as StoredReading;
+  } catch {
+    return null;
+  }
+}
+
 // Hook for Vue components
 export function useReadingStorage() {
   return {

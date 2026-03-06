@@ -169,6 +169,23 @@ describe('Aspect Motion - Retrograde Handling', () => {
     expect(result.isApplying).toBe(true);
   });
 
+  it('should correctly identify applying aspect when orb is less than 1 degree', () => {
+    // Regression: Moon at 14.52° Libra (194.52°) applying to square Jupiter at 15.13° Cancer (105.13°).
+    // Orb is 0.61° — Moon has NOT yet reached the exact square point → must be APPLYING.
+    // The old timestep method moved Moon ~1.3° in 0.1 days, overshooting the exact point and
+    // incorrectly reporting SEPARATING, which then caused a false Void of Course reading.
+    const chartData = {
+      planets: {
+        moon: { position: 194.52, isRetrograde: false },
+        jupiter: { position: 105.13, isRetrograde: true },
+      },
+    };
+
+    const result = calculateAspectMotion(chartData, 'moon square jupiter');
+    expect(result.isApplying).toBe(true);
+    expect(result.isSeparating).toBe(false);
+  });
+
   it('should correctly calculate separation for direct and retrograde motion', () => {
     // Test Moon separating from sextile with Jupiter
     const chartData = {

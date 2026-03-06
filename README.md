@@ -62,7 +62,7 @@ This application implements comprehensive horary astrology features based on tra
 
 The deployed app at horary-chat.netlify.app uses Groq automatically. No API key or account required from you.
 
-Readings are routed through a serverless Netlify function that holds the Groq key server-side. The default model is `llama-3.3-70b-versatile`.
+Readings are routed through a serverless Netlify function that holds the Groq key server-side. The default model is `qwen/qwen3-32b`, with `llama-3.3-70b-versatile` and others also available.
 
 **If you're self-hosting**, you'll need your own Groq key:
 1. Get a free API key at [console.groq.com/keys](https://console.groq.com/keys) (no credit card required)

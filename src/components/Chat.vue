@@ -100,8 +100,8 @@ const sendMessage = async () => {
   isLoading.value = true;
 
   try {
-    // Get conversation history (excluding the chart data message)
-    const history = messages.value.slice(1).map((msg) => ({
+    // Get conversation history (excluding the pending new message)
+    const history = messages.value.slice(0, -1).map((msg) => ({
       role: msg.role,
       content: msg.content,
     }));

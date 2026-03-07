@@ -19,14 +19,6 @@ function isRateLimited(ip: string): boolean {
 }
 
 export const handler: Handler = async (event: HandlerEvent) => {
-  // Only allow POST requests
-  if (event.httpMethod !== 'POST') {
-    return {
-      statusCode: 405,
-      body: JSON.stringify({ error: 'Method not allowed' }),
-    };
-  }
-
   // Get the origin for CORS
   const origin = event.headers.origin || '';
 
@@ -39,6 +31,27 @@ export const handler: Handler = async (event: HandlerEvent) => {
 
   const isAllowedOrigin = allowedOrigins.includes(origin);
   const corsOrigin = isAllowedOrigin ? origin : '';
+
+  // Handle CORS preflight before any other checks
+  if (event.httpMethod === 'OPTIONS') {
+    return {
+      statusCode: 204,
+      headers: {
+        'Access-Control-Allow-Origin': corsOrigin,
+        'Access-Control-Allow-Methods': 'POST, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+      },
+      body: '',
+    };
+  }
+
+  // Only allow POST requests
+  if (event.httpMethod !== 'POST') {
+    return {
+      statusCode: 405,
+      body: JSON.stringify({ error: 'Method not allowed' }),
+    };
+  }
 
   if (!isAllowedOrigin && origin) {
     console.warn(`Blocked request from unauthorized origin: ${origin}`);
@@ -113,7 +126,7 @@ export const handler: Handler = async (event: HandlerEvent) => {
           'Access-Control-Allow-Headers': 'Content-Type',
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ error: 'LLM provider error' }),
+        body: JSON.stringify({ error: data?.error?.message || 'LLM provider error' }),
       };
     }
 

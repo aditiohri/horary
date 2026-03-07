@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import UserChat from "./components/UserChat.vue";
 import ReadingHistory from "./components/ReadingHistory.vue";
 import LLMSettings from "./components/LLMSettings.vue";
 import HoraryInfoModal from "./components/HoraryInfoModal.vue";
-import { useReadingStorage, type StoredReading } from './utils/storage';
+import { useReadingStorage, decodeReadingFromUrl, type StoredReading } from './utils/storage';
 import { useDarkMode } from './composables/useDarkMode';
 
 type AppView = 'chat' | 'history';
@@ -34,6 +34,17 @@ const handleSelectReading = (reading: StoredReading) => {
 };
 
 const storageStats = getStorageStats();
+
+onMounted(() => {
+  const sharedReading = decodeReadingFromUrl();
+  if (sharedReading) {
+    selectedHistoryReading.value = sharedReading;
+    // Remove the ?share= param from the URL without a page reload
+    const url = new URL(window.location.href);
+    url.searchParams.delete("share");
+    window.history.replaceState({}, "", url.toString());
+  }
+});
 </script>
 
 <template>

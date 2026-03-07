@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from "vue";
-import { useReadingStorage, type StoredReading } from "../utils/storage";
+import { useReadingStorage, encodeReadingToUrl, type StoredReading } from "../utils/storage";
 
 const emit = defineEmits<{
   (e: "select-reading", reading: StoredReading): void;
@@ -15,6 +15,7 @@ const searchQuery = ref("");
 const isLoading = ref(false);
 const showConfirmDelete = ref(false);
 const readingToDelete = ref<StoredReading | null>(null);
+const copiedReadingId = ref<string | null>(null);
 
 // Computed filtered readings
 const filteredReadings = computed(() => {
@@ -85,6 +86,30 @@ const handleDelete = async () => {
     readingToDelete.value = null;
   } catch (error) {
     console.error("Error deleting reading:", error);
+  }
+};
+
+// Copy share link for a reading
+const copyShareLink = async (reading: StoredReading) => {
+  const url = encodeReadingToUrl(reading);
+  try {
+    await navigator.clipboard.writeText(url);
+    copiedReadingId.value = reading.id;
+    setTimeout(() => {
+      copiedReadingId.value = null;
+    }, 2000);
+  } catch {
+    // Fallback: select from a temporary input
+    const input = document.createElement("input");
+    input.value = url;
+    document.body.appendChild(input);
+    input.select();
+    document.execCommand("copy");
+    document.body.removeChild(input);
+    copiedReadingId.value = reading.id;
+    setTimeout(() => {
+      copiedReadingId.value = null;
+    }, 2000);
   }
 };
 
@@ -166,18 +191,41 @@ onMounted(loadReadings);
                     })
                   }}
                 </span>
-                <button
-                  @click.stop="confirmDelete(reading)"
-                  class="delete-button"
-                  title="Delete reading">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                    <path
-                      d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6"
-                      stroke="currentColor"
-                      stroke-width="2"
-                      stroke-linecap="round" />
-                  </svg>
-                </button>
+                <div class="reading-actions">
+                  <button
+                    @click.stop="copyShareLink(reading)"
+                    class="share-button"
+                    :title="copiedReadingId === reading.id ? 'Link copied!' : 'Copy share link'">
+                    <svg v-if="copiedReadingId !== reading.id" width="16" height="16" viewBox="0 0 24 24" fill="none">
+                      <path
+                        d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round" />
+                    </svg>
+                    <svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none">
+                      <path
+                        d="M5 13l4 4L19 7"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round" />
+                    </svg>
+                  </button>
+                  <button
+                    @click.stop="confirmDelete(reading)"
+                    class="delete-button"
+                    title="Delete reading">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                      <path
+                        d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round" />
+                    </svg>
+                  </button>
+                </div>
               </div>
 
               <div class="reading-question">
@@ -367,6 +415,30 @@ onMounted(loadReadings);
   font-size: 0.875rem;
   color: var(--color-text-tertiary);
   font-weight: 500;
+}
+
+.reading-actions {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.share-button {
+  background: none;
+  border: none;
+  padding: 0.5rem;
+  cursor: pointer;
+  color: var(--color-text-secondary);
+  border-radius: 0.25rem;
+  transition: color 0.2s;
+  min-width: 44px;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.share-button:hover {
+  color: var(--color-accent);
 }
 
 .delete-button {

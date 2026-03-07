@@ -2,6 +2,22 @@ import type { Handler, HandlerEvent } from '@netlify/functions';
 
 const GROQ_API_KEY = process.env.GROQ_FREE_TIER_KEY;
 
+// Simple in-memory rate limiter (best-effort; resets on cold starts)
+const rateLimitMap = new Map<string, { count: number; windowStart: number }>();
+const RATE_LIMIT_WINDOW_MS = 60_000;
+const RATE_LIMIT_MAX_REQUESTS = 20;
+
+function isRateLimited(ip: string): boolean {
+  const now = Date.now();
+  const entry = rateLimitMap.get(ip);
+  if (!entry || now - entry.windowStart > RATE_LIMIT_WINDOW_MS) {
+    rateLimitMap.set(ip, { count: 1, windowStart: now });
+    return false;
+  }
+  entry.count += 1;
+  return entry.count > RATE_LIMIT_MAX_REQUESTS;
+}
+
 export const handler: Handler = async (event: HandlerEvent) => {
   // Only allow POST requests
   if (event.httpMethod !== 'POST') {
@@ -14,16 +30,15 @@ export const handler: Handler = async (event: HandlerEvent) => {
   // Get the origin for CORS
   const origin = event.headers.origin || '';
 
-  // List of allowed origins
+  // List of allowed origins — exact match to prevent startsWith bypass
   const allowedOrigins = [
     'http://localhost:5173',        // Vite dev server
     'http://localhost:8888',        // Netlify dev
-    'https://horary-chat.netlify.app',   // Production (update with actual domain)
-    // Add more domains as needed
+    'https://horary-chat.netlify.app',
   ];
 
-  // Check if origin is allowed
-  const isAllowedOrigin = allowedOrigins.some(allowed => origin.startsWith(allowed));
+  const isAllowedOrigin = allowedOrigins.includes(origin);
+  const corsOrigin = isAllowedOrigin ? origin : '';
 
   if (!isAllowedOrigin && origin) {
     console.warn(`Blocked request from unauthorized origin: ${origin}`);
@@ -38,9 +53,23 @@ export const handler: Handler = async (event: HandlerEvent) => {
     console.error('GROQ_FREE_TIER_KEY environment variable is not set');
     return {
       statusCode: 500,
-      body: JSON.stringify({
-        error: 'Server configuration error - API key not set',
-      }),
+      body: JSON.stringify({ error: 'Server configuration error' }),
+    };
+  }
+
+  // Rate limiting by client IP
+  const clientIp =
+    event.headers['x-forwarded-for']?.split(',')[0].trim() ||
+    event.headers['x-nf-client-connection-ip'] ||
+    'unknown';
+  if (isRateLimited(clientIp)) {
+    return {
+      statusCode: 429,
+      headers: {
+        'Access-Control-Allow-Origin': corsOrigin,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ error: 'Too many requests - please try again later' }),
     };
   }
 
@@ -49,9 +78,13 @@ export const handler: Handler = async (event: HandlerEvent) => {
     const requestBody = JSON.parse(event.body || '{}');
 
     // Validate request has required fields
-    if (!requestBody.model || !requestBody.messages) {
+    if (!requestBody.model || !Array.isArray(requestBody.messages)) {
       return {
         statusCode: 400,
+        headers: {
+          'Access-Control-Allow-Origin': corsOrigin,
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify({
           error: 'Invalid request - missing model or messages',
         }),
@@ -76,14 +109,11 @@ export const handler: Handler = async (event: HandlerEvent) => {
       return {
         statusCode: response.status,
         headers: {
-          'Access-Control-Allow-Origin': origin || '*',
+          'Access-Control-Allow-Origin': corsOrigin,
           'Access-Control-Allow-Headers': 'Content-Type',
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          error: data.error?.message || 'Groq API error',
-          details: data,
-        }),
+        body: JSON.stringify({ error: 'LLM provider error' }),
       };
     }
 
@@ -91,7 +121,7 @@ export const handler: Handler = async (event: HandlerEvent) => {
     return {
       statusCode: 200,
       headers: {
-        'Access-Control-Allow-Origin': origin || '*',
+        'Access-Control-Allow-Origin': corsOrigin,
         'Access-Control-Allow-Headers': 'Content-Type',
         'Content-Type': 'application/json',
       },
@@ -102,14 +132,11 @@ export const handler: Handler = async (event: HandlerEvent) => {
     return {
       statusCode: 500,
       headers: {
-        'Access-Control-Allow-Origin': origin || '*',
+        'Access-Control-Allow-Origin': corsOrigin,
         'Access-Control-Allow-Headers': 'Content-Type',
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        error: 'Internal server error',
-        message: error.message,
-      }),
+      body: JSON.stringify({ error: 'Internal server error' }),
     };
   }
 };

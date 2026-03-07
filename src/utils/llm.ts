@@ -13,10 +13,17 @@ import { calculateChartAccidentalDignities } from "./horary/accidentalDignities"
 import { calculatePartOfFortune, formatPartOfFortuneForDisplay } from "./horary/arabicParts";
 import { analyzeQuestion, formatHouseContextForLLM } from "./horary/houses";
 
+// Strip control characters and truncate to prevent prompt injection
+function sanitizeQuestion(q: string): string {
+  // Remove ASCII control chars (except \n and \t), then trim and cap at 500 chars
+  return q.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '').trim().slice(0, 500);
+}
+
 // Enhanced format chart for LLM with aspect motion
 export function formatChartForLLMWithMotion(reading: HoraryReading): string {
   const chartData = reading.chartData;
-  let formattedData = `## Chart Data for Question: "${reading.question}"\n`;
+  const question = sanitizeQuestion(reading.question);
+  let formattedData = `## Chart Data for Question: "${question}"\n`;
   formattedData += `**Time**: ${new Date(
     reading.timestamp
   ).toLocaleString()}\n`;
@@ -296,8 +303,8 @@ export function formatChartForLLMWithMotion(reading: HoraryReading): string {
   // Inject question-specific house context (structured context engineering)
   // Analyzes the natural language question to identify relevant houses and
   // appends their full meanings so the LLM receives targeted guidance.
-  const houseAnalysis = analyzeQuestion(reading.question);
-  formattedData += formatHouseContextForLLM(reading.question, houseAnalysis);
+  const houseAnalysis = analyzeQuestion(question);
+  formattedData += formatHouseContextForLLM(question, houseAnalysis);
 
   return formattedData;
 }
@@ -397,8 +404,9 @@ function getPlanetHouse(planetDegrees: number, cusps: number[]): number {
 // Format chart data for the LLM
 function formatChartForLLM(reading: HoraryReading): string {
   const { chartData } = reading;
+  const question = sanitizeQuestion(reading.question);
 
-  let formattedData = `## Chart Data for Question: "${reading.question}"\n`;
+  let formattedData = `## Chart Data for Question: "${question}"\n`;
   formattedData += `**Time**: ${new Date(
     reading.timestamp
   ).toLocaleString()}\n`;
@@ -539,7 +547,7 @@ export const continueHoraryConversation = async (
         content: `${formattedChart}\n\nPlease analyze this horary chart.`,
       },
       ...conversationHistory,
-      { role: "user" as const, content: newMessage },
+      { role: "user" as const, content: sanitizeQuestion(newMessage) },
     ];
 
     const response = await openai.chat.completions.create({

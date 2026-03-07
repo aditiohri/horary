@@ -35,10 +35,16 @@ const formatDateTimeLocal = (date: Date): string => {
   return `${year}-${month}-${day}T${hours}:${minutes}`;
 };
 
+const MAX_QUESTION_LENGTH = 500;
+
 // Validate question length
 const validateQuestion = () => {
   if (question.value.length < 10) {
     error.value = "Question must be at least 10 characters long";
+    return false;
+  }
+  if (question.value.length > MAX_QUESTION_LENGTH) {
+    error.value = `Question must be no more than ${MAX_QUESTION_LENGTH} characters`;
     return false;
   }
   error.value = "";
@@ -162,9 +168,15 @@ onMounted(() => {
             :class="{ error: error }"
             placeholder="Ask your horary question..."
             rows="1"
+            :maxlength="MAX_QUESTION_LENGTH"
             @input="validateQuestion"
             @keydown.enter.prevent="handleSubmit"></textarea>
-          <span v-if="error" class="error-message">{{ error }}</span>
+          <div class="question-meta">
+            <span v-if="error" class="error-message">{{ error }}</span>
+            <span class="char-counter" :class="{ 'char-counter--warn': question.length > MAX_QUESTION_LENGTH * 0.9 }">
+              {{ question.length }}/{{ MAX_QUESTION_LENGTH }}
+            </span>
+          </div>
         </div>
 
         <button
@@ -270,11 +282,28 @@ textarea.error {
   border-color: var(--color-error);
 }
 
+.question-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  min-height: 1.25rem;
+}
+
 .error-message {
   color: var(--color-error);
   font-size: 0.875rem;
   margin-top: 0.25rem;
-  display: block;
+}
+
+.char-counter {
+  font-size: 0.75rem;
+  color: var(--color-text-tertiary);
+  margin-top: 0.25rem;
+  margin-left: auto;
+}
+
+.char-counter--warn {
+  color: var(--color-error);
 }
 
 .location-error {

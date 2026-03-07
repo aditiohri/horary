@@ -140,6 +140,19 @@ class ReadingStorage {
     }
   }
 
+  // Import a complete reading (e.g. from a share link), deduplicating by ID
+  importReading(reading: StoredReading): void {
+    const readings = this.getAllReadings();
+    if (!readings.some(r => r.id === reading.id)) {
+      readings.unshift(reading);
+      try {
+        localStorage.setItem(this.STORAGE_KEY, JSON.stringify(readings));
+      } catch (error) {
+        console.error("Error importing reading:", error);
+      }
+    }
+  }
+
   // Generate a unique ID
   private generateId(): string {
     return Date.now().toString(36) + Math.random().toString(36).substr(2);
@@ -181,25 +194,54 @@ class ReadingStorage {
 // Create and export a singleton instance
 export const readingStorage = new ReadingStorage();
 
-// Encode a reading into a shareable URL
-export function encodeReadingToUrl(reading: StoredReading): string {
-  const json = JSON.stringify(reading);
-  const encoded = btoa(encodeURIComponent(json));
+// Encode a reading into a shareable URL (gzip + URL-safe base64)
+export async function encodeReadingToUrl(reading: StoredReading): Promise<string> {
+  const bytes = new TextEncoder().encode(JSON.stringify(reading));
+  const stream = new ReadableStream({
+    start(c) { c.enqueue(bytes); c.close(); },
+  });
+  const compressed = stream.pipeThrough(new CompressionStream("gzip"));
+  const chunks: Uint8Array[] = [];
+  const reader = compressed.getReader();
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    chunks.push(value);
+  }
+  const out = new Uint8Array(chunks.reduce((n, c) => n + c.length, 0));
+  let offset = 0;
+  for (const chunk of chunks) { out.set(chunk, offset); offset += chunk.length; }
+  const base64url = btoa(String.fromCodePoint(...out))
+    .replace(/\+/g, "-").replace(/\//g, "_").replace(/=/g, "");
   const url = new URL(window.location.href);
-  url.search = "";
-  url.hash = "";
-  url.searchParams.set("share", encoded);
+  url.search = ""; url.hash = "";
+  url.searchParams.set("share", base64url);
   return url.toString();
 }
 
 // Decode a shared reading from the current URL's ?share= param
-export function decodeReadingFromUrl(): StoredReading | null {
-  const params = new URLSearchParams(window.location.search);
-  const encoded = params.get("share");
+export async function decodeReadingFromUrl(): Promise<StoredReading | null> {
+  const encoded = new URLSearchParams(window.location.search).get("share");
   if (!encoded) return null;
   try {
-    const json = decodeURIComponent(atob(encoded));
-    return JSON.parse(json) as StoredReading;
+    const padded = encoded.replace(/-/g, "+").replace(/_/g, "/")
+      + "==".slice(0, (4 - encoded.length % 4) % 4);
+    const bytes = Uint8Array.from(atob(padded), c => c.codePointAt(0)!);
+    const stream = new ReadableStream({
+      start(c) { c.enqueue(bytes); c.close(); },
+    });
+    const decompressed = stream.pipeThrough(new DecompressionStream("gzip"));
+    const chunks: Uint8Array[] = [];
+    const reader = decompressed.getReader();
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      chunks.push(value);
+    }
+    const out = new Uint8Array(chunks.reduce((n, c) => n + c.length, 0));
+    let offset = 0;
+    for (const chunk of chunks) { out.set(chunk, offset); offset += chunk.length; }
+    return JSON.parse(new TextDecoder().decode(out)) as StoredReading;
   } catch {
     return null;
   }
@@ -218,6 +260,7 @@ export function useReadingStorage() {
       readingStorage.getReadingsByDateRange.bind(readingStorage),
     exportReadings: readingStorage.exportReadings.bind(readingStorage),
     importReadings: readingStorage.importReadings.bind(readingStorage),
+    importReading: readingStorage.importReading.bind(readingStorage),
     getStorageStats: readingStorage.getStorageStats.bind(readingStorage),
   };
 }

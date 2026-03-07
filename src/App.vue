@@ -4,7 +4,7 @@ import UserChat from "./components/UserChat.vue";
 import ReadingHistory from "./components/ReadingHistory.vue";
 import LLMSettings from "./components/LLMSettings.vue";
 import HoraryInfoModal from "./components/HoraryInfoModal.vue";
-import { useReadingStorage, decodeReadingFromUrl, type StoredReading } from './utils/storage';
+import { readingStorage, decodeReadingFromUrl, type StoredReading } from './utils/storage';
 import { useDarkMode } from './composables/useDarkMode';
 
 type AppView = 'chat' | 'history';
@@ -12,7 +12,6 @@ type AppView = 'chat' | 'history';
 const currentView = ref<AppView>('chat');
 const selectedHistoryReading = ref<StoredReading | null>(null);
 const chatResetKey = ref(0); // Used to force UserChat component to reset
-const { getStorageStats } = useReadingStorage();
 const { isDark, toggleDarkMode } = useDarkMode();
 const showSettings = ref(false);
 const showHoraryInfo = ref(false);
@@ -33,11 +32,12 @@ const handleSelectReading = (reading: StoredReading) => {
   currentView.value = 'chat';
 };
 
-const storageStats = getStorageStats();
+const storageStats = readingStorage.getStorageStats();
 
-onMounted(() => {
-  const sharedReading = decodeReadingFromUrl();
+onMounted(async () => {
+  const sharedReading = await decodeReadingFromUrl();
   if (sharedReading) {
+    readingStorage.importReading(sharedReading);
     selectedHistoryReading.value = sharedReading;
     // Remove the ?share= param from the URL without a page reload
     const url = new URL(window.location.href);

@@ -91,7 +91,7 @@ const handleDelete = async () => {
 
 // Copy share link for a reading
 const copyShareLink = async (reading: StoredReading) => {
-  const url = encodeReadingToUrl(reading);
+  const url = await encodeReadingToUrl(reading);
   try {
     await navigator.clipboard.writeText(url);
     copiedReadingId.value = reading.id;

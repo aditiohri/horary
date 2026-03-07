@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, nextTick, watch, onMounted } from "vue";
+import { ref, nextTick, watch, onMounted, onUnmounted } from "vue";
 import { Chart } from "@astrodraw/astrochart";
 import QuestionForm from "./QuestionForm.vue";
 import HoraryChart from "./HoraryChart.vue";
@@ -30,14 +30,19 @@ const { saveReading, updateReading } = useReadingStorage();
 const chartData = ref<QuestionData | null>(null);
 const showConversation = ref(false);
 const currentReadingId = ref<string | null>(null);
-const activeTab = ref<'wheel' | 'data'>('wheel');
+const activeTab = ref<'chat' | 'wheel' | 'data'>('chat');
 const showAbout = ref(false);
+const isMobile = ref(window.innerWidth <= 768);
+
+const handleResize = () => {
+  isMobile.value = window.innerWidth <= 768;
+};
 
 const handleChartCalculated = async (data: QuestionData) => {
   chartData.value = data;
 
   showConversation.value = true;
-  activeTab.value = 'wheel'; // Start with chart wheel view
+  activeTab.value = 'chat'; // Start with chat tab
 
   // Save the new reading to storage
   try {
@@ -221,6 +226,14 @@ watch(
   { immediate: true }
 );
 
+onMounted(() => {
+  window.addEventListener('resize', handleResize);
+});
+
+onUnmounted(() => {
+  window.removeEventListener('resize', handleResize);
+});
+
 // Load selected reading on mount if provided
 onMounted(async () => {
   if (props.selectedReading) {
@@ -263,28 +276,11 @@ watch(activeTab, async (newTab) => {
       </div>
 
       <div v-else class="reading-layout">
-        <!-- Chart display -->
-        <div class="chart-section">
-          <!-- Tab Navigation -->
-          <div class="tab-navigation">
-            <button
-              @click="activeTab = 'wheel'"
-              :class="['tab-button', { active: activeTab === 'wheel' }]"
-            >
-              Chart Wheel
-            </button>
-            <button
-              @click="activeTab = 'data'"
-              :class="['tab-button', { active: activeTab === 'data' }]"
-            >
-              Chart Data
-            </button>
-          </div>
-
-          <!-- Tab Content -->
+        <!-- Chart display (desktop only — unmounted on mobile to avoid #paper conflict) -->
+        <div v-if="!isMobile" class="chart-section">
           <div class="tab-content">
-            <HoraryChart v-if="activeTab === 'wheel'" :chart-data="chartData" />
-            <ChartDataView v-if="activeTab === 'data'" :chart-data="chartData" />
+            <HoraryChart v-show="activeTab !== 'data'" :chart-data="chartData" />
+            <ChartDataView v-show="activeTab === 'data'" :chart-data="chartData" />
           </div>
 
           <div class="chart-actions">
@@ -299,7 +295,43 @@ watch(activeTab, async (newTab) => {
 
         <!-- Conversation interface -->
         <div v-if="showConversation" class="conversation-section">
+          <!-- Unified tab navigation -->
+          <div class="tab-navigation">
+            <button
+              @click="activeTab = 'chat'"
+              :class="['tab-button', { active: activeTab === 'chat' }]"
+            >
+              Chat
+            </button>
+            <button
+              @click="activeTab = 'wheel'"
+              :class="['tab-button', { active: activeTab === 'wheel' }]"
+            >
+              Chart Wheel
+            </button>
+            <button
+              @click="activeTab = 'data'"
+              :class="['tab-button', { active: activeTab === 'data' }]"
+            >
+              Chart Data
+            </button>
+          </div>
+
+          <!-- Mobile-only chart views (rendered here since chart-section is unmounted) -->
+          <template v-if="isMobile">
+            <HoraryChart v-if="activeTab === 'wheel'" :chart-data="chartData" />
+            <ChartDataView v-if="activeTab === 'data'" :chart-data="chartData" />
+            <div v-if="activeTab !== 'chat'" class="mobile-chart-actions">
+              <button @click="startNewReading" class="new-reading-button">
+                Ask Another Question
+              </button>
+              <span v-if="currentReadingId" class="reading-saved"> ✓ Reading saved </span>
+            </div>
+          </template>
+
+          <!-- Chat (always on desktop; only when chat tab active on mobile) -->
           <Chat
+            v-if="!isMobile || activeTab === 'chat'"
             :reading="chartData"
             :existing-conversation="selectedReading?.conversation || []"
             @conversation-update="handleConversationUpdate" />
@@ -568,9 +600,17 @@ watch(activeTab, async (newTab) => {
 .tab-navigation {
   display: flex;
   gap: 0.5rem;
-  margin-bottom: 1rem;
   border-bottom: 2px solid var(--color-border);
   padding-bottom: 0;
+}
+
+.mobile-chart-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem 1rem;
+  flex-wrap: wrap;
 }
 
 .tab-button {
@@ -601,6 +641,7 @@ watch(activeTab, async (newTab) => {
   min-height: 300px;
   overflow: hidden;
 }
+
 
 .input-area {
   position: sticky;
@@ -637,11 +678,15 @@ watch(activeTab, async (newTab) => {
 @media (max-width: 768px) {
   .reading-layout {
     grid-template-columns: 1fr;
-    gap: 1rem;
+    gap: 0;
   }
 
+  /* Remove the card container on mobile so chat fills the viewport edge-to-edge */
   .content-area {
-    padding: 0.75rem;
+    padding: 0;
+    border-radius: 0;
+    box-shadow: none;
+    background: transparent;
   }
 
   .welcome-message {
@@ -652,28 +697,11 @@ watch(activeTab, async (newTab) => {
     grid-template-columns: 1fr;
     gap: 1rem;
   }
-
-  .chart-section {
-    order: 2; /* Chart comes after conversation on mobile */
-  }
-
-  .conversation-section {
-    order: 1;
-  }
 }
 
 @media (max-width: 640px) {
-  .content-area {
-    padding: 0.5rem;
-    border-radius: 0.5rem;
-  }
-
   .reading-layout {
-    gap: 0.5rem;
-  }
-
-  .chart-section {
-    gap: 0.5rem;
+    gap: 0;
   }
 
   .chart-actions {

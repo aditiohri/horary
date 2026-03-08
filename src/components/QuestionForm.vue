@@ -9,6 +9,7 @@ interface QuestionData {
     latitude: number;
     longitude: number;
   };
+  locationName?: string;
   chartData: any;
 }
 
@@ -136,6 +137,7 @@ const handleSubmit = async () => {
       question: question.value,
       timestamp: questionTime.toISOString(),
       location: location.value,
+      locationName: locationName.value || undefined,
       chartData,
     };
 

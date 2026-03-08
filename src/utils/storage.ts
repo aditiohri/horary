@@ -9,6 +9,7 @@ export interface StoredReading {
     latitude: number;
     longitude: number;
   };
+  locationName?: string;
   chartData: any;
   conversation: Array<{
     role: "user" | "assistant";

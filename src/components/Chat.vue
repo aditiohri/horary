@@ -176,11 +176,10 @@ const questionInfo = computed(() => {
   return {
     question: props.reading.question,
     time: new Date(props.reading.timestamp).toLocaleString(),
-    location: props.reading.location
-      ? `${props.reading.location.latitude.toFixed(
-          2
-        )}°, ${props.reading.location.longitude.toFixed(2)}°`
-      : "Location not provided",
+    location: props.reading.locationName
+      || (props.reading.location
+        ? `${props.reading.location.latitude.toFixed(2)}°, ${props.reading.location.longitude.toFixed(2)}°`
+        : "Location not provided"),
   };
 });
 
@@ -352,9 +351,6 @@ watch(() => props.reading, (newReading) => {
 
 .question-preview {
   flex: 1;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
   color: var(--color-text-secondary);
 }
 

@@ -14,6 +14,7 @@ interface QuestionData {
     latitude: number;
     longitude: number;
   };
+  locationName?: string;
   chartData: any;
 }
 
@@ -50,6 +51,7 @@ const handleChartCalculated = async (data: QuestionData) => {
       question: data.question,
       timestamp: data.timestamp,
       location: data.location,
+      locationName: data.locationName,
       chartData: data.chartData,
       conversation: [],
     });
@@ -210,6 +212,7 @@ watch(
         question: newReading.question,
         timestamp: newReading.timestamp,
         location: newReading.location,
+        locationName: newReading.locationName,
         chartData: newReading.chartData,
       };
       showConversation.value = true;
@@ -241,6 +244,7 @@ onMounted(async () => {
       question: props.selectedReading.question,
       timestamp: props.selectedReading.timestamp,
       location: props.selectedReading.location,
+      locationName: props.selectedReading.locationName,
       chartData: props.selectedReading.chartData,
     };
     showConversation.value = true;

@@ -10,12 +10,14 @@ import { getUsageStats } from '../utils/llm/freeTier';
 const props = defineProps<{
   modelValue: boolean;
   isDark: boolean;
+  readingsCount: number;
 }>();
 
 const emit = defineEmits<{
   'update:modelValue': [value: boolean];
   'toggleDark': [];
   'feedback': [];
+  'viewHistory': [];
 }>();
 
 const {
@@ -221,6 +223,20 @@ onUnmounted(() => {
       </div>
 
       <div class="modal-content">
+        <!-- Reading History -->
+        <div class="readings-history-section">
+          <div class="readings-history-info">
+            <span class="readings-history-label">Reading History</span>
+            <span class="readings-history-count">{{ props.readingsCount }} {{ props.readingsCount === 1 ? 'reading' : 'readings' }}</span>
+          </div>
+          <button
+            class="view-history-button"
+            @click="() => { emit('viewHistory'); emit('update:modelValue', false); }"
+          >
+            View All Readings →
+          </button>
+        </div>
+
         <!-- Appearance -->
         <div class="form-group">
           <label>Appearance</label>
@@ -908,6 +924,55 @@ onUnmounted(() => {
   font-size: 0.875rem;
   color: var(--color-warning);
   line-height: 1.5;
+}
+
+/* Reading History section at top of settings */
+.readings-history-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.875rem 1rem;
+  background: var(--color-surface-raised);
+  border-radius: 0.5rem;
+  border: 1px solid var(--color-border);
+}
+
+.readings-history-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.readings-history-label {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.readings-history-count {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.view-history-button {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: var(--color-accent);
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+  transition: color 0.2s ease;
+}
+
+.view-history-button:hover {
+  color: var(--color-accent-hover);
+  text-decoration: underline;
 }
 
 /* Theme toggle button */

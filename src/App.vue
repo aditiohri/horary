@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, watch, onMounted } from 'vue';
 import UserChat from "./components/UserChat.vue";
 import ReadingHistory from "./components/ReadingHistory.vue";
 import LLMSettings from "./components/LLMSettings.vue";
@@ -17,6 +17,12 @@ const { isDark, toggleDarkMode } = useDarkMode();
 const showSettings = ref(false);
 const showHoraryInfo = ref(false);
 const showFeedback = ref(false);
+
+const savedReadingsCount = ref(readingStorage.getStorageStats().totalReadings);
+const refreshReadingsCount = () => {
+  savedReadingsCount.value = readingStorage.getStorageStats().totalReadings;
+};
+watch(currentView, refreshReadingsCount);
 
 const startNewReading = () => {
   selectedHistoryReading.value = null;
@@ -37,6 +43,7 @@ const handleSelectReading = (reading: StoredReading) => {
 };
 
 onMounted(async () => {
+  refreshReadingsCount();
   const sharedReading = await decodeReadingFromUrl();
   if (sharedReading) {
     readingStorage.importReading(sharedReading);
@@ -140,8 +147,19 @@ onMounted(async () => {
 
     <!-- Bottom bar: mobile only -->
     <div class="bottom-bar">
-      <button class="bottom-new-reading" @click="startNewReading">
+      <button
+        v-if="currentView === 'home'"
+        class="bottom-new-reading"
+        @click="startNewReading"
+      >
         ✦ New Reading
+      </button>
+      <button
+        v-else
+        class="bottom-saved-readings"
+        @click="goHome"
+      >
+        📜 Saved Readings ({{ savedReadingsCount }})
       </button>
     </div>
 
@@ -149,8 +167,10 @@ onMounted(async () => {
     <LLMSettings
       v-model="showSettings"
       :is-dark="isDark"
+      :readings-count="savedReadingsCount"
       @toggle-dark="toggleDarkMode"
       @feedback="showFeedback = true"
+      @view-history="() => { showSettings = false; goHome(); }"
     />
 
     <!-- Horary Info Modal -->
@@ -533,6 +553,28 @@ body {
 }
 
 .bottom-new-reading:active {
+  transform: scale(0.98);
+}
+
+.bottom-saved-readings {
+  flex: 1;
+  background: var(--color-surface-raised);
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-border);
+  padding: 0.75rem 1rem;
+  border-radius: 9999px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.bottom-saved-readings:hover {
+  background: var(--color-bg-hover);
+}
+
+.bottom-saved-readings:active {
   transform: scale(0.98);
 }
 

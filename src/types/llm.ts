@@ -75,7 +75,7 @@ export const PROVIDER_CONFIGS: Record<LLMProvider, ProviderConfig> = {
   },
   'groq-free': {
     id: 'groq-free',
-    name: 'Free Tier (Groq)',
+    name: 'Shared (Groq)',
     description: 'Try the app with Groq\'s free tier. Fast responses with generous limits.',
     requiresApiKey: false,
     supportsLocal: false,
@@ -89,7 +89,7 @@ export const PROVIDER_CONFIGS: Record<LLMProvider, ProviderConfig> = {
   },
   groq: {
     id: 'groq',
-    name: 'Groq (Your API Key)',
+    name: 'Personal (Groq)',
     description: 'Use your own Groq API key for personal limits — no sharing with other users.',
     requiresApiKey: true,
     supportsLocal: false,

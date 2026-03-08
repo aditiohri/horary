@@ -492,7 +492,7 @@ onUnmounted(() => {
             </div>
 
             <div v-else-if="localProvider === 'groq-free'" class="help-section">
-              <h4 style="margin-top: 0; color: var(--color-text-primary);">Free Tier with Groq</h4>
+              <h4 style="margin-top: 0; color: var(--color-text-primary);">Shared (Groq)</h4>
               <p class="form-help">
                 Try the app with Groq's lightning-fast free tier using our shared API key:
               </p>
@@ -510,7 +510,7 @@ onUnmounted(() => {
             </div>
 
             <div v-else-if="localProvider === 'groq'" class="help-section">
-              <h4 style="margin-top: 0; color: var(--color-text-primary);">Groq with Your API Key</h4>
+              <h4 style="margin-top: 0; color: var(--color-text-primary);">Personal (Groq)</h4>
               <p class="form-help">
                 Use your own Groq API key for personal limits — no sharing with other app users:
               </p>

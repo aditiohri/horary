@@ -7,14 +7,19 @@ const rateLimitMap = new Map<string, { count: number; windowStart: number }>();
 const RATE_LIMIT_WINDOW_MS = 60_000;
 const RATE_LIMIT_MAX_REQUESTS = 20;
 
-function humanizeGroqError(status: number, error?: { type?: string; code?: string; message?: string }): string {
+function humanizeGroqError(status: number, isUserKey: boolean, error?: { type?: string; code?: string; message?: string }): string {
   const errorType = error?.type || '';
-  const errorCode = error?.code || '';
 
   if (status === 401) {
+    if (isUserKey) {
+      return 'Your Groq API key was rejected. Please double-check it in Settings and try again.';
+    }
     return 'The AI service credentials are misconfigured. Please contact the developer.';
   }
   if (status === 403) {
+    if (isUserKey) {
+      return 'Your Groq API key doesn\'t have permission to use this model. Try a different model or check your Groq account.';
+    }
     return 'Access to this AI model is restricted. Please contact the developer.';
   }
   if (status === 404) {
@@ -27,7 +32,10 @@ function humanizeGroqError(status: number, error?: { type?: string; code?: strin
     return 'Something about your question couldn\'t be processed. Try rephrasing it, and if it keeps happening, contact the developer.';
   }
   if (status === 429) {
-    if (errorType === 'tokens' || errorCode === 'rate_limit_exceeded' || errorType.includes('token')) {
+    if (isUserKey) {
+      return 'You\'ve hit your personal Groq rate limit. Please wait a moment and try again.';
+    }
+    if (errorType === 'tokens' || errorType.includes('token')) {
       return 'This shared AI service has used a lot of capacity recently — you\'re not the only one using it! Please wait a moment and try again.';
     }
     return 'This shared AI service is currently at capacity — you\'re not the only one using it! Please wait a moment and try again.';
@@ -70,7 +78,7 @@ export const handler: Handler = async (event: HandlerEvent) => {
       headers: {
         'Access-Control-Allow-Origin': corsOrigin,
         'Access-Control-Allow-Methods': 'POST, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Groq-API-Key',
       },
       body: '',
     };
@@ -92,8 +100,28 @@ export const handler: Handler = async (event: HandlerEvent) => {
     };
   }
 
-  // Check if API key is configured
-  if (!GROQ_API_KEY) {
+  // Check for user-provided API key in header
+  const userProvidedKey = event.headers['x-groq-api-key'] || '';
+  const isUserKey = userProvidedKey.length > 0;
+
+  if (isUserKey) {
+    if (!userProvidedKey.startsWith('gsk_')) {
+      return {
+        statusCode: 400,
+        headers: {
+          'Access-Control-Allow-Origin': corsOrigin,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ error: 'Invalid API key format. Groq keys should start with gsk_.' }),
+      };
+    }
+  }
+
+  // Determine which API key to use
+  const apiKeyToUse = isUserKey ? userProvidedKey : GROQ_API_KEY;
+
+  // Check if API key is available
+  if (!apiKeyToUse) {
     console.error('GROQ_FREE_TIER_KEY environment variable is not set');
     return {
       statusCode: 500,
@@ -135,12 +163,12 @@ export const handler: Handler = async (event: HandlerEvent) => {
       };
     }
 
-    // Forward request to Groq
+    // Forward request to Groq (key is never logged)
     const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${GROQ_API_KEY}`,
+        'Authorization': `Bearer ${apiKeyToUse}`,
       },
       body: JSON.stringify(requestBody),
     });
@@ -149,7 +177,11 @@ export const handler: Handler = async (event: HandlerEvent) => {
 
     // Check if Groq returned an error
     if (!response.ok) {
-      console.error('Groq API error:', data);
+      if (isUserKey) {
+        console.error('Groq API error (user key):', response.status, data?.error?.type);
+      } else {
+        console.error('Groq API error:', data);
+      }
       return {
         statusCode: response.status,
         headers: {
@@ -157,7 +189,7 @@ export const handler: Handler = async (event: HandlerEvent) => {
           'Access-Control-Allow-Headers': 'Content-Type',
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ error: humanizeGroqError(response.status, data?.error) }),
+        body: JSON.stringify({ error: humanizeGroqError(response.status, isUserKey, data?.error) }),
       };
     }
 

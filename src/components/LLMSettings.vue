@@ -31,11 +31,12 @@ const {
 // Local form state
 const localProvider = ref<LLMProvider>(settings.provider);
 const localBaseUrl = ref(settings.provider === 'ollama' ? settings.baseUrl : 'http://localhost:11434/v1/');
-const localApiKey = ref('');
+const localApiKey = ref(settings.provider === 'groq' ? settings.apiKey : '');
 const localModel = ref(settings.model);
 const localTimeout = ref(settings.timeout);
 const hasUnsavedChanges = ref(false);
 const showApiKey = ref(false);
+const apiKeyError = ref('');
 
 // Reactive trigger for usage stats updates
 const usageStatsVersion = ref(0);
@@ -60,26 +61,36 @@ const usageStats = computed(() => {
 // Watch for changes to detect unsaved state
 watch([localProvider, localBaseUrl, localApiKey, localModel, localTimeout], () => {
   const savedBaseUrl = settings.provider === 'ollama' ? settings.baseUrl : '';
+  const savedApiKey = settings.provider === 'groq' ? settings.apiKey : '';
 
   hasUnsavedChanges.value =
     localProvider.value !== settings.provider ||
     localBaseUrl.value !== savedBaseUrl ||
-    localApiKey.value !== '' ||
+    localApiKey.value !== savedApiKey ||
     localModel.value !== settings.model ||
     localTimeout.value !== settings.timeout;
+
+  // Clear API key error when user edits the key
+  if (apiKeyError.value) {
+    apiKeyError.value = '';
+  }
 });
 
 // Reset fields when provider changes
 watch(localProvider, (newProvider) => {
   const config = getProviderConfig(newProvider);
   localModel.value = config.defaultModel;
+  apiKeyError.value = '';
 
   if (newProvider === 'ollama') {
     localBaseUrl.value = 'http://localhost:11434/v1/';
     localApiKey.value = '';
   } else if (newProvider === 'openrouter-free') {
-    // Free tier doesn't need API key or base URL
     localApiKey.value = '';
+    localBaseUrl.value = '';
+  } else if (newProvider === 'groq') {
+    // Pre-fill saved key if switching back to groq
+    localApiKey.value = settings.provider === 'groq' ? settings.apiKey : '';
     localBaseUrl.value = '';
   } else {
     localApiKey.value = '';
@@ -122,6 +133,18 @@ async function handleRefreshModels() {
 
 // Save settings handler
 function handleSave() {
+  // Validate API key for groq provider
+  if (localProvider.value === 'groq') {
+    if (!localApiKey.value.trim()) {
+      apiKeyError.value = 'Please enter your Groq API key before saving.';
+      return;
+    }
+    if (!localApiKey.value.startsWith('gsk_')) {
+      apiKeyError.value = 'Groq keys start with gsk_ — please check your key.';
+      return;
+    }
+  }
+
   updateSettings({
     provider: localProvider.value,
     baseUrl: localBaseUrl.value,
@@ -130,6 +153,7 @@ function handleSave() {
     timeout: localTimeout.value,
   } as any);
   hasUnsavedChanges.value = false;
+  apiKeyError.value = '';
   emit('update:modelValue', false);
 }
 
@@ -138,10 +162,11 @@ function handleCancel() {
   // Reset local form to saved settings
   localProvider.value = settings.provider;
   localBaseUrl.value = settings.provider === 'ollama' ? settings.baseUrl : 'http://localhost:11434/v1/';
-  localApiKey.value = '';
+  localApiKey.value = settings.provider === 'groq' ? settings.apiKey : '';
   localModel.value = settings.model;
   localTimeout.value = settings.timeout;
   hasUnsavedChanges.value = false;
+  apiKeyError.value = '';
   resetConnectionStatus();
   emit('update:modelValue', false);
 }
@@ -260,8 +285,8 @@ onUnmounted(() => {
           </div>
         </div>
 
-        <!-- Cloud providers: API Key -->
-        <div v-if="currentProviderConfig.requiresApiKey && localProvider !== 'openrouter-free'" class="form-group">
+        <!-- API Key field (for providers that require it, e.g. groq) -->
+        <div v-if="currentProviderConfig.requiresApiKey" class="form-group">
           <label for="api-key">API Key</label>
           <div class="api-key-input-group">
             <input
@@ -269,7 +294,9 @@ onUnmounted(() => {
               v-model="localApiKey"
               :type="showApiKey ? 'text' : 'password'"
               class="form-input"
+              :class="{ 'input-error': apiKeyError }"
               :placeholder="currentProviderConfig.apiKeyPlaceholder"
+              autocomplete="off"
             />
             <button
               @click="showApiKey = !showApiKey"
@@ -281,16 +308,20 @@ onUnmounted(() => {
               <span v-else>🔒</span>
             </button>
           </div>
+          <p v-if="apiKeyError" class="form-error">{{ apiKeyError }}</p>
           <p class="form-help">
-            Get your API key from
+            Get your free API key from
             <a
               :href="currentProviderConfig.getApiKeyUrl"
               target="_blank"
               rel="noopener noreferrer"
               class="help-link"
             >
-              {{ currentProviderConfig.name }}
+              console.groq.com/keys
             </a>
+          </p>
+          <p class="form-help security-notice">
+            Your key is stored in your browser only and sent directly to Groq via our proxy. It is never logged or shared.
           </p>
         </div>
 
@@ -436,6 +467,22 @@ onUnmounted(() => {
             for the same great performance without sharing limits.
           </p>
         </div>
+
+        <div v-else-if="localProvider === 'groq'" class="help-section">
+          <h4 style="margin-top: 0; color: var(--color-text-primary);">Groq with Your API Key</h4>
+          <p class="form-help">
+            Use your own Groq API key for personal limits — no sharing with other app users:
+          </p>
+          <ul style="margin: 0.5rem 0; padding-left: 1.5rem; color: var(--color-text-secondary); font-size: 0.875rem;">
+            <li><strong>Your own personal rate limits</strong> — independent from other users</li>
+            <li><strong>Access to all Groq models</strong> including the latest releases</li>
+            <li><strong>Free Groq accounts</strong> include generous personal quotas</li>
+          </ul>
+          <p class="form-help" style="margin-top: 0.75rem;">
+            Get a free API key at
+            <a href="https://console.groq.com/keys" target="_blank" rel="noopener noreferrer" class="help-link">console.groq.com/keys</a>
+          </p>
+        </div>
       </div>
 
       <div class="modal-footer">
@@ -549,6 +596,10 @@ onUnmounted(() => {
   border-color: var(--color-accent);
 }
 
+.form-input.input-error {
+  border-color: var(--color-error);
+}
+
 .form-help {
   font-size: 0.75rem;
   color: var(--color-text-tertiary);
@@ -561,6 +612,16 @@ onUnmounted(() => {
   border-radius: 0.25rem;
   font-family: monospace;
   font-size: 0.875em;
+}
+
+.form-error {
+  font-size: 0.75rem;
+  color: var(--color-error);
+  margin: 0;
+}
+
+.security-notice {
+  margin-top: 0.25rem;
 }
 
 .api-key-input-group {

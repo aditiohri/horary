@@ -108,6 +108,64 @@ async function testProviderConnection(
           error: 'Cannot reach Netlify function. Run "npm run dev" to start the local server.',
         };
       }
+    } else if (provider === 'groq') {
+      // Test user-provided Groq API key
+      if (settings.provider !== 'groq') {
+        return { status: 'error', error: 'Invalid settings for Groq provider' };
+      }
+
+      if (!settings.apiKey) {
+        return { status: 'error', error: 'Please enter your Groq API key first.' };
+      }
+
+      if (!settings.apiKey.startsWith('gsk_')) {
+        return { status: 'error', error: 'Invalid key format. Groq keys start with gsk_.' };
+      }
+
+      const baseURL = import.meta.env.DEV
+        ? 'http://localhost:8888/.netlify/functions'
+        : '/.netlify/functions';
+
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), settings.timeout);
+
+      try {
+        const response = await fetch(`${baseURL}/llm-proxy`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Groq-API-Key': settings.apiKey,
+          },
+          body: JSON.stringify({
+            model: settings.model,
+            messages: [{ role: 'user', content: 'hi' }],
+            max_tokens: 1,
+          }),
+          signal: controller.signal,
+        });
+
+        clearTimeout(timeoutId);
+
+        if (response.status === 200 || response.status === 400) {
+          return { status: 'success', message: 'API key verified — Groq is ready.' };
+        } else if (response.status === 401) {
+          return { status: 'error', error: 'API key rejected by Groq. Double-check it and try again.' };
+        } else if (response.status === 403) {
+          return { status: 'error', error: 'Your API key doesn\'t have permission for this model.' };
+        } else if (response.status === 429) {
+          return { status: 'success', message: 'Key is valid — you\'ve hit your rate limit right now. Wait a moment before making requests.' };
+        } else if (response.status === 404) {
+          return { status: 'error', error: 'Netlify function not deployed. Run "npm run dev" for local testing.' };
+        } else {
+          return { status: 'error', error: `Unexpected response: ${response.status}` };
+        }
+      } catch (error: any) {
+        clearTimeout(timeoutId);
+        if (error.name === 'AbortError') {
+          return { status: 'error', error: 'Connection timeout' };
+        }
+        return { status: 'error', error: 'Cannot reach the proxy. Run "npm run dev" to start the local server.' };
+      }
     }
 
     return {

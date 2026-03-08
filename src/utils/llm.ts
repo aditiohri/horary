@@ -460,7 +460,7 @@ export const generateHoraryReading = async (
     if (settings.provider === 'openrouter-free') {
       const quotaCheck = checkQuota();
       if (!quotaCheck.allowed) {
-        throw new Error(`Free tier limit reached: ${quotaCheck.reason}. Please add your own API key in Settings to continue.`);
+        throw new Error(quotaCheck.reason);
       }
     }
 
@@ -531,7 +531,7 @@ export const continueHoraryConversation = async (
     if (settings.provider === 'openrouter-free') {
       const quotaCheck = checkQuota();
       if (!quotaCheck.allowed) {
-        throw new Error(`Free tier limit reached: ${quotaCheck.reason}. Please add your own API key in Settings to continue.`);
+        throw new Error(quotaCheck.reason);
       }
     }
 
@@ -581,7 +581,7 @@ export const generateText = async (prompt: string): Promise<string | null> => {
     if (settings.provider === 'openrouter-free') {
       const quotaCheck = checkQuota();
       if (!quotaCheck.allowed) {
-        throw new Error(`Free tier limit reached: ${quotaCheck.reason}. Please add your own API key in Settings to continue.`);
+        throw new Error(quotaCheck.reason);
       }
     }
 

@@ -7,6 +7,7 @@ import {
   continueHoraryConversation,
   type HoraryReading,
 } from "../utils/llm";
+import { formatLLMError } from "../utils/llm/client";
 
 interface ConversationMessage {
   role: "user" | "assistant";
@@ -33,21 +34,7 @@ const questionCollapsed = ref(false);
 
 // Format error message with actionable guidance
 function formatErrorMessage(error: any): string {
-  const errorMessage = error?.message || String(error);
-
-  if (errorMessage.includes('Ollama server not running')) {
-    return `Unable to connect to Ollama server. Please ensure Ollama is running on your system. You can check your connection settings by clicking the settings button (⚙️) in the header.`;
-  }
-
-  if (errorMessage.includes('Model not found')) {
-    return `The selected model was not found. Please check your model settings by clicking the settings button (⚙️) in the header, or pull the model using the Ollama CLI.`;
-  }
-
-  if (errorMessage.includes('timeout')) {
-    return `Connection timeout. The Ollama server is not responding. Please check your settings (⚙️) or try increasing the timeout value.`;
-  }
-
-  return `Error: ${errorMessage}. Please check your Ollama settings (⚙️) and ensure the server is running.`;
+  return formatLLMError(error);
 }
 
 // Generate initial reading

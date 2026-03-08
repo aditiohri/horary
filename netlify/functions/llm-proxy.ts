@@ -7,6 +7,37 @@ const rateLimitMap = new Map<string, { count: number; windowStart: number }>();
 const RATE_LIMIT_WINDOW_MS = 60_000;
 const RATE_LIMIT_MAX_REQUESTS = 20;
 
+function humanizeGroqError(status: number, error?: { type?: string; code?: string; message?: string }): string {
+  const errorType = error?.type || '';
+  const errorCode = error?.code || '';
+
+  if (status === 401) {
+    return 'The AI service credentials are misconfigured. Please contact the developer.';
+  }
+  if (status === 403) {
+    return 'Access to this AI model is restricted. Please contact the developer.';
+  }
+  if (status === 404) {
+    return 'The requested AI model is unavailable right now. Please try again shortly.';
+  }
+  if (status === 413) {
+    return 'Your question is too long for the AI to process. Please shorten it and try again.';
+  }
+  if (status === 422) {
+    return 'Something about your question couldn\'t be processed. Try rephrasing it, and if it keeps happening, contact the developer.';
+  }
+  if (status === 429) {
+    if (errorType === 'tokens' || errorCode === 'rate_limit_exceeded' || errorType.includes('token')) {
+      return 'This shared AI service has used a lot of capacity recently — you\'re not the only one using it! Please wait a moment and try again.';
+    }
+    return 'This shared AI service is currently at capacity — you\'re not the only one using it! Please wait a moment and try again.';
+  }
+  if (status >= 500) {
+    return 'The AI service is temporarily unavailable. Please try again in a few minutes.';
+  }
+  return 'The AI service encountered an unexpected problem. Please try again shortly.';
+}
+
 function isRateLimited(ip: string): boolean {
   const now = Date.now();
   const entry = rateLimitMap.get(ip);
@@ -66,7 +97,7 @@ export const handler: Handler = async (event: HandlerEvent) => {
     console.error('GROQ_FREE_TIER_KEY environment variable is not set');
     return {
       statusCode: 500,
-      body: JSON.stringify({ error: 'Server configuration error' }),
+      body: JSON.stringify({ error: 'The service is not properly configured. Please contact the developer.' }),
     };
   }
 
@@ -82,7 +113,7 @@ export const handler: Handler = async (event: HandlerEvent) => {
         'Access-Control-Allow-Origin': corsOrigin,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ error: 'Too many requests - please try again later' }),
+      body: JSON.stringify({ error: 'You\'ve made too many requests in a short time. Please wait a minute and try again.' }),
     };
   }
 
@@ -126,7 +157,7 @@ export const handler: Handler = async (event: HandlerEvent) => {
           'Access-Control-Allow-Headers': 'Content-Type',
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ error: data?.error?.message || 'LLM provider error' }),
+        body: JSON.stringify({ error: humanizeGroqError(response.status, data?.error) }),
       };
     }
 
@@ -149,7 +180,7 @@ export const handler: Handler = async (event: HandlerEvent) => {
         'Access-Control-Allow-Headers': 'Content-Type',
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ error: 'Internal server error' }),
+      body: JSON.stringify({ error: 'Something went wrong on our end. Please try again shortly.' }),
     };
   }
 };

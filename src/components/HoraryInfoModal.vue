@@ -62,7 +62,7 @@ const close = () => emit('update:modelValue', false);
 }
 
 .modal {
-  background: var(--color-bg-secondary);
+  background: var(--color-surface);
   border-radius: 0.75rem;
   max-width: 520px;
   width: 100%;
@@ -121,7 +121,7 @@ const close = () => emit('update:modelValue', false);
 .tradition-note {
   padding-top: 0.75rem;
   border-top: 1px solid var(--color-border);
-  color: var(--color-text-tertiary) !important;
+  color: var(--color-text-muted) !important;
   font-size: 0.875rem !important;
 }
 </style>

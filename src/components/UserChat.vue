@@ -411,7 +411,7 @@ watch(activeTab, async (newTab) => {
   min-height: 0;
   overflow-y: auto;
   padding: 1rem;
-  background: var(--color-bg-secondary);
+  background: var(--color-surface);
   border-radius: 1rem;
   box-shadow: var(--shadow-md);
   width: 100%;
@@ -447,7 +447,7 @@ watch(activeTab, async (newTab) => {
   align-items: flex-start;
   gap: 1rem;
   padding: 1rem;
-  background: var(--color-bg-tertiary);
+  background: var(--color-surface-raised);
   border-radius: 0.75rem;
   border: 1px solid var(--color-border);
   transition: background-color 0.3s ease, border-color 0.3s ease;
@@ -492,7 +492,7 @@ watch(activeTab, async (newTab) => {
 }
 
 .about-toggle:hover {
-  background: var(--color-bg-tertiary);
+  background: var(--color-surface-raised);
   color: var(--color-text-primary);
 }
 
@@ -515,7 +515,7 @@ watch(activeTab, async (newTab) => {
 
 .about-card {
   padding: 1rem;
-  background: var(--color-bg-tertiary);
+  background: var(--color-surface-raised);
   border-radius: 0.75rem;
   border: 1px solid var(--color-border);
 }
@@ -624,7 +624,7 @@ watch(activeTab, async (newTab) => {
   padding: 0.75rem 1.5rem;
   font-size: 1rem;
   font-weight: 500;
-  color: var(--color-text-tertiary);
+  color: var(--color-text-muted);
   cursor: pointer;
   border-bottom: 2px solid transparent;
   margin-bottom: -2px;
@@ -633,7 +633,7 @@ watch(activeTab, async (newTab) => {
 
 .tab-button:hover {
   color: var(--color-text-primary);
-  background: var(--color-bg-tertiary);
+  background: var(--color-surface-raised);
 }
 
 .tab-button.active {
@@ -651,7 +651,7 @@ watch(activeTab, async (newTab) => {
 .input-area {
   position: sticky;
   bottom: 0;
-  background: var(--color-bg-primary);
+  background: var(--color-bg);
   padding: 1rem 0;
   margin-top: auto;
   width: 100%;
@@ -698,7 +698,7 @@ watch(activeTab, async (newTab) => {
     position: sticky;
     top: 0;
     z-index: 5;
-    background: var(--color-bg-primary);
+    background: var(--color-bg);
     transition: background-color 0.3s ease;
   }
 

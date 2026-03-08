@@ -145,57 +145,85 @@ html {
 
 /* CSS Custom Properties for Theming */
 :root {
-  /* Light mode — warm parchment with gold/amber highlights */
-  --color-bg-primary: #fdf8f0;
-  --color-bg-secondary: #fffcf5;
-  --color-bg-tertiary: #fdf1dc;
-  --color-bg-hover: #f5e6c0;
-  --color-bg-active: #d97706;
+  /* Light mode — warm parchment, aged ink, gold highlights */
 
+  /* Main page background — old vellum parchment */
+  --color-bg: #fdf6e8;
+  /* Card / panel background — slightly deeper manuscript page */
+  --color-surface: #faf0d8;
+  /* Elevated surfaces — dropdowns, modals, raised panels */
+  --color-surface-raised: #f4e4be;
+
+  /* Main body text — dark brown ink */
   --color-text-primary: #2d1f0e;
+  /* Supporting / secondary text — medium brown */
   --color-text-secondary: #6b4c2a;
-  --color-text-tertiary: #9a7148;
-  --color-text-inverse: #fffcf5;
+  /* Placeholders, disabled states, timestamps — light brown */
+  --color-text-muted: #9a7148;
 
-  --color-border: #e8d5a8;
-  --color-border-focus: #c9a84c;
+  /* Dividers and input borders — warm tan */
+  --color-border: #ddc896;
 
-  --color-accent: #d97706;
-  --color-accent-hover: #b45309;
-  --color-success: #65a30d;
-  --color-warning: #f59e0b;
-  --color-error: #dc2626;
+  /* Primary action color — rich amber-gold */
+  --color-accent: #b8690a;
+  /* Accent on hover / active state */
+  --color-accent-hover: #96550a;
+  /* Text and icons placed on top of the accent color */
+  --color-accent-foreground: #fffcf5;
 
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
+  /* Internal-use tokens (not in the public token spec) */
+  --color-bg-hover: #ecddb0;           /* hover state for interactive surfaces */
+  --color-bg-active: #b8690a;          /* active nav / selected state bg */
+  --color-text-inverse: #fffcf5;       /* light text on dark/accent backgrounds */
+  --color-border-focus: #c09030;       /* focus ring — warm gold */
+  --color-success: #4a8c12;
+  --color-warning: #d97706;
+  --color-error: #c52020;
+
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08);
   --shadow-md: 0 2px 4px rgba(0, 0, 0, 0.1);
-  --shadow-lg: 0 4px 6px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 4px 6px rgba(0, 0, 0, 0.12);
 }
 
-/* Dark mode — brownish black with cream text, gold and forest green */
+/* Dark mode — candlelight in a dark overgrown stairwell */
+/* Palette drawn from deep forest foliage, dark wood, and candleflame amber */
 :root.dark {
-  --color-bg-primary: #1a0e05;
-  --color-bg-secondary: #261507;
-  --color-bg-tertiary: #3d2010;
-  --color-bg-hover: #522b14;
-  --color-bg-active: #b45309;
+  /* Main page background — near-black deep forest, like the darkest foliage */
+  --color-bg: #0e1a10;
+  /* Card / panel background — dark mid-foliage, shadowed wood */
+  --color-surface: #182b1a;
+  /* Elevated surfaces — slightly lighter canopy layer */
+  --color-surface-raised: #223424;
 
-  --color-text-primary: #fdf4dc;
-  --color-text-secondary: #e8d5b0;
-  --color-text-tertiary: #c4a882;
-  --color-text-inverse: #1a0e05;
+  /* Main body text — soft candle-wax cream */
+  --color-text-primary: #f2e8d0;
+  /* Supporting text — warmer cream with a hint of amber */
+  --color-text-secondary: #c8b896;
+  /* Placeholders, disabled, timestamps — warm muted tan */
+  --color-text-muted: #8a7a5c;
 
-  --color-border: #6b3d0f;
-  --color-border-focus: #a0591c;
+  /* Dividers and input borders — shadowed greenery */
+  --color-border: #2d4430;
 
-  --color-accent: #f59e0b;
-  --color-accent-hover: #d97706;
-  --color-success: #2d6a4f;
-  --color-warning: #d97706;
-  --color-error: #f87171;
+  /* Primary action color — candleflame amber */
+  --color-accent: #d4820a;
+  /* Accent on hover / active state — deeper ember */
+  --color-accent-hover: #b86d08;
+  /* Text and icons placed on top of the accent color */
+  --color-accent-foreground: #1a0d02;
 
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
-  --shadow-md: 0 2px 4px rgba(0, 0, 0, 0.4);
-  --shadow-lg: 0 4px 6px rgba(0, 0, 0, 0.4);
+  /* Internal-use tokens */
+  --color-bg-hover: #243826;           /* hover state — slightly brighter foliage */
+  --color-bg-active: #d4820a;          /* active nav — candleflame */
+  --color-text-inverse: #0e1a10;       /* dark text on light/accent backgrounds */
+  --color-border-focus: #a06820;       /* focus ring — warm amber-gold */
+  --color-success: #2a6a3a;
+  --color-warning: #d4820a;
+  --color-error: #e06060;
+
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.45);
+  --shadow-md: 0 2px 6px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 4px 12px rgba(0, 0, 0, 0.55);
 }
 
 body {
@@ -203,7 +231,7 @@ body {
     Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
   line-height: 1.6;
   color: var(--color-text-primary);
-  background-color: var(--color-bg-primary);
+  background-color: var(--color-bg);
   overflow-x: hidden;
   transition: background-color 0.3s ease, color 0.3s ease;
 }
@@ -219,7 +247,7 @@ body {
 
 /* Header */
 .app-header {
-  background-color: var(--color-bg-secondary);
+  background-color: var(--color-surface);
   padding: 1rem;
   box-shadow: var(--shadow-sm);
   position: sticky;
@@ -253,7 +281,7 @@ body {
 
 .info-tag {
   background: rgba(217, 119, 6, 0.08);
-  color: var(--color-text-tertiary);
+  color: var(--color-text-muted);
   border: 1px solid rgba(217, 119, 6, 0.2);
   border-radius: 9999px;
   font-size: 0.6875rem;
@@ -284,7 +312,7 @@ body {
 }
 
 .nav-button {
-  background: var(--color-bg-tertiary);
+  background: var(--color-surface-raised);
   color: var(--color-text-secondary);
   border: 1px solid var(--color-border);
   padding: 0.5rem 1rem;
@@ -325,7 +353,7 @@ body {
 
 /* Settings Button */
 .settings-button {
-  background: var(--color-bg-tertiary);
+  background: var(--color-surface-raised);
   border: 1px solid var(--color-border);
   border-radius: 0.5rem;
   padding: 0.5rem;
@@ -351,7 +379,7 @@ body {
 /* Feedback Button */
 .feedback-button {
   background: rgba(217, 119, 6, 0.08);
-  color: var(--color-text-tertiary);
+  color: var(--color-text-muted);
   border: 1px solid rgba(217, 119, 6, 0.2);
   border-radius: 9999px;
   font-size: 0.6875rem;
@@ -372,7 +400,7 @@ body {
 
 /* Dark Mode Toggle */
 .dark-mode-toggle {
-  background: var(--color-bg-tertiary);
+  background: var(--color-surface-raised);
   border: 1px solid var(--color-border);
   border-radius: 0.5rem;
   padding: 0.5rem;

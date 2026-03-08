@@ -236,7 +236,7 @@ onMounted(() => {
 <style scoped>
 .question-form-container {
   width: 100%;
-  background: var(--color-bg-secondary);
+  background: var(--color-surface);
   border-radius: 1rem;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   transition: background-color 0.3s ease;
@@ -271,7 +271,7 @@ textarea {
   min-height: 44px;
   max-height: 120px;
   overflow-y: auto;
-  background: var(--color-bg-primary);
+  background: var(--color-bg);
   color: var(--color-text-primary);
 }
 
@@ -299,7 +299,7 @@ textarea.error {
 
 .char-counter {
   font-size: 0.75rem;
-  color: var(--color-text-tertiary);
+  color: var(--color-text-muted);
   margin-top: 0.25rem;
   margin-left: auto;
 }
@@ -334,7 +334,7 @@ textarea.error {
 
 .submit-button:disabled {
   background-color: var(--color-bg-hover);
-  color: var(--color-text-tertiary);
+  color: var(--color-text-muted);
   cursor: not-allowed;
 }
 
@@ -359,7 +359,7 @@ textarea.error {
   flex-direction: column;
   gap: 1rem;
   padding: 1rem;
-  background: var(--color-bg-tertiary);
+  background: var(--color-surface-raised);
   border-radius: 0.5rem;
   border: 1px solid var(--color-border);
 }
@@ -381,7 +381,7 @@ textarea.error {
   border: 2px solid var(--color-border);
   border-radius: 0.5rem;
   font-size: 1rem;
-  background: var(--color-bg-primary);
+  background: var(--color-bg);
   color: var(--color-text-primary);
   transition: border-color 0.2s ease;
 }
@@ -393,7 +393,7 @@ textarea.error {
 
 .field-hint {
   font-size: 0.75rem;
-  color: var(--color-text-tertiary);
+  color: var(--color-text-muted);
   font-style: italic;
 }
 
@@ -402,7 +402,7 @@ textarea.error {
   align-items: center;
   gap: 0.75rem;
   padding: 0.75rem;
-  background: var(--color-bg-primary);
+  background: var(--color-bg);
   border-radius: 0.5rem;
   font-size: 0.875rem;
   color: var(--color-text-secondary);
@@ -423,7 +423,7 @@ textarea.error {
 
 .location-coords {
   font-size: 0.75rem;
-  color: var(--color-text-tertiary);
+  color: var(--color-text-muted);
   font-family: monospace;
 }
 

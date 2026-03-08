@@ -277,7 +277,7 @@ onMounted(loadReadings);
   display: flex;
   flex-direction: column;
   height: 100%;
-  background: var(--color-bg-secondary);
+  background: var(--color-surface);
   border-radius: 1rem;
   overflow: hidden;
 }
@@ -285,7 +285,7 @@ onMounted(loadReadings);
 .history-header {
   padding: 1.5rem;
   border-bottom: 1px solid var(--color-border);
-  background: var(--color-bg-tertiary);
+  background: var(--color-surface-raised);
 }
 
 .header-top {
@@ -327,7 +327,7 @@ onMounted(loadReadings);
   border-radius: 0.5rem;
   font-size: 1rem;
   transition: border-color 0.2s;
-  background: var(--color-bg-primary);
+  background: var(--color-bg);
   color: var(--color-text-primary);
 }
 
@@ -391,7 +391,7 @@ onMounted(loadReadings);
 }
 
 .reading-card {
-  background: var(--color-bg-tertiary);
+  background: var(--color-surface-raised);
   border: 1px solid var(--color-border);
   border-radius: 0.75rem;
   padding: 1rem;
@@ -413,7 +413,7 @@ onMounted(loadReadings);
 
 .reading-time {
   font-size: 0.875rem;
-  color: var(--color-text-tertiary);
+  color: var(--color-text-muted);
   font-weight: 500;
 }
 
@@ -468,7 +468,7 @@ onMounted(loadReadings);
   display: flex;
   gap: 1rem;
   font-size: 0.75rem;
-  color: var(--color-text-tertiary);
+  color: var(--color-text-muted);
 }
 
 .conversation-count {
@@ -497,7 +497,7 @@ onMounted(loadReadings);
 }
 
 .modal {
-  background: var(--color-bg-secondary);
+  background: var(--color-surface);
   border-radius: 0.75rem;
   padding: 1.5rem;
   max-width: 400px;
@@ -523,7 +523,7 @@ onMounted(loadReadings);
 }
 
 .cancel-button {
-  background: var(--color-bg-tertiary);
+  background: var(--color-surface-raised);
   color: var(--color-text-secondary);
   border: 1px solid var(--color-border);
   padding: 0.5rem 1rem;

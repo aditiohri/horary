@@ -547,7 +547,7 @@ const formatTimeToExact = (days: number | undefined) => {
 
 <style scoped>
 .chart-data-view {
-  background: var(--color-bg-secondary);
+  background: var(--color-surface);
   border-radius: 1rem;
   padding: 1.5rem;
   overflow-y: auto;
@@ -578,7 +578,7 @@ const formatTimeToExact = (days: number | undefined) => {
   padding: 0.4rem 0.9rem;
   border-radius: 0.375rem;
   border: 1px solid var(--color-border-focus);
-  background: var(--color-bg-tertiary);
+  background: var(--color-surface-raised);
   color: var(--color-text-secondary);
   font-size: 0.8rem;
   cursor: pointer;
@@ -609,7 +609,7 @@ const formatTimeToExact = (days: number | undefined) => {
 }
 
 .timestamp, .location {
-  color: var(--color-text-tertiary);
+  color: var(--color-text-muted);
   font-size: 0.85rem;
   margin: 0.25rem 0;
 }
@@ -648,7 +648,7 @@ const formatTimeToExact = (days: number | undefined) => {
   padding: 0.2rem 0.6rem;
   border: 1px solid var(--color-border-focus);
   border-radius: 0.25rem;
-  background: var(--color-bg-tertiary);
+  background: var(--color-surface-raised);
   color: var(--color-text-secondary);
   cursor: pointer;
   white-space: nowrap;
@@ -665,7 +665,7 @@ const formatTimeToExact = (days: number | undefined) => {
 .data-table {
   width: 100%;
   border-collapse: collapse;
-  background: var(--color-bg-secondary);
+  background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: 0.5rem;
   overflow: hidden;
@@ -673,7 +673,7 @@ const formatTimeToExact = (days: number | undefined) => {
 }
 
 .data-table thead {
-  background: var(--color-bg-tertiary);
+  background: var(--color-surface-raised);
 }
 
 .data-table th {
@@ -698,7 +698,7 @@ const formatTimeToExact = (days: number | undefined) => {
 }
 
 .data-table tbody tr:hover {
-  background: var(--color-bg-tertiary);
+  background: var(--color-surface-raised);
 }
 
 /* Planet Table */
@@ -750,7 +750,7 @@ const formatTimeToExact = (days: number | undefined) => {
 }
 
 .aspect-highlight {
-  background: var(--color-bg-secondary);
+  background: var(--color-surface);
   border-radius: 0.5rem;
   padding: 1rem;
   border: 1px solid var(--color-border);
@@ -777,7 +777,7 @@ const formatTimeToExact = (days: number | undefined) => {
 
 .orb {
   font-family: monospace;
-  background: var(--color-bg-tertiary);
+  background: var(--color-surface-raised);
   padding: 0.25rem 0.5rem;
   border-radius: 0.25rem;
 }
@@ -818,7 +818,7 @@ const formatTimeToExact = (days: number | undefined) => {
 }
 
 .no-aspect {
-  color: var(--color-text-tertiary);
+  color: var(--color-text-muted);
   font-style: italic;
   margin: 0;
 }
@@ -877,7 +877,7 @@ const formatTimeToExact = (days: number | undefined) => {
 }
 
 .past-time {
-  color: var(--color-text-tertiary);
+  color: var(--color-text-muted);
 }
 
 /* Houses Grid */
@@ -888,7 +888,7 @@ const formatTimeToExact = (days: number | undefined) => {
 }
 
 .house-item {
-  background: var(--color-bg-tertiary);
+  background: var(--color-surface-raised);
   border: 1px solid var(--color-border);
   border-radius: 0.5rem;
   padding: 0.75rem;
@@ -930,7 +930,7 @@ const formatTimeToExact = (days: number | undefined) => {
   color: var(--color-text-secondary);
   margin-left: 0.5rem;
   padding: 0.25rem 0.5rem;
-  background: var(--color-bg-tertiary);
+  background: var(--color-surface-raised);
   border-radius: 0.25rem;
 }
 
@@ -968,7 +968,7 @@ const formatTimeToExact = (days: number | undefined) => {
 }
 
 .dignity-score.neutral {
-  color: var(--color-text-tertiary);
+  color: var(--color-text-muted);
 }
 
 /* Row coloring by strength */
@@ -1130,7 +1130,7 @@ const formatTimeToExact = (days: number | undefined) => {
   padding: 1.5rem;
   border-radius: 0.5rem;
   border: 2px solid;
-  background: var(--color-bg-secondary);
+  background: var(--color-surface);
 }
 
 .voc-status.voc-warning {
@@ -1243,7 +1243,7 @@ const formatTimeToExact = (days: number | undefined) => {
 }
 
 .pof-dispositor {
-  background: var(--color-bg-secondary);
+  background: var(--color-surface);
   border-radius: 0.5rem;
   padding: 1rem;
   margin-bottom: 1rem;
@@ -1332,7 +1332,7 @@ const formatTimeToExact = (days: number | undefined) => {
 }
 
 .dispositor-dignity .dignity-score.neutral {
-  color: var(--color-text-tertiary);
+  color: var(--color-text-muted);
 }
 
 .dispositor-description {

@@ -162,7 +162,7 @@ async function submit() {
 }
 
 .modal {
-  background: var(--color-bg-secondary);
+  background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: 0.75rem;
   width: 100%;
@@ -191,7 +191,7 @@ async function submit() {
 .modal-close {
   background: none;
   border: none;
-  color: var(--color-text-tertiary);
+  color: var(--color-text-muted);
   cursor: pointer;
   font-size: 1rem;
   padding: 0.25rem 0.5rem;
@@ -230,7 +230,7 @@ async function submit() {
   margin-left: auto;
   font-size: 0.75rem;
   font-weight: 400;
-  color: var(--color-text-tertiary);
+  color: var(--color-text-muted);
 }
 
 .form-input,
@@ -240,7 +240,7 @@ async function submit() {
   padding: 0.5rem 0.75rem;
   border: 1px solid var(--color-border);
   border-radius: 0.5rem;
-  background: var(--color-bg-primary);
+  background: var(--color-bg);
   color: var(--color-text-primary);
   font-size: 0.875rem;
   font-family: inherit;
@@ -301,7 +301,7 @@ async function submit() {
 }
 
 .btn-secondary {
-  background: var(--color-bg-tertiary);
+  background: var(--color-surface-raised);
   color: var(--color-text-secondary);
   border: 1px solid var(--color-border);
   border-radius: 0.5rem;

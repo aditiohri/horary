@@ -76,7 +76,7 @@ export function checkQuota(): { allowed: boolean; reason?: string } {
   if (usage.dailyTokensUsed >= limits.maxTokensPerDay) {
     return {
       allowed: false,
-      reason: 'The shared AI service has hit its daily limit. Please try again tomorrow, or add your own API key in Settings to continue without limits.',
+      reason: 'The shared AI service has hit its daily limit. Please try again tomorrow, or add your own free Groq API key in Settings → LLM Provider.',
     };
   }
 
@@ -87,7 +87,7 @@ export function checkQuota(): { allowed: boolean; reason?: string } {
 
     return {
       allowed: false,
-      reason: `The shared AI service has reached its hourly limit. Please try again in ${minutesUntilReset} minute${minutesUntilReset === 1 ? '' : 's'}, or add your own API key in Settings to continue without limits.`,
+      reason: `The shared AI service has reached its hourly limit. Please try again in ${minutesUntilReset} minute${minutesUntilReset === 1 ? '' : 's'}, or add your own free Groq API key in Settings → LLM Provider.`,
     };
   }
 

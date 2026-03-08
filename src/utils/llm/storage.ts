@@ -27,6 +27,14 @@ export function getDefaultSettings(provider: LLMProvider): LLMSettings {
         model: config.defaultModel,
         timeout: DEFAULT_TIMEOUT,
       };
+
+    case 'groq':
+      return {
+        provider: 'groq',
+        apiKey: '',
+        model: config.defaultModel,
+        timeout: DEFAULT_TIMEOUT,
+      };
   }
 }
 
@@ -81,6 +89,12 @@ export function loadSettings(): LLMSettings {
         const openrouterSettings = getDefaultSettings('openrouter-free');
         saveSettings(openrouterSettings);
         return openrouterSettings;
+      }
+
+      // For groq: ensure apiKey field exists (may be missing from older stored settings)
+      if (parsed.provider === 'groq') {
+        const defaults = getDefaultSettings('groq');
+        return { ...defaults, ...parsed };
       }
 
       // Validate: Check if model is still in the suggested list for this provider

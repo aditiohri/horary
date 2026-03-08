@@ -561,6 +561,7 @@ watch(activeTab, async (newTab) => {
   display: flex;
   flex-direction: column;
   min-height: 0;
+  min-width: 0;
 }
 
 .new-reading-button {
@@ -687,6 +688,14 @@ watch(activeTab, async (newTab) => {
     border-radius: 0;
     box-shadow: none;
     background: transparent;
+  }
+
+  .tab-navigation {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    background: var(--color-bg-primary);
+    transition: background-color 0.3s ease;
   }
 
   .welcome-message {

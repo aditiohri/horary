@@ -127,6 +127,11 @@ onMounted(async () => {
   box-sizing: border-box;
 }
 
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
 /* CSS Custom Properties for Theming */
 :root {
   /* Light mode — warm parchment with gold/amber highlights */

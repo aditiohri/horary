@@ -1,4 +1,4 @@
-export type LLMProvider = 'ollama' | 'openrouter-free' | 'groq';
+export type LLMProvider = 'ollama' | 'groq-free' | 'groq';
 
 export interface BaseLLMSettings {
   provider: LLMProvider;
@@ -12,7 +12,7 @@ export interface OllamaProviderSettings {
 }
 
 export interface FreeTierProviderSettings {
-  provider: 'openrouter-free';
+  provider: 'groq-free';
   mode: 'free-tier';
   model: string;
   timeout: number;
@@ -73,8 +73,8 @@ export const PROVIDER_CONFIGS: Record<LLMProvider, ProviderConfig> = {
     defaultModel: 'llama3.2:latest',
     suggestedModels: ['llama3.2:latest', 'qwen2.5:14b', 'mistral:latest'],
   },
-  'openrouter-free': {
-    id: 'openrouter-free',
+  'groq-free': {
+    id: 'groq-free',
     name: 'Free Tier (Groq)',
     description: 'Try the app with Groq\'s free tier. Fast responses with generous limits.',
     requiresApiKey: false,
@@ -93,13 +93,12 @@ export const PROVIDER_CONFIGS: Record<LLMProvider, ProviderConfig> = {
     description: 'Use your own Groq API key for personal limits — no sharing with other users.',
     requiresApiKey: true,
     supportsLocal: false,
-    defaultModel: 'llama-3.3-70b-versatile',
+    defaultModel: 'qwen/qwen3-32b',
     suggestedModels: [
+      'qwen/qwen3-32b',
+      'qwen-2.5-32b',
       'llama-3.3-70b-versatile',
-      'llama-3.1-70b-versatile',
       'llama-3.1-8b-instant',
-      'gemma2-9b-it',
-      'mixtral-8x7b-32768',
     ],
     apiKeyPlaceholder: 'gsk_...',
     apiKeyPattern: /^gsk_/,

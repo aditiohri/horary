@@ -41,7 +41,7 @@ async function testProviderConnection(
           error: `Server responded with status ${response.status}`,
         };
       }
-    } else if (provider === 'openrouter-free') {
+    } else if (provider === 'groq-free') {
       // Test free tier by checking if Netlify function is available
       const baseURL = import.meta.env.DEV
         ? 'http://localhost:8888/.netlify/functions'

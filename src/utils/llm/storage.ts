@@ -20,9 +20,9 @@ export function getDefaultSettings(provider: LLMProvider): LLMSettings {
         timeout: DEFAULT_TIMEOUT,
       };
 
-    case 'openrouter-free':
+    case 'groq-free':
       return {
-        provider: 'openrouter-free',
+        provider: 'groq-free',
         mode: 'free-tier',
         model: config.defaultModel,
         timeout: DEFAULT_TIMEOUT,
@@ -84,11 +84,11 @@ export function loadSettings(): LLMSettings {
 
       // Validate: Ollama can only be used in local development
       if (parsed.provider === 'ollama' && !canUseOllama()) {
-        console.warn('Ollama cannot be used on deployed sites. Switching to OpenRouter.');
+        console.warn('Ollama cannot be used on deployed sites. Switching to Groq free tier.');
         // Switch to OpenRouter and save the change
-        const openrouterSettings = getDefaultSettings('openrouter-free');
-        saveSettings(openrouterSettings);
-        return openrouterSettings;
+        const groqFreeSettings = getDefaultSettings('groq-free');
+        saveSettings(groqFreeSettings);
+        return groqFreeSettings;
       }
 
       // For groq: ensure apiKey field exists (may be missing from older stored settings)
@@ -117,10 +117,10 @@ export function loadSettings(): LLMSettings {
     if (migrated) {
       // Also validate migrated settings
       if (migrated.provider === 'ollama' && !canUseOllama()) {
-        console.warn('Ollama cannot be used on deployed sites. Switching to OpenRouter.');
-        const openrouterSettings = getDefaultSettings('openrouter-free');
-        saveSettings(openrouterSettings);
-        return openrouterSettings;
+        console.warn('Ollama cannot be used on deployed sites. Switching to Groq free tier.');
+        const groqFreeSettings = getDefaultSettings('groq-free');
+        saveSettings(groqFreeSettings);
+        return groqFreeSettings;
       }
       return migrated;
     }

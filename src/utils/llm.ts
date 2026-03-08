@@ -457,7 +457,7 @@ export const generateHoraryReading = async (
     const settings = loadSettings();
 
     // Check quota if using free tier
-    if (settings.provider === 'openrouter-free') {
+    if (settings.provider === 'groq-free') {
       const quotaCheck = checkQuota();
       if (!quotaCheck.allowed) {
         throw new Error(quotaCheck.reason);
@@ -505,7 +505,7 @@ Begin your response immediately with "## Overall Judgment" — no preamble.`;
     });
 
     // Record usage for free tier
-    if (settings.provider === 'openrouter-free') {
+    if (settings.provider === 'groq-free') {
       const tokensUsed = response.usage?.total_tokens || 0;
       recordUsage(tokensUsed);
     }
@@ -528,7 +528,7 @@ export const continueHoraryConversation = async (
     const settings = loadSettings();
 
     // Check quota if using free tier
-    if (settings.provider === 'openrouter-free') {
+    if (settings.provider === 'groq-free') {
       const quotaCheck = checkQuota();
       if (!quotaCheck.allowed) {
         throw new Error(quotaCheck.reason);
@@ -559,7 +559,7 @@ export const continueHoraryConversation = async (
     });
 
     // Record usage for free tier
-    if (settings.provider === 'openrouter-free') {
+    if (settings.provider === 'groq-free') {
       const tokensUsed = response.usage?.total_tokens || 0;
       recordUsage(tokensUsed);
     }
@@ -578,7 +578,7 @@ export const generateText = async (prompt: string): Promise<string | null> => {
     const settings = loadSettings();
 
     // Check quota if using free tier
-    if (settings.provider === 'openrouter-free') {
+    if (settings.provider === 'groq-free') {
       const quotaCheck = checkQuota();
       if (!quotaCheck.allowed) {
         throw new Error(quotaCheck.reason);
@@ -594,7 +594,7 @@ export const generateText = async (prompt: string): Promise<string | null> => {
     });
 
     // Record usage for free tier
-    if (settings.provider === 'openrouter-free') {
+    if (settings.provider === 'groq-free') {
       const tokensUsed = response.usage?.total_tokens || 0;
       recordUsage(tokensUsed);
     }

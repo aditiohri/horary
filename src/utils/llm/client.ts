@@ -72,16 +72,26 @@ export function formatLLMError(error: any, provider?: string): string {
   const errorMessage = error?.message || String(error);
   const activeProvider = provider || loadSettings().provider;
 
+  // Quota limit messages are already user-friendly — pass through as-is
+  if (errorMessage.includes('shared AI service has')) {
+    return errorMessage;
+  }
+
+  const isFreeTier = activeProvider === 'openrouter-free';
+
   // Connection errors
   if (errorMessage.includes('ECONNREFUSED') || errorMessage.includes('Failed to fetch')) {
     if (activeProvider === 'ollama') {
       return 'Cannot connect to Ollama server. Please ensure Ollama is running on your machine.';
     }
-    return 'Network connection failed. Please check your internet connection.';
+    return 'Couldn\'t reach the AI service. Please check your internet connection and try again.';
   }
 
   // API key errors
   if (errorMessage.includes('API key') || errorMessage.includes('apiKey') || errorMessage.includes('401')) {
+    if (isFreeTier) {
+      return 'The AI service credentials are misconfigured. Please contact the developer.';
+    }
     return `Invalid or missing API key. Please check your ${activeProvider.toUpperCase()} API key in Settings.`;
   }
 
@@ -90,19 +100,38 @@ export function formatLLMError(error: any, provider?: string): string {
     if (activeProvider === 'ollama') {
       return 'Model not found. Please pull the model using: ollama pull <model-name>';
     }
+    if (isFreeTier) {
+      return 'The requested AI model is unavailable right now. Please try again shortly.';
+    }
     return 'Model not found. Please check your model name in Settings.';
   }
 
   // Timeout errors
   if (errorMessage.includes('timeout') || errorMessage.includes('aborted')) {
+    if (isFreeTier) {
+      return 'The AI service took too long to respond. Please try again in a moment.';
+    }
     return 'Request timeout. The server took too long to respond. Try increasing timeout in Settings.';
   }
 
   // Rate limit errors
-  if (errorMessage.includes('429') || errorMessage.includes('rate limit')) {
+  if (errorMessage.includes('429') || errorMessage.includes('rate limit') || errorMessage.includes('at capacity')) {
+    if (isFreeTier) {
+      return 'This shared AI service is currently at capacity — you\'re not the only one using it! Please wait a moment and try again.';
+    }
     return 'Rate limit exceeded. Please wait a moment before trying again.';
   }
 
-  // Generic error with provider context
+  // Server errors
+  if (errorMessage.includes('500') || errorMessage.includes('502') || errorMessage.includes('503') || errorMessage.includes('unavailable')) {
+    if (isFreeTier) {
+      return 'The AI service is temporarily unavailable. Please try again in a few minutes.';
+    }
+  }
+
+  // Generic error — keep Ollama messages technical for developers, soften free-tier messages
+  if (isFreeTier) {
+    return 'The AI service encountered an unexpected problem. Please try again shortly.';
+  }
   return `Error from ${activeProvider.toUpperCase()}: ${errorMessage}`;
 }

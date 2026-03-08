@@ -281,7 +281,7 @@ onUnmounted(() => {
             <span class="stat-value">{{ usageStats.totalTokensUsed.toLocaleString() }}</span>
           </div>
           <div v-if="usageStats.dailyTokensPercentUsed >= 80" class="usage-warning">
-            ⚠️ You've used {{ usageStats.dailyTokensPercentUsed.toFixed(0) }}% of your daily quota. Consider adding your own API key for unlimited usage.
+            ⚠️ You've used {{ usageStats.dailyTokensPercentUsed.toFixed(0) }}% of your daily quota. Switch to <strong>Groq (Your API Key)</strong> in the provider dropdown above, or sign up for a free key at <a href="https://console.groq.com/keys" target="_blank" rel="noopener noreferrer" class="help-link">console.groq.com/keys</a>.
           </div>
         </div>
 

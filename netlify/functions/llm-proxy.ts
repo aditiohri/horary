@@ -36,9 +36,9 @@ function humanizeGroqError(status: number, isUserKey: boolean, error?: { type?: 
       return 'You\'ve hit your personal Groq rate limit. Please wait a moment and try again.';
     }
     if (errorType === 'tokens' || errorType.includes('token')) {
-      return 'This shared AI service has used a lot of capacity recently — you\'re not the only one using it! Please wait a moment and try again.';
+      return 'This shared AI service has used a lot of capacity recently — you\'re not the only one using it! Please wait a moment and try again, or add your own free Groq API key in Settings → LLM Provider.';
     }
-    return 'This shared AI service is currently at capacity — you\'re not the only one using it! Please wait a moment and try again.';
+    return 'This shared AI service is currently at capacity — you\'re not the only one using it! Please wait a moment and try again, or add your own free Groq API key in Settings → LLM Provider.';
   }
   if (status >= 500) {
     return 'The AI service is temporarily unavailable. Please try again in a few minutes.';

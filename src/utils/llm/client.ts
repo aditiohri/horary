@@ -151,7 +151,7 @@ export function formatLLMError(error: any, provider?: string): string {
       return 'You\'ve hit your personal Groq rate limit. Please wait a moment and try again.';
     }
     if (isFreeTier) {
-      return 'This shared AI service is currently at capacity — you\'re not the only one using it! Please wait a moment and try again.';
+      return 'This shared AI service is currently at capacity — you\'re not the only one using it! Please wait a moment and try again, or add your own free Groq API key in Settings → LLM Provider.';
     }
     return 'Rate limit exceeded. Please wait a moment before trying again.';
   }

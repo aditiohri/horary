@@ -31,6 +31,7 @@ const isLoading = ref(false);
 const hasInitialReading = ref(false);
 const conversationContainer = ref<HTMLElement>();
 const questionCollapsed = ref(false);
+const geocodedLocation = ref<string>("");
 
 // Format error message with actionable guidance
 function formatErrorMessage(error: any): string {
@@ -164,11 +165,31 @@ const questionInfo = computed(() => {
     question: props.reading.question,
     time: new Date(props.reading.timestamp).toLocaleString(),
     location: props.reading.locationName
-      || (props.reading.location
-        ? `${props.reading.location.latitude.toFixed(2)}°, ${props.reading.location.longitude.toFixed(2)}°`
-        : "Location not provided"),
+      || geocodedLocation.value
+      || (props.reading.location ? "Location not available" : "Location not provided"),
   };
 });
+
+// Reverse-geocode coordinates for readings saved without a locationName
+watch(() => props.reading, async (r) => {
+  if (!r || r.locationName || !r.location) return;
+  try {
+    const res = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?lat=${r.location.latitude}&lon=${r.location.longitude}&format=json`
+    );
+    const data = await res.json();
+    const addr = data.address ?? {};
+    const city = addr.city || addr.town || addr.village || addr.county;
+    const state = addr.state;
+    const country = addr.country;
+    if (city && state) geocodedLocation.value = `${city}, ${state}`;
+    else if (city && country) geocodedLocation.value = `${city}, ${country}`;
+    else if (state && country) geocodedLocation.value = `${state}, ${country}`;
+    else if (country) geocodedLocation.value = country;
+  } catch {
+    // leave geocodedLocation empty; questionInfo falls back to "Location not available"
+  }
+}, { immediate: true });
 
 // Configure marked for better rendering
 marked.setOptions({
@@ -360,7 +381,7 @@ watch(() => props.reading, (newReading) => {
 .conversation-container {
   flex: 1;
   overflow-y: auto;
-  padding: 1rem;
+  padding: 0.75rem 1rem 1rem;
   scroll-behavior: smooth;
 }
 
@@ -410,6 +431,15 @@ watch(() => props.reading, (newReading) => {
   margin-top: 1em;
   margin-bottom: 0.5em;
   font-weight: 600;
+}
+
+.message-text :deep(h1:first-child),
+.message-text :deep(h2:first-child),
+.message-text :deep(h3:first-child),
+.message-text :deep(h4:first-child),
+.message-text :deep(h5:first-child),
+.message-text :deep(h6:first-child) {
+  margin-top: 0;
 }
 
 .message-text :deep(h1) { font-size: 1.5em; }

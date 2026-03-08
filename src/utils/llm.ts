@@ -346,6 +346,7 @@ export interface HoraryReading {
     latitude: number;
     longitude: number;
   };
+  locationName?: string;
   chartData: HoraryChartData;
 }
 

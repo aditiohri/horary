@@ -42,8 +42,6 @@ const localTimeout = ref(settings.timeout);
 const hasUnsavedChanges = ref(false);
 const showApiKey = ref(false);
 const apiKeyError = ref('');
-const llmSettingsExpanded = ref(false);
-
 // Reactive trigger for usage stats updates
 const usageStatsVersion = ref(0);
 
@@ -257,33 +255,10 @@ onUnmounted(() => {
           </button>
         </div>
 
-        <!-- LLM Settings (collapsible) -->
-        <div class="collapsible-section">
-          <button
-            class="collapsible-header"
-            @click="llmSettingsExpanded = !llmSettingsExpanded"
-            :aria-expanded="llmSettingsExpanded"
-          >
-            <span>LLM Settings</span>
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              class="chevron-icon"
-              :class="{ 'chevron-expanded': llmSettingsExpanded }"
-            >
-              <path
-                d="M6 9l6 6 6-6"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-            </svg>
-          </button>
-
-          <div v-show="llmSettingsExpanded" class="collapsible-content">
+        <!-- LLM Settings -->
+        <div class="llm-settings-section">
+          <h3 class="section-title">LLM Settings</h3>
+          <div class="llm-settings-content">
             <!-- Provider Selection -->
             <div class="form-group">
               <label for="provider">LLM Provider</label>
@@ -1028,47 +1003,27 @@ onUnmounted(() => {
 }
 
 /* Collapsible section */
-.collapsible-section {
-  border: 1px solid var(--color-border);
-  border-radius: 0.5rem;
-  overflow: hidden;
-}
-
-.collapsible-header {
-  width: 100%;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0.875rem 1rem;
-  background: var(--color-surface-raised);
-  border: none;
-  cursor: pointer;
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: var(--color-text-primary);
-  text-align: left;
-  transition: background-color 0.2s;
-}
-
-.collapsible-header:hover {
-  background: var(--color-bg-hover);
-}
-
-.chevron-icon {
-  flex-shrink: 0;
-  transition: transform 0.2s;
-  color: var(--color-text-secondary);
-}
-
-.chevron-expanded {
-  transform: rotate(180deg);
-}
-
-.collapsible-content {
+.llm-settings-section {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
-  padding: 1.25rem 1rem;
+  border-top: 1px solid var(--color-border);
+  padding-top: 0.5rem;
+}
+
+.section-title {
+  margin: 0;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.llm-settings-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
 }
 
 /* Feedback row */

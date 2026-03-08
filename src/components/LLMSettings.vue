@@ -9,10 +9,13 @@ import { getUsageStats } from '../utils/llm/freeTier';
 
 const props = defineProps<{
   modelValue: boolean;
+  isDark: boolean;
 }>();
 
 const emit = defineEmits<{
   'update:modelValue': [value: boolean];
+  'toggleDark': [];
+  'feedback': [];
 }>();
 
 const {
@@ -218,6 +221,15 @@ onUnmounted(() => {
       </div>
 
       <div class="modal-content">
+        <!-- Appearance -->
+        <div class="form-group">
+          <label>Appearance</label>
+          <button @click="emit('toggleDark')" class="theme-toggle-button">
+            <span>{{ props.isDark ? '☀️' : '🌙' }}</span>
+            <span>{{ props.isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode' }}</span>
+          </button>
+        </div>
+
         <!-- Provider Selection -->
         <div class="form-group">
           <label for="provider">LLM Provider</label>
@@ -482,6 +494,16 @@ onUnmounted(() => {
             Get a free API key at
             <a href="https://console.groq.com/keys" target="_blank" rel="noopener noreferrer" class="help-link">console.groq.com/keys</a>
           </p>
+        </div>
+
+        <!-- Feedback -->
+        <div class="feedback-row">
+          <button
+            class="feedback-link-button"
+            @click="() => { emit('feedback'); emit('update:modelValue', false); }"
+          >
+            ✉ Send Feedback
+          </button>
         </div>
       </div>
 
@@ -888,10 +910,63 @@ onUnmounted(() => {
   line-height: 1.5;
 }
 
-/* Mobile optimizations */
-@media (max-width: 640px) {
+/* Theme toggle button */
+.theme-toggle-button {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border);
+  border-radius: 0.5rem;
+  padding: 0.625rem 0.875rem;
+  font-size: 0.9375rem;
+  color: var(--color-text-primary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+  width: 100%;
+}
+
+.theme-toggle-button:hover {
+  background: var(--color-bg-hover);
+  border-color: var(--color-accent);
+}
+
+/* Feedback row */
+.feedback-row {
+  display: flex;
+}
+
+.feedback-link-button {
+  background: none;
+  border: 1px solid var(--color-border);
+  border-radius: 0.5rem;
+  padding: 0.5rem 0.875rem;
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.feedback-link-button:hover {
+  background: var(--color-bg-hover);
+  color: var(--color-text-primary);
+  border-color: var(--color-accent);
+}
+
+/* Mobile: render as bottom sheet */
+@media (max-width: 1023px) {
+  .modal-overlay {
+    align-items: flex-end;
+    padding: 0;
+  }
+
   .modal {
-    max-height: 95vh;
+    border-radius: 1rem 1rem 0 0;
+    max-width: 100%;
+    width: 100%;
+    max-height: 90vh;
   }
 
   .modal-header,
@@ -905,8 +980,7 @@ onUnmounted(() => {
   }
 
   .modal-footer {
-    flex-direction: column;
-    gap: 0.75rem;
+    padding-bottom: calc(1rem + env(safe-area-inset-bottom));
   }
 
   .action-buttons {

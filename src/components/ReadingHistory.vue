@@ -2,6 +2,8 @@
 import { ref, computed, onMounted } from "vue";
 import { useReadingStorage, encodeReadingToUrl, type StoredReading } from "../utils/storage";
 
+const props = withDefaults(defineProps<{ compact?: boolean }>(), { compact: false });
+
 const emit = defineEmits<{
   (e: "select-reading", reading: StoredReading): void;
   (e: "close"): void;
@@ -124,7 +126,7 @@ onMounted(loadReadings);
 </script>
 
 <template>
-  <div class="reading-history">
+  <div class="reading-history" :class="{ compact: props.compact }">
     <div class="history-header">
       <div class="header-top">
         <h2>Reading History</h2>
@@ -549,6 +551,27 @@ onMounted(loadReadings);
 .confirm-delete-button:hover {
   background: var(--color-error);
   filter: brightness(0.85);
+}
+
+/* Compact mode — used when embedded in sidebar */
+.reading-history.compact {
+  border-radius: 0;
+}
+
+.reading-history.compact .header-top {
+  display: none;
+}
+
+.reading-history.compact .history-header {
+  padding: 0.75rem;
+}
+
+.reading-history.compact .history-content {
+  padding: 0.5rem 0.75rem;
+}
+
+.reading-history.compact .readings-grid {
+  grid-template-columns: 1fr;
 }
 
 /* Mobile optimizations */

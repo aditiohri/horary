@@ -8,40 +8,40 @@ import FeedbackModal from "./components/FeedbackModal.vue";
 import { readingStorage, decodeReadingFromUrl, type StoredReading } from './utils/storage';
 import { useDarkMode } from './composables/useDarkMode';
 
-type AppView = 'chat' | 'history';
+type AppView = 'home' | 'reading';
 
-const currentView = ref<AppView>('chat');
+const currentView = ref<AppView>('home');
 const selectedHistoryReading = ref<StoredReading | null>(null);
-const chatResetKey = ref(0); // Used to force UserChat component to reset
+const chatResetKey = ref(0);
 const { isDark, toggleDarkMode } = useDarkMode();
 const showSettings = ref(false);
 const showHoraryInfo = ref(false);
 const showFeedback = ref(false);
 
-const showHistory = () => {
-  currentView.value = 'history';
+const startNewReading = () => {
+  selectedHistoryReading.value = null;
+  chatResetKey.value++;
+  currentView.value = 'reading';
 };
 
-const showChat = () => {
-  currentView.value = 'chat';
-  selectedHistoryReading.value = null;
-  // Increment key to force UserChat to reset, clearing any existing chart data
-  chatResetKey.value++;
+const goHome = () => {
+  if (currentView.value === 'home') {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+  currentView.value = 'home';
 };
 
 const handleSelectReading = (reading: StoredReading) => {
   selectedHistoryReading.value = reading;
-  currentView.value = 'chat';
+  currentView.value = 'reading';
 };
-
-const storageStats = readingStorage.getStorageStats();
 
 onMounted(async () => {
   const sharedReading = await decodeReadingFromUrl();
   if (sharedReading) {
     readingStorage.importReading(sharedReading);
     selectedHistoryReading.value = sharedReading;
-    // Remove the ?share= param from the URL without a page reload
+    currentView.value = 'reading';
     const url = new URL(window.location.href);
     url.searchParams.delete("share");
     window.history.replaceState({}, "", url.toString());
@@ -54,73 +54,104 @@ onMounted(async () => {
     <header class="app-header">
       <div class="header-content">
         <div class="title-group">
-          <h1>Horary Astrology</h1>
+          <button
+            class="app-title"
+            @click="goHome"
+            aria-label="Horary Astrology — return to home"
+          >
+            Horary Astrology
+          </button>
           <button
             class="info-tag"
             @click="showHoraryInfo = true"
             aria-label="Learn more about horary astrology"
-          >Learn more</button>
-        </div>
-        <div class="header-actions">
-          <nav class="header-nav">
-            <button
-              @click="showChat"
-              :class="['nav-button', { active: currentView === 'chat' }]"
-            >
-              New Reading
-            </button>
-            <button
-              @click="showHistory"
-              :class="['nav-button', { active: currentView === 'history' }]"
-            >
-              History
-              <span v-if="storageStats.totalReadings > 0" class="history-count">
-                {{ storageStats.totalReadings }}
-              </span>
-            </button>
-          </nav>
-          <button
-            @click="showFeedback = true"
-            class="feedback-button"
-            aria-label="Send feedback"
-            title="Send feedback"
-          >Feedback</button>
-          <button
-            @click="showSettings = true"
-            class="settings-button"
-            aria-label="Settings"
-            title="Ollama Settings"
           >
-            ⚙️
+            Learn more
+          </button>
+        </div>
+        <div class="header-right">
+          <button
+            class="header-new-reading"
+            @click="startNewReading"
+            aria-label="Start a new reading"
+          >
+            ✦ New Reading
           </button>
           <button
-            @click="toggleDarkMode"
-            class="dark-mode-toggle"
-            :aria-label="isDark ? 'Switch to light mode' : 'Switch to dark mode'"
+            class="settings-button"
+            @click="showSettings = true"
+            aria-label="Settings"
+            title="Settings"
           >
-            <span v-if="isDark">☀️</span>
-            <span v-else>🌙</span>
+            ⚙
           </button>
         </div>
       </div>
     </header>
 
-    <main class="app-main">
-      <UserChat
-        v-if="currentView === 'chat'"
-        :key="chatResetKey"
-        :selected-reading="selectedHistoryReading"
-        @new-reading="selectedHistoryReading = null"
-      />
-      <ReadingHistory
-        v-else-if="currentView === 'history'"
-        @select-reading="handleSelectReading"
-        @close="showChat"
-      />
-    </main>
+    <div class="app-body">
+      <!-- Sidebar: home screen on mobile, permanent panel on desktop -->
+      <aside
+        class="app-sidebar"
+        :class="{ 'mobile-hidden': currentView === 'reading' }"
+      >
+        <div class="sidebar-top">
+          <button class="sidebar-new-reading" @click="startNewReading">
+            ✦ New Reading
+          </button>
+        </div>
 
-    <!-- Settings Modal -->
-    <LLMSettings v-model="showSettings" />
+        <div class="sidebar-history">
+          <ReadingHistory
+            :compact="true"
+            @select-reading="handleSelectReading"
+            @close="goHome"
+          />
+        </div>
+
+        <div class="sidebar-footer">
+          <button class="sidebar-footer-button" @click="toggleDarkMode">
+            <span>{{ isDark ? '☀️' : '🌙' }}</span>
+            <span>{{ isDark ? 'Light Mode' : 'Dark Mode' }}</span>
+          </button>
+          <button class="sidebar-footer-button" @click="showSettings = true">
+            <span>⚙</span>
+            <span>API Settings</span>
+          </button>
+          <button class="sidebar-footer-button" @click="showFeedback = true">
+            <span>✉</span>
+            <span>Feedback</span>
+          </button>
+        </div>
+      </aside>
+
+      <!-- Main reading area: always visible on desktop, reading-view on mobile -->
+      <main
+        class="app-main"
+        :class="{ 'mobile-hidden': currentView === 'home' }"
+      >
+        <UserChat
+          :key="chatResetKey"
+          :selected-reading="selectedHistoryReading"
+          @new-reading="selectedHistoryReading = null"
+        />
+      </main>
+    </div>
+
+    <!-- Bottom bar: mobile only -->
+    <div class="bottom-bar">
+      <button class="bottom-new-reading" @click="startNewReading">
+        ✦ New Reading
+      </button>
+    </div>
+
+    <!-- Settings Modal / bottom sheet -->
+    <LLMSettings
+      v-model="showSettings"
+      :is-dark="isDark"
+      @toggle-dark="toggleDarkMode"
+      @feedback="showFeedback = true"
+    />
 
     <!-- Horary Info Modal -->
     <HoraryInfoModal v-model="showHoraryInfo" />
@@ -236,47 +267,58 @@ body {
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-/* App container */
+/* ─── App container ───────────────────────────────────────── */
 .app-container {
-  height: 100vh;
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
   width: 100%;
   overflow: hidden;
 }
 
-/* Header */
+/* ─── Header ──────────────────────────────────────────────── */
 .app-header {
   background-color: var(--color-surface);
-  padding: 1rem;
+  padding: 0.625rem 1rem;
   box-shadow: var(--shadow-sm);
   position: sticky;
   top: 0;
   z-index: 10;
-  width: 100%;
   border-bottom: 1px solid var(--color-border);
   transition: background-color 0.3s ease, border-color 0.3s ease;
+  flex-shrink: 0;
 }
 
 .header-content {
-  max-width: 1200px;
-  margin: 0 auto;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 1rem;
+  gap: 0.75rem;
 }
 
 .title-group {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  min-width: 0;
 }
 
-.app-header h1 {
-  font-size: 1.5rem;
+/* Tappable title — acts as home link */
+.app-title {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font-size: 1.25rem;
+  font-weight: 700;
   color: var(--color-text-primary);
+  font-family: inherit;
   white-space: nowrap;
+  transition: color 0.2s ease;
+}
+
+.app-title:hover {
+  color: var(--color-accent);
 }
 
 .info-tag {
@@ -291,7 +333,7 @@ body {
   white-space: nowrap;
   transition: all 0.2s ease;
   letter-spacing: 0.01em;
-  align-self: center;
+  font-family: inherit;
 }
 
 .info-tag:hover {
@@ -300,223 +342,238 @@ body {
   border-color: rgba(217, 119, 6, 0.35);
 }
 
-.header-actions {
+.header-right {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-}
-
-.header-nav {
-  display: flex;
   gap: 0.5rem;
+  flex-shrink: 0;
 }
 
-.nav-button {
-  background: var(--color-surface-raised);
-  color: var(--color-text-secondary);
-  border: 1px solid var(--color-border);
-  padding: 0.5rem 1rem;
-  border-radius: 0.5rem;
-  cursor: pointer;
+/* "New Reading" in header — visible on mobile, hidden on desktop (sidebar has it) */
+.header-new-reading {
+  background: var(--color-accent);
+  color: var(--color-accent-foreground);
+  border: none;
+  padding: 0.5rem 0.875rem;
+  border-radius: 9999px;
   font-size: 0.875rem;
-  font-weight: 500;
-  transition: all 0.2s ease;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
+  font-weight: 600;
+  cursor: pointer;
   white-space: nowrap;
+  transition: all 0.2s ease;
+  font-family: inherit;
 }
 
-.nav-button:hover {
-  background: var(--color-bg-hover);
+.header-new-reading:hover {
+  background: var(--color-accent-hover);
 }
 
-.nav-button.active {
-  background: var(--color-bg-active);
-  color: var(--color-text-inverse);
-  border-color: var(--color-bg-active);
+.header-new-reading:active {
+  transform: scale(0.96);
 }
 
-.history-count {
-  background: rgba(255, 255, 255, 0.2);
-  color: currentColor;
-  padding: 0.125rem 0.375rem;
-  border-radius: 0.75rem;
-  font-size: 0.75rem;
-  min-width: 1.25rem;
-  text-align: center;
-}
-
-.nav-button.active .history-count {
-  background: rgba(255, 255, 255, 0.3);
-}
-
-/* Settings Button */
+/* Settings gear button */
 .settings-button {
   background: var(--color-surface-raised);
   border: 1px solid var(--color-border);
   border-radius: 0.5rem;
   padding: 0.5rem;
   cursor: pointer;
-  font-size: 1.25rem;
+  font-size: 1.125rem;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: all 0.2s ease;
-  width: 2.5rem;
-  height: 2.5rem;
+  width: 2.25rem;
+  height: 2.25rem;
+  color: var(--color-text-secondary);
+  font-family: inherit;
 }
 
 .settings-button:hover {
   background: var(--color-bg-hover);
-  transform: scale(1.05);
-}
-
-.settings-button:active {
-  transform: scale(0.95);
-}
-
-/* Feedback Button */
-.feedback-button {
-  background: rgba(217, 119, 6, 0.08);
-  color: var(--color-text-muted);
-  border: 1px solid rgba(217, 119, 6, 0.2);
-  border-radius: 9999px;
-  font-size: 0.6875rem;
-  font-weight: 500;
-  padding: 0.15rem 0.6rem;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: all 0.2s ease;
-  letter-spacing: 0.01em;
-  align-self: center;
-}
-
-.feedback-button:hover {
-  background: rgba(217, 119, 6, 0.15);
   color: var(--color-accent);
-  border-color: rgba(217, 119, 6, 0.35);
 }
 
-/* Dark Mode Toggle */
-.dark-mode-toggle {
-  background: var(--color-surface-raised);
-  border: 1px solid var(--color-border);
-  border-radius: 0.5rem;
-  padding: 0.5rem;
-  cursor: pointer;
-  font-size: 1.25rem;
+/* ─── App body: sidebar + main ────────────────────────────── */
+.app-body {
+  flex: 1;
   display: flex;
-  align-items: center;
-  justify-content: center;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* ─── Sidebar ─────────────────────────────────────────────── */
+.app-sidebar {
+  display: flex;
+  flex-direction: column;
+  background: var(--color-surface);
+  border-right: 1px solid var(--color-border);
+  overflow: hidden;
+  /* Mobile: full width — it IS the home screen */
+  width: 100%;
+  flex-shrink: 0;
+  transition: background-color 0.3s ease;
+}
+
+.sidebar-top {
+  padding: 0.75rem;
+  border-bottom: 1px solid var(--color-border);
+  flex-shrink: 0;
+  /* Hidden on mobile — bottom bar handles New Reading there */
+  display: none;
+}
+
+.sidebar-new-reading {
+  width: 100%;
+  background: var(--color-accent);
+  color: var(--color-accent-foreground);
+  border: none;
+  padding: 0.625rem 1rem;
+  border-radius: 0.5rem;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  cursor: pointer;
   transition: all 0.2s ease;
-  width: 2.5rem;
-  height: 2.5rem;
+  font-family: inherit;
 }
 
-.dark-mode-toggle:hover {
-  background: var(--color-bg-hover);
-  transform: scale(1.05);
+.sidebar-new-reading:hover {
+  background: var(--color-accent-hover);
 }
 
-.dark-mode-toggle:active {
-  transform: scale(0.95);
-}
-
-/* Main content */
-.app-main {
+.sidebar-history {
   flex: 1;
   min-height: 0;
   display: flex;
   flex-direction: column;
-  max-width: 1200px;
-  margin: 0 auto;
-  width: 100%;
-  padding: 1rem;
-  gap: 1rem;
   overflow: hidden;
 }
 
-/* Tablet optimizations */
-@media (max-width: 768px) {
-  .app-header h1 {
-    font-size: 1.25rem;
+/* Sidebar footer: theme, settings, feedback — desktop only */
+.sidebar-footer {
+  display: none;
+  flex-direction: column;
+  gap: 0.125rem;
+  padding: 0.5rem;
+  border-top: 1px solid var(--color-border);
+  flex-shrink: 0;
+}
+
+.sidebar-footer-button {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  width: 100%;
+  background: none;
+  border: none;
+  padding: 0.5rem 0.625rem;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+  text-align: left;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.sidebar-footer-button:hover {
+  background: var(--color-bg-hover);
+  color: var(--color-text-primary);
+}
+
+/* ─── Main content ────────────────────────────────────────── */
+.app-main {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--color-bg);
+}
+
+/* ─── Mobile: conditional visibility (max 1023px) ─────────── */
+@media (max-width: 1023px) {
+  .app-sidebar.mobile-hidden {
+    display: none;
   }
 
-  .nav-button {
-    padding: 0.5rem 0.75rem;
-    font-size: 0.8125rem;
-  }
-
-  .settings-button,
-  .dark-mode-toggle {
-    width: 2.25rem;
-    height: 2.25rem;
-    font-size: 1.125rem;
+  .app-main.mobile-hidden {
+    display: none;
   }
 }
 
-/* Mobile optimizations */
-@media (max-width: 640px) {
-  .app-header {
-    padding: 0.75rem;
-  }
+/* ─── Bottom bar: mobile only ─────────────────────────────── */
+.bottom-bar {
+  background: var(--color-surface);
+  border-top: 1px solid var(--color-border);
+  padding: 0.625rem 1rem;
+  padding-bottom: calc(0.625rem + env(safe-area-inset-bottom));
+  display: flex;
+  flex-shrink: 0;
+}
 
-  .header-content {
-    flex-wrap: wrap;
-  }
+.bottom-new-reading {
+  flex: 1;
+  background: var(--color-accent);
+  color: var(--color-accent-foreground);
+  border: none;
+  padding: 0.75rem 1rem;
+  border-radius: 9999px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
 
-  .title-group {
-    flex: 1 1 auto;
-  }
+.bottom-new-reading:hover {
+  background: var(--color-accent-hover);
+}
 
-  .app-header h1 {
-    font-size: 1.125rem;
-  }
+.bottom-new-reading:active {
+  transform: scale(0.98);
+}
 
-  .header-actions {
-    flex: 1 1 100%;
-    justify-content: space-between;
-    gap: 0.5rem;
-  }
-
-  .header-nav {
-    flex: 1;
-    gap: 0.5rem;
-  }
-
-  .nav-button {
-    flex: 1;
-    justify-content: center;
-    padding: 0.625rem 0.5rem;
-    font-size: 0.8125rem;
-  }
-
-  .settings-button,
-  .dark-mode-toggle {
-    width: 2.5rem;
-    height: 2.5rem;
+/* ─── Desktop 1024px+ ─────────────────────────────────────── */
+@media (min-width: 1024px) {
+  /* Fixed-width sidebar */
+  .app-sidebar {
+    width: 280px;
     flex-shrink: 0;
   }
 
+  /* Always show both panels on desktop, regardless of mobile-hidden class */
+  .app-sidebar.mobile-hidden {
+    display: flex;
+  }
+
+  .app-main.mobile-hidden {
+    display: flex;
+  }
+
+  /* Hide mobile-only elements */
+  .bottom-bar {
+    display: none;
+  }
+
+  .header-new-reading {
+    display: none;
+  }
+
+  /* Show desktop sidebar internals */
+  .sidebar-top {
+    display: block;
+  }
+
+  .sidebar-footer {
+    display: flex;
+  }
+
+  /* Allow main to scroll on desktop */
   .app-main {
-    padding: 0.5rem;
-  }
-}
-
-/* Very small screens */
-@media (max-width: 380px) {
-  .app-header h1 {
-    font-size: 1rem;
-  }
-
-  .nav-button {
-    font-size: 0.75rem;
-    padding: 0.5rem 0.375rem;
-  }
-
-  .history-count {
-    font-size: 0.625rem;
+    overflow-y: auto;
   }
 }
 </style>

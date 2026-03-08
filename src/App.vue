@@ -236,40 +236,40 @@ html {
   --shadow-lg: 0 4px 6px rgba(0, 0, 0, 0.12);
 }
 
-/* Dark mode — candlelight in a dark overgrown stairwell */
-/* Palette drawn from deep forest foliage, dark wood, and candleflame amber */
+/* Dark mode — candlelight in a dark garden */
+/* Near-black green-tinted backgrounds with warm amber accents */
 :root.dark {
-  /* Main page background — near-black deep forest, like the darkest foliage */
-  --color-bg: #0e1a10;
-  /* Card / panel background — dark mid-foliage, shadowed wood */
-  --color-surface: #182b1a;
-  /* Elevated surfaces — slightly lighter canopy layer */
-  --color-surface-raised: #223424;
+  /* Main page background — near-black green-tinted */
+  --color-bg: #161a12;
+  /* Card / panel background — dark surface */
+  --color-surface: #1e2418;
+  /* Elevated surfaces — slightly lifted, still very dark */
+  --color-surface-raised: #242c1d;
 
-  /* Main body text — soft candle-wax cream */
-  --color-text-primary: #f2e8d0;
-  /* Supporting text — warmer cream with a hint of amber */
+  /* Main body text — warm off-white */
+  --color-text-primary: #f0ead8;
+  /* Supporting text — warm mid-tone */
   --color-text-secondary: #c8b896;
-  /* Placeholders, disabled, timestamps — warm muted tan */
-  --color-text-muted: #8a7a5c;
+  /* Placeholders, disabled, timestamps */
+  --color-text-muted: #a89e85;
 
-  /* Dividers and input borders — shadowed greenery */
-  --color-border: #2d4430;
+  /* Dividers and input borders */
+  --color-border: #2a3522;
 
-  /* Primary action color — candleflame amber */
-  --color-accent: #d4820a;
-  /* Accent on hover / active state — deeper ember */
-  --color-accent-hover: #b86d08;
+  /* Primary action color — warm amber */
+  --color-accent: #c4854a;
+  /* Accent on hover / active state — brighter ember */
+  --color-accent-hover: #e8a96b;
   /* Text and icons placed on top of the accent color */
-  --color-accent-foreground: #1a0d02;
+  --color-accent-foreground: #1a1008;
 
   /* Internal-use tokens */
-  --color-bg-hover: #243826;           /* hover state — slightly brighter foliage */
-  --color-bg-active: #d4820a;          /* active nav — candleflame */
-  --color-text-inverse: #0e1a10;       /* dark text on light/accent backgrounds */
-  --color-border-focus: #a06820;       /* focus ring — warm amber-gold */
+  --color-bg-hover: #242e1c;           /* hover state — slightly lifted dark surface */
+  --color-bg-active: #c4854a;          /* active nav — amber */
+  --color-text-inverse: #161a12;       /* dark text on light/accent backgrounds */
+  --color-border-focus: #c4854a;       /* focus ring — amber */
   --color-success: #2a6a3a;
-  --color-warning: #d4820a;
+  --color-warning: #c4854a;
   --color-error: #e06060;
 
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.45);

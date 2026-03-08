@@ -519,7 +519,7 @@ onUnmounted(() => {
 }
 
 .modal {
-  background: var(--color-bg-secondary);
+  background: var(--color-surface);
   border-radius: 0.75rem;
   max-width: 600px;
   width: 100%;
@@ -585,7 +585,7 @@ onUnmounted(() => {
   border: 2px solid var(--color-border);
   border-radius: 0.5rem;
   font-size: 1rem;
-  background: var(--color-bg-primary);
+  background: var(--color-bg);
   color: var(--color-text-primary);
   transition: border-color 0.2s;
 }
@@ -602,12 +602,12 @@ onUnmounted(() => {
 
 .form-help {
   font-size: 0.75rem;
-  color: var(--color-text-tertiary);
+  color: var(--color-text-muted);
   margin: 0;
 }
 
 .form-help code {
-  background: var(--color-bg-tertiary);
+  background: var(--color-surface-raised);
   padding: 0.125rem 0.375rem;
   border-radius: 0.25rem;
   font-family: monospace;
@@ -634,7 +634,7 @@ onUnmounted(() => {
 }
 
 .toggle-visibility-button {
-  background: var(--color-bg-tertiary);
+  background: var(--color-surface-raised);
   border: 2px solid var(--color-border);
   padding: 0.75rem;
   border-radius: 0.5rem;
@@ -663,7 +663,7 @@ onUnmounted(() => {
 }
 
 .refresh-button {
-  background: var(--color-bg-tertiary);
+  background: var(--color-surface-raised);
   border: 2px solid var(--color-border);
   padding: 0.75rem;
   border-radius: 0.5rem;
@@ -703,7 +703,7 @@ onUnmounted(() => {
   flex-direction: column;
   gap: 0.75rem;
   padding: 1rem;
-  background: var(--color-bg-tertiary);
+  background: var(--color-surface-raised);
   border-radius: 0.5rem;
 }
 
@@ -765,7 +765,7 @@ onUnmounted(() => {
 
 .help-section {
   padding: 1rem;
-  background: var(--color-bg-tertiary);
+  background: var(--color-surface-raised);
   border-radius: 0.5rem;
   border: 1px solid var(--color-border);
 }
@@ -804,7 +804,7 @@ onUnmounted(() => {
 }
 
 .cancel-button {
-  background: var(--color-bg-tertiary);
+  background: var(--color-surface-raised);
   color: var(--color-text-secondary);
   border: 1px solid var(--color-border);
   padding: 0.5rem 1rem;
@@ -840,7 +840,7 @@ onUnmounted(() => {
 /* Free tier usage stats */
 .usage-stats {
   padding: 1rem;
-  background: var(--color-bg-tertiary);
+  background: var(--color-surface-raised);
   border-radius: 0.5rem;
   border: 1px solid var(--color-border);
 }

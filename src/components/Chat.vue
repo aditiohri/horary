@@ -325,7 +325,7 @@ watch(() => props.reading, (newReading) => {
   display: flex;
   flex-direction: column;
   height: 100%;
-  background: var(--color-bg-secondary);
+  background: var(--color-surface);
   border-radius: 1rem;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   overflow: hidden;
@@ -333,7 +333,7 @@ watch(() => props.reading, (newReading) => {
 
 .conversation-header {
   border-bottom: 1px solid var(--color-border);
-  background: var(--color-bg-tertiary);
+  background: var(--color-surface-raised);
 }
 
 .question-toggle {
@@ -364,7 +364,7 @@ watch(() => props.reading, (newReading) => {
 
 .question-chevron {
   font-size: 0.65rem;
-  color: var(--color-text-tertiary);
+  color: var(--color-text-muted);
   flex-shrink: 0;
 }
 
@@ -373,7 +373,7 @@ watch(() => props.reading, (newReading) => {
 }
 
 .question-meta .meta {
-  color: var(--color-text-tertiary);
+  color: var(--color-text-muted);
   font-size: 0.8rem;
   margin: 0;
 }
@@ -536,7 +536,7 @@ watch(() => props.reading, (newReading) => {
 }
 
 .message.assistant .message-text {
-  background: var(--color-bg-secondary);
+  background: var(--color-surface);
   color: var(--color-text-primary);
   border-radius: 0;
   padding-left: 0;
@@ -551,7 +551,7 @@ watch(() => props.reading, (newReading) => {
 
 .message-time {
   font-size: 0.75rem;
-  color: var(--color-text-tertiary);
+  color: var(--color-text-muted);
   margin-top: 0.25rem;
   align-self: flex-end;
 }
@@ -565,7 +565,7 @@ watch(() => props.reading, (newReading) => {
   align-items: center;
   gap: 0.5rem;
   padding: 0.75rem 0;
-  background: var(--color-bg-secondary);
+  background: var(--color-surface);
   border: none;
   border-radius: 0;
 }
@@ -609,7 +609,7 @@ watch(() => props.reading, (newReading) => {
 .conversation-input {
   padding: 1rem;
   border-top: 1px solid var(--color-border);
-  background: var(--color-bg-secondary);
+  background: var(--color-surface);
 }
 
 .input-container {
@@ -629,7 +629,7 @@ watch(() => props.reading, (newReading) => {
   max-height: 120px;
   overflow-y: auto;
   transition: border-color 0.2s ease;
-  background: var(--color-bg-primary);
+  background: var(--color-bg);
   color: var(--color-text-primary);
 }
 
@@ -639,8 +639,8 @@ watch(() => props.reading, (newReading) => {
 }
 
 .message-input:disabled {
-  background: var(--color-bg-tertiary);
-  color: var(--color-text-tertiary);
+  background: var(--color-surface-raised);
+  color: var(--color-text-muted);
 }
 
 .send-button {
@@ -696,7 +696,7 @@ watch(() => props.reading, (newReading) => {
   margin-top: 0.75rem;
   border: 1px solid var(--color-border);
   border-radius: 0.5rem;
-  background: var(--color-bg-tertiary);
+  background: var(--color-surface-raised);
   font-size: 0.875rem;
 }
 
@@ -748,7 +748,7 @@ details[open] .followup-guide-toggle::before {
   margin-top: 0.5rem !important;
   font-style: italic;
   font-size: 0.8rem;
-  color: var(--color-text-tertiary) !important;
+  color: var(--color-text-muted) !important;
   border-top: 1px solid var(--color-border);
   padding-top: 0.5rem;
 }

@@ -29,6 +29,7 @@ const currentMessage = ref("");
 const isLoading = ref(false);
 const hasInitialReading = ref(false);
 const conversationContainer = ref<HTMLElement>();
+const questionCollapsed = ref(false);
 
 // Format error message with actionable guidance
 function formatErrorMessage(error: any): string {
@@ -225,12 +226,16 @@ watch(() => props.reading, (newReading) => {
 <template>
   <div class="horary-conversation">
     <div class="conversation-header">
-      <h3>Horary Reading</h3>
-      <div class="question-info">
-        <p class="question">{{ questionInfo.question }}</p>
-        <p class="meta">
-          {{ questionInfo.time }} • {{ questionInfo.location }}
-        </p>
+      <button
+        @click="questionCollapsed = !questionCollapsed"
+        class="question-toggle"
+        :title="questionCollapsed ? 'Show question details' : 'Collapse question details'"
+      >
+        <span class="question-preview">{{ questionInfo.question }}</span>
+        <span class="question-chevron">{{ questionCollapsed ? '▼' : '▲' }}</span>
+      </button>
+      <div v-show="!questionCollapsed" class="question-meta">
+        <p class="meta">{{ questionInfo.time }} • {{ questionInfo.location }}</p>
       </div>
     </div>
 
@@ -313,7 +318,6 @@ watch(() => props.reading, (newReading) => {
   display: flex;
   flex-direction: column;
   height: 100%;
-  max-height: 80vh;
   background: var(--color-bg-secondary);
   border-radius: 1rem;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
@@ -321,27 +325,52 @@ watch(() => props.reading, (newReading) => {
 }
 
 .conversation-header {
-  padding: 1.5rem;
   border-bottom: 1px solid var(--color-border);
   background: var(--color-bg-tertiary);
 }
 
-.conversation-header h3 {
-  margin: 0 0 0.5rem 0;
-  color: var(--color-text-primary);
-  font-size: 1.25rem;
-}
-
-.question-info .question {
-  font-style: italic;
+.question-toggle {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
   color: var(--color-text-secondary);
-  margin: 0.5rem 0;
-  font-size: 1rem;
+  font-size: 0.9rem;
+  font-style: italic;
+  transition: background-color 0.15s ease;
 }
 
-.question-info .meta {
+.question-toggle:hover {
+  background: var(--color-bg-hover);
+}
+
+.question-preview {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--color-text-secondary);
+}
+
+.question-chevron {
+  font-size: 0.65rem;
   color: var(--color-text-tertiary);
-  font-size: 0.875rem;
+  flex-shrink: 0;
+}
+
+.question-meta {
+  padding: 0 1rem 0.75rem;
+}
+
+.question-meta .meta {
+  color: var(--color-text-tertiary);
+  font-size: 0.8rem;
   margin: 0;
 }
 
@@ -627,10 +656,6 @@ watch(() => props.reading, (newReading) => {
 
 /* Mobile optimizations */
 @media (max-width: 640px) {
-  .conversation-header {
-    padding: 1rem;
-  }
-
   .conversation-container {
     padding: 0.75rem;
   }

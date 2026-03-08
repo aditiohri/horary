@@ -4,6 +4,7 @@ import UserChat from "./components/UserChat.vue";
 import ReadingHistory from "./components/ReadingHistory.vue";
 import LLMSettings from "./components/LLMSettings.vue";
 import HoraryInfoModal from "./components/HoraryInfoModal.vue";
+import FeedbackModal from "./components/FeedbackModal.vue";
 import { readingStorage, decodeReadingFromUrl, type StoredReading } from './utils/storage';
 import { useDarkMode } from './composables/useDarkMode';
 
@@ -15,6 +16,7 @@ const chatResetKey = ref(0); // Used to force UserChat component to reset
 const { isDark, toggleDarkMode } = useDarkMode();
 const showSettings = ref(false);
 const showHoraryInfo = ref(false);
+const showFeedback = ref(false);
 
 const showHistory = () => {
   currentView.value = 'history';
@@ -78,6 +80,12 @@ onMounted(async () => {
             </button>
           </nav>
           <button
+            @click="showFeedback = true"
+            class="feedback-button"
+            aria-label="Send feedback"
+            title="Send feedback"
+          >Feedback</button>
+          <button
             @click="showSettings = true"
             class="settings-button"
             aria-label="Settings"
@@ -116,6 +124,9 @@ onMounted(async () => {
 
     <!-- Horary Info Modal -->
     <HoraryInfoModal v-model="showHoraryInfo" />
+
+    <!-- Feedback Modal -->
+    <FeedbackModal v-model="showFeedback" />
   </div>
 </template>
 
@@ -335,6 +346,28 @@ body {
 
 .settings-button:active {
   transform: scale(0.95);
+}
+
+/* Feedback Button */
+.feedback-button {
+  background: rgba(217, 119, 6, 0.08);
+  color: var(--color-text-tertiary);
+  border: 1px solid rgba(217, 119, 6, 0.2);
+  border-radius: 9999px;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  padding: 0.15rem 0.6rem;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+  letter-spacing: 0.01em;
+  align-self: center;
+}
+
+.feedback-button:hover {
+  background: rgba(217, 119, 6, 0.15);
+  color: var(--color-accent);
+  border-color: rgba(217, 119, 6, 0.35);
 }
 
 /* Dark Mode Toggle */

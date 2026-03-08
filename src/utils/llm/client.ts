@@ -73,7 +73,7 @@ export function createLLMClient(settings?: LLMSettings): OpenAI {
     case 'ollama':
       return createOllamaClient(activeSettings);
 
-    case 'openrouter-free':
+    case 'groq-free':
       return createFreeTierClient();
 
     case 'groq':
@@ -104,7 +104,7 @@ export function formatLLMError(error: any, provider?: string): string {
     return errorMessage;
   }
 
-  const isFreeTier = activeProvider === 'openrouter-free';
+  const isFreeTier = activeProvider === 'groq-free';
   const isGroq = activeProvider === 'groq';
 
   // Connection errors

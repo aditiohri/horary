@@ -25,8 +25,8 @@ export function getDefaultProvider(): LLMProvider {
     return 'ollama';
   }
 
-  // In deployed environment, default to OpenRouter (has free models)
-  return 'openrouter-free';
+  // In deployed environment, default to Groq free tier
+  return 'groq-free';
 }
 
 /**
@@ -38,7 +38,7 @@ export function isProviderAvailable(provider: LLMProvider): boolean {
     return isLocalEnvironment();
   }
 
-  // OpenRouter and Anthropic work everywhere
+  // Groq providers work everywhere
   return true;
 }
 
@@ -50,5 +50,5 @@ export function getEnvironmentGuidance(): string {
     return 'You are running locally. Ollama (free, private) is recommended.';
   }
 
-  return 'You are on a deployed site. Please use OpenRouter or Anthropic (requires API key).';
+  return 'You are on a deployed site. Please use the Groq free tier or your own API key.';
 }

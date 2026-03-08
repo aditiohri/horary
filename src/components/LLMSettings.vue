@@ -52,7 +52,7 @@ const usageStats = computed(() => {
   // Depend on usageStatsVersion to trigger re-computation
   usageStatsVersion.value; // eslint-disable-line no-unused-expressions
 
-  if (localProvider.value === 'openrouter-free') {
+  if (localProvider.value === 'groq-free') {
     return getUsageStats();
   }
   return null;
@@ -85,7 +85,7 @@ watch(localProvider, (newProvider) => {
   if (newProvider === 'ollama') {
     localBaseUrl.value = 'http://localhost:11434/v1/';
     localApiKey.value = '';
-  } else if (newProvider === 'openrouter-free') {
+  } else if (newProvider === 'groq-free') {
     localApiKey.value = '';
     localBaseUrl.value = '';
   } else if (newProvider === 'groq') {
@@ -257,7 +257,7 @@ onUnmounted(() => {
         </div>
 
         <!-- Free Tier Usage Stats -->
-        <div v-if="localProvider === 'openrouter-free' && usageStats" class="usage-stats">
+        <div v-if="localProvider === 'groq-free' && usageStats" class="usage-stats">
           <h3>Usage This Period</h3>
           <div class="usage-stat">
             <span class="stat-label">Hourly Requests:</span>
@@ -450,7 +450,7 @@ onUnmounted(() => {
           </p>
         </div>
 
-        <div v-else-if="localProvider === 'openrouter-free'" class="help-section">
+        <div v-else-if="localProvider === 'groq-free'" class="help-section">
           <h4 style="margin-top: 0; color: var(--color-text-primary);">Free Tier with Groq</h4>
           <p class="form-help">
             Try the app with Groq's lightning-fast free tier using our shared API key:

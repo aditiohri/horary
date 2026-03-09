@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, watch } from "vue";
 import { useReadingStorage, encodeReadingToUrl, type StoredReading } from "../utils/storage";
 
-const props = withDefaults(defineProps<{ compact?: boolean }>(), { compact: false });
+const props = withDefaults(defineProps<{ compact?: boolean; refreshKey?: number }>(), { compact: false, refreshKey: 0 });
 
 const emit = defineEmits<{
   (e: "select-reading", reading: StoredReading): void;
@@ -123,6 +123,8 @@ const truncateQuestion = (question: string, maxLength: number = 100) => {
 };
 
 onMounted(loadReadings);
+
+watch(() => props.refreshKey, loadReadings);
 </script>
 
 <template>

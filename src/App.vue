@@ -196,6 +196,7 @@ html {
 
 /* CSS Custom Properties for Theming */
 :root {
+  color-scheme: light;
   /* Light mode — warm parchment, aged ink, gold highlights */
 
   /* Main page background — old vellum parchment */
@@ -239,6 +240,7 @@ html {
 /* Dark mode — candlelight in a dark garden */
 /* Near-black green-tinted backgrounds with warm amber accents */
 :root.dark {
+  color-scheme: dark;
   /* Main page background — near-black green-tinted */
   --color-bg: #161a12;
   /* Card / panel background — dark surface */

@@ -7,6 +7,7 @@ import HoraryInfoModal from "./components/HoraryInfoModal.vue";
 import FeedbackModal from "./components/FeedbackModal.vue";
 import { readingStorage, decodeReadingFromUrl, type StoredReading } from './utils/storage';
 import { useDarkMode } from './composables/useDarkMode';
+import { useRegisterSW } from 'virtual:pwa-register/vue';
 
 type AppView = 'home' | 'reading';
 
@@ -14,6 +15,9 @@ const currentView = ref<AppView>('home');
 const selectedHistoryReading = ref<StoredReading | null>(null);
 const chatResetKey = ref(0);
 const { isDark, toggleDarkMode } = useDarkMode();
+
+const { needRefresh, updateServiceWorker } = useRegisterSW();
+watch(needRefresh, (val) => { if (val) updateServiceWorker(); });
 const showSettings = ref(false);
 const showHoraryInfo = ref(false);
 const showFeedback = ref(false);

@@ -24,6 +24,8 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   'new-reading': [];
+  'reading-started': [];
+  'view-history': [];
 }>();
 
 const { saveReading, updateReading } = useReadingStorage();
@@ -32,6 +34,7 @@ const chartData = ref<QuestionData | null>(null);
 const showConversation = ref(false);
 const currentReadingId = ref<string | null>(null);
 const activeTab = ref<'chat' | 'wheel' | 'data'>('chat');
+const activeChartTab = ref<'wheel' | 'data'>('wheel');
 const showAbout = ref(false);
 const isMobile = ref(window.innerWidth <= 768);
 
@@ -43,7 +46,10 @@ const handleChartCalculated = async (data: QuestionData) => {
   chartData.value = data;
 
   showConversation.value = true;
-  activeTab.value = 'chat'; // Start with chat tab
+  activeTab.value = 'chat'; // Start with chat tab on mobile
+  activeChartTab.value = 'wheel'; // Default chart panel to Chart Wheel
+
+  emit('reading-started');
 
   // Save the new reading to storage
   try {
@@ -217,6 +223,7 @@ watch(
       };
       showConversation.value = true;
       currentReadingId.value = newReading.id;
+      activeChartTab.value = 'wheel';
 
       // Wait for next tick and render chart
       await nextTick();
@@ -249,14 +256,23 @@ onMounted(async () => {
     };
     showConversation.value = true;
     currentReadingId.value = props.selectedReading.id;
+    activeChartTab.value = 'wheel';
 
     await nextTick();
     await renderChart(chartData.value);
   }
 });
 
-// Re-render chart when switching to wheel tab
+// Re-render chart when switching to wheel tab (mobile)
 watch(activeTab, async (newTab) => {
+  if (newTab === 'wheel' && chartData.value) {
+    await nextTick();
+    await renderChart(chartData.value);
+  }
+});
+
+// Re-render chart when switching to wheel tab (desktop chart panel)
+watch(activeChartTab, async (newTab) => {
   if (newTab === 'wheel' && chartData.value) {
     await nextTick();
     await renderChart(chartData.value);
@@ -280,27 +296,15 @@ watch(activeTab, async (newTab) => {
       </div>
 
       <div v-else class="reading-layout">
-        <!-- Chart display (desktop only — unmounted on mobile to avoid #paper conflict) -->
-        <div v-if="!isMobile" class="chart-section">
-          <div class="tab-content">
-            <HoraryChart v-show="activeTab !== 'data'" :chart-data="chartData" />
-            <ChartDataView v-show="activeTab === 'data'" :chart-data="chartData" />
-          </div>
-
-          <div class="chart-actions">
-            <button @click="startNewReading" class="new-reading-button">
-              Ask Another Question
-            </button>
-            <div v-if="currentReadingId" class="reading-info">
-              <span class="reading-saved"> ✓ Reading saved </span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Conversation interface -->
+        <!-- LEFT: Conversation / chat column -->
+        <!-- On desktop: 60% width, scrollable, always shows chat -->
+        <!-- On mobile: full width, tab-controlled content -->
         <div v-if="showConversation" class="conversation-section">
-          <!-- Unified tab navigation -->
-          <div class="tab-navigation">
+          <!-- Question heading: desktop only -->
+          <h2 v-if="!isMobile" class="reading-question">{{ chartData?.question }}</h2>
+
+          <!-- Mobile tab navigation: Chat / Chart Wheel / Chart Data -->
+          <div v-if="isMobile" class="tab-navigation">
             <button
               @click="activeTab = 'chat'"
               :class="['tab-button', { active: activeTab === 'chat' }]"
@@ -340,6 +344,39 @@ watch(activeTab, async (newTab) => {
             :reading-id="currentReadingId ?? undefined"
             :existing-conversation="selectedReading?.conversation || []"
             @conversation-update="handleConversationUpdate" />
+        </div>
+
+        <!-- RIGHT: Chart panel — desktop only (unmounted on mobile to avoid #paper conflict) -->
+        <div v-if="!isMobile" class="chart-section">
+          <!-- Desktop chart tab navigation: Chart Wheel / Chart Data -->
+          <div class="chart-tab-navigation">
+            <button
+              @click="activeChartTab = 'wheel'"
+              :class="['chart-tab-button', { active: activeChartTab === 'wheel' }]"
+            >
+              Chart Wheel
+            </button>
+            <button
+              @click="activeChartTab = 'data'"
+              :class="['chart-tab-button', { active: activeChartTab === 'data' }]"
+            >
+              Chart Data
+            </button>
+          </div>
+
+          <div class="tab-content">
+            <HoraryChart v-show="activeChartTab !== 'data'" :chart-data="chartData" />
+            <ChartDataView v-show="activeChartTab === 'data'" :chart-data="chartData" />
+          </div>
+
+          <div class="chart-actions">
+            <button @click="startNewReading" class="new-reading-button">
+              Ask Another Question
+            </button>
+            <div v-if="currentReadingId" class="reading-info">
+              <span class="reading-saved"> ✓ Reading saved </span>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -393,6 +430,13 @@ watch(activeTab, async (newTab) => {
           <p>No account or personal information is required to use this app. Your horary question text is sent to Groq's API for AI interpretation — <a href="https://groq.com/privacy-policy/" target="_blank" rel="noopener">Groq's privacy policy</a> applies to these requests. Location data used for chart calculation is requested by your browser at reading time and is not stored beyond the chart itself. You can delete any or all readings from the History tab at any time.</p>
         </div>
       </div>
+    </div>
+
+    <!-- "Past readings" link: desktop only, shown in welcome/home state -->
+    <div v-if="!chartData" class="past-readings-link-container">
+      <button class="past-readings-link" @click="emit('view-history')">
+        ✦ — or revisit a past reading — ✦
+      </button>
     </div>
   </div>
 </template>
@@ -539,6 +583,32 @@ watch(activeTab, async (newTab) => {
   text-decoration: underline;
 }
 
+/* ─── Past readings link (desktop only) ───────────────────── */
+.past-readings-link-container {
+  display: none;
+  text-align: center;
+  padding: 1.75rem 0 1.25rem;
+  width: 100%;
+}
+
+.past-readings-link {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: var(--font-serif);
+  font-size: 1.0625rem;
+  color: var(--color-text-muted);
+  letter-spacing: 0.04em;
+  transition: color 0.25s ease;
+  padding: 0.25rem 0.5rem;
+  font-style: italic;
+}
+
+.past-readings-link:hover {
+  color: var(--color-accent);
+}
+
+/* ─── Reading layout ──────────────────────────────────────── */
 .reading-layout {
   display: grid;
   grid-template-columns: 2fr 1fr;
@@ -546,6 +616,15 @@ watch(activeTab, async (newTab) => {
   min-height: 100%;
 }
 
+/* Conversation section: LEFT on desktop (via DOM order), full-width mobile */
+.conversation-section {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  min-width: 0;
+}
+
+/* Desktop chart panel: RIGHT column */
 .chart-section {
   display: flex;
   flex-direction: column;
@@ -554,19 +633,49 @@ watch(activeTab, async (newTab) => {
   min-height: 0;
 }
 
+/* Reading question heading: desktop only */
+.reading-question {
+  display: none;
+}
+
+/* Desktop chart tab navigation */
+.chart-tab-navigation {
+  display: flex;
+  gap: 0;
+  border-bottom: 2px solid var(--color-border);
+  flex-shrink: 0;
+}
+
+.chart-tab-button {
+  background: transparent;
+  border: none;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  transition: all 0.2s ease;
+  font-family: var(--font-sans);
+}
+
+.chart-tab-button:hover {
+  color: var(--color-text-primary);
+  background: var(--color-surface-raised);
+}
+
+.chart-tab-button.active {
+  color: var(--color-accent);
+  border-bottom-color: var(--color-accent);
+}
+
 .chart-actions {
   display: flex;
   justify-content: space-between;
   align-items: center;
   flex-wrap: wrap;
   gap: 1rem;
-}
-
-.conversation-section {
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-  min-width: 0;
 }
 
 .new-reading-button {
@@ -602,7 +711,7 @@ watch(activeTab, async (newTab) => {
   font-weight: 500;
 }
 
-/* Tab Navigation Styles */
+/* Mobile tab Navigation Styles */
 .tab-navigation {
   display: flex;
   gap: 0.5rem;
@@ -648,7 +757,6 @@ watch(activeTab, async (newTab) => {
   overflow: hidden;
 }
 
-
 .input-area {
   position: sticky;
   bottom: 0;
@@ -659,7 +767,7 @@ watch(activeTab, async (newTab) => {
   transition: background-color 0.3s ease;
 }
 
-/* Tablet layout */
+/* ─── Tablet layout ───────────────────────────────────────── */
 @media (max-width: 1024px) and (min-width: 769px) {
   .reading-layout {
     grid-template-columns: 1fr;
@@ -680,7 +788,7 @@ watch(activeTab, async (newTab) => {
   }
 }
 
-/* Mobile layout */
+/* ─── Mobile layout ───────────────────────────────────────── */
 @media (max-width: 768px) {
   .reading-layout {
     grid-template-columns: 1fr;
@@ -747,7 +855,123 @@ watch(activeTab, async (newTab) => {
   }
 }
 
-/* Desktop: compact welcome state — no gap between intro text and question form */
+/* ─── Desktop 1024px+: journal layout ────────────────────── */
+@media (min-width: 1024px) {
+  /* Welcome / home state: centered journal form */
+  .user-chat.welcome-state {
+    align-items: center;
+    overflow-y: auto;
+    padding: 0 2rem;
+  }
+
+  .user-chat.welcome-state .content-area {
+    max-width: 560px;
+    width: 100%;
+    background: transparent;
+    box-shadow: none;
+    border-radius: 0;
+    text-align: center;
+    overflow-y: visible;
+    flex: none;
+    height: auto;
+  }
+
+  .user-chat.welcome-state .welcome-message {
+    padding: max(3rem, 10vh) 1rem 1.5rem;
+  }
+
+  .user-chat.welcome-state .welcome-message h2 {
+    font-family: var(--font-serif);
+    font-size: 2.25rem;
+    font-weight: 400;
+    letter-spacing: 0.02em;
+    line-height: 1.2;
+    margin-bottom: 0.75rem;
+  }
+
+  .user-chat.welcome-state .welcome-message p {
+    font-size: 1rem;
+    color: var(--color-text-secondary);
+    line-height: 1.7;
+  }
+
+  .user-chat.welcome-state .input-area {
+    max-width: 560px;
+    width: 100%;
+    position: relative;
+    bottom: auto;
+    margin-top: 0;
+    padding: 0.5rem 0 0.75rem;
+  }
+
+  .user-chat.welcome-state .about-section {
+    max-width: 560px;
+    width: 100%;
+  }
+
+  /* Past readings link: show on desktop */
+  .past-readings-link-container {
+    display: block;
+    max-width: 560px;
+    width: 100%;
+  }
+
+  /* Reading layout: 60% chat left, 40% chart right */
+  .reading-layout {
+    grid-template-columns: 3fr 2fr;
+    gap: 0;
+    min-height: 100%;
+    padding: 0;
+    align-items: stretch;
+  }
+
+  /* content-area is transparent in reading state on desktop */
+  .user-chat:not(.welcome-state) .content-area {
+    background: transparent;
+    box-shadow: none;
+    border-radius: 0;
+    padding: 0;
+    overflow: visible;
+    flex: 1;
+  }
+
+  /* Conversation section (LEFT): independently scrollable */
+  .conversation-section {
+    overflow-y: auto;
+    border-right: 1px solid var(--color-border);
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  /* Reading question heading: show on desktop */
+  .reading-question {
+    display: block;
+    font-family: var(--font-serif);
+    font-size: 1.5rem;
+    font-weight: 400;
+    font-style: italic;
+    color: var(--color-text-primary);
+    line-height: 1.4;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--color-border);
+    margin-bottom: 0.25rem;
+    flex-shrink: 0;
+  }
+
+  /* Chart section (RIGHT): sticky with its own scroll */
+  .chart-section {
+    padding: 1rem 1rem 1rem 1.25rem;
+    overflow-y: auto;
+    position: sticky;
+    top: 0;
+    align-self: start;
+    max-height: calc(100vh - 100px);
+  }
+}
+
+/* Desktop: compact welcome state — adjustments beyond 769px baseline */
 @media (min-width: 769px) {
   .user-chat.welcome-state {
     overflow-y: auto;

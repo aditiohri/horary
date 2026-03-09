@@ -9,9 +9,9 @@ import { readingStorage, decodeReadingFromUrl, type StoredReading } from './util
 import { useDarkMode } from './composables/useDarkMode';
 import { useRegisterSW } from 'virtual:pwa-register/vue';
 
-type AppView = 'home' | 'reading';
+type AppView = 'home' | 'reading' | 'history';
 
-const currentView = ref<AppView>('reading');
+const currentView = ref<AppView>('home');
 const selectedHistoryReading = ref<StoredReading | null>(null);
 const chatResetKey = ref(0);
 const { isDark, toggleDarkMode } = useDarkMode();
@@ -31,7 +31,7 @@ watch(currentView, refreshReadingsCount);
 const startNewReading = () => {
   selectedHistoryReading.value = null;
   chatResetKey.value++;
-  currentView.value = 'reading';
+  currentView.value = 'home';
 };
 
 const goHome = () => {
@@ -39,6 +39,10 @@ const goHome = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
   currentView.value = 'home';
+};
+
+const goHistory = () => {
+  currentView.value = 'history';
 };
 
 const handleSelectReading = (reading: StoredReading) => {
@@ -101,18 +105,28 @@ onMounted(async () => {
     </header>
 
     <div class="app-body">
-      <!-- Sidebar: home screen on mobile, permanent panel on desktop -->
+      <!-- Sidebar: home screen on mobile, permanent nav panel on desktop -->
       <aside
         class="app-sidebar"
         :class="{ 'mobile-hidden': currentView === 'reading' }"
       >
-        <div class="sidebar-top">
+        <!-- Desktop nav: New Reading + History link (hidden on mobile) -->
+        <div class="sidebar-nav">
           <button class="sidebar-new-reading" @click="startNewReading">
             ✦ New Reading
           </button>
+          <button
+            class="sidebar-nav-link"
+            :class="{ 'sidebar-nav-link--active': currentView === 'history' }"
+            @click="goHistory"
+          >
+            <span class="sidebar-nav-icon">📜</span>
+            <span>Saved Readings</span>
+          </button>
         </div>
 
-        <div class="sidebar-history">
+        <!-- Mobile: full ReadingHistory list (hidden on desktop) -->
+        <div class="sidebar-history-mobile">
           <ReadingHistory
             :compact="true"
             @select-reading="handleSelectReading"
@@ -136,15 +150,27 @@ onMounted(async () => {
         </div>
       </aside>
 
-      <!-- Main reading area: always visible on desktop, reading-view on mobile -->
+      <!-- Main content area: hidden on mobile unless reading -->
       <main
         class="app-main"
-        :class="{ 'mobile-hidden': currentView === 'home' }"
+        :class="{ 'mobile-hidden': currentView !== 'reading' }"
       >
+        <!-- History page: standalone on desktop -->
+        <div v-if="currentView === 'history'" class="history-page">
+          <ReadingHistory
+            @select-reading="handleSelectReading"
+            @close="goHome"
+          />
+        </div>
+
+        <!-- Home + Reading: UserChat handles its own welcome/reading states -->
         <UserChat
+          v-else
           :key="chatResetKey"
           :selected-reading="selectedHistoryReading"
           @new-reading="selectedHistoryReading = null"
+          @reading-started="currentView = 'reading'"
+          @view-history="goHistory"
         />
       </main>
     </div>
@@ -152,7 +178,7 @@ onMounted(async () => {
     <!-- Bottom bar: mobile only -->
     <div class="bottom-bar">
       <button
-        v-if="currentView === 'home'"
+        v-if="currentView !== 'reading'"
         class="bottom-new-reading"
         @click="startNewReading"
       >
@@ -174,7 +200,7 @@ onMounted(async () => {
       :readings-count="savedReadingsCount"
       @toggle-dark="toggleDarkMode"
       @feedback="showFeedback = true"
-      @view-history="() => { showSettings = false; goHome(); }"
+      @view-history="() => { showSettings = false; goHistory(); }"
     />
 
     <!-- Horary Info Modal -->
@@ -183,6 +209,22 @@ onMounted(async () => {
     <!-- Feedback Modal -->
     <FeedbackModal v-model="showFeedback" />
   </div>
+
+  <!-- Desktop colophon footer -->
+  <footer class="app-footer">
+    <span class="app-footer-copy">© 2025 aditiohri</span>
+    <a
+      href="https://github.com/aditiohri/horary"
+      target="_blank"
+      rel="noopener"
+      class="app-footer-github"
+      aria-label="View on GitHub"
+    >
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+        <path d="M12 2C6.477 2 2 6.477 2 12c0 4.418 2.865 8.166 6.839 9.489.5.092.682-.217.682-.482 0-.237-.008-.866-.013-1.7-2.782.603-3.369-1.342-3.369-1.342-.454-1.155-1.11-1.462-1.11-1.462-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.578 9.578 0 0112 6.836a9.59 9.59 0 012.504.337c1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.202 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.741 0 .267.18.578.688.48C19.138 20.163 22 16.418 22 12c0-5.523-4.477-10-10-10z"/>
+      </svg>
+    </a>
+  </footer>
 </template>
 
 <style>
@@ -239,6 +281,11 @@ html {
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08);
   --shadow-md: 0 2px 4px rgba(0, 0, 0, 0.1);
   --shadow-lg: 0 4px 6px rgba(0, 0, 0, 0.12);
+
+  /* Typography tokens */
+  --font-serif: 'EB Garamond', Georgia, 'Times New Roman', serif;
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
+    Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
 }
 
 /* Dark mode — candlelight in a dark garden */
@@ -284,8 +331,7 @@ html {
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
-    Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+  font-family: var(--font-sans);
   line-height: 1.6;
   color: var(--color-text-primary);
   background-color: var(--color-bg);
@@ -338,9 +384,10 @@ body {
   font-size: 1.25rem;
   font-weight: 700;
   color: var(--color-text-primary);
-  font-family: inherit;
+  font-family: var(--font-serif);
   white-space: nowrap;
   transition: color 0.2s ease;
+  letter-spacing: 0.01em;
 }
 
 .app-title:hover {
@@ -442,11 +489,8 @@ body {
   transition: background-color 0.3s ease;
 }
 
-.sidebar-top {
-  padding: 0.75rem;
-  border-bottom: 1px solid var(--color-border);
-  flex-shrink: 0;
-  /* Hidden on mobile — bottom bar handles New Reading there */
+/* Desktop nav section — hidden on mobile */
+.sidebar-nav {
   display: none;
 }
 
@@ -468,7 +512,41 @@ body {
   background: var(--color-accent-hover);
 }
 
-.sidebar-history {
+.sidebar-nav-link {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  width: 100%;
+  background: none;
+  border: none;
+  padding: 0.5rem 0.625rem;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  font-size: 0.9375rem;
+  color: var(--color-text-secondary);
+  text-align: left;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.sidebar-nav-link:hover {
+  background: var(--color-bg-hover);
+  color: var(--color-text-primary);
+}
+
+.sidebar-nav-link--active {
+  background: var(--color-bg-hover);
+  color: var(--color-text-primary);
+  font-weight: 500;
+}
+
+.sidebar-nav-icon {
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+/* Mobile history: ReadingHistory in sidebar — hidden on desktop */
+.sidebar-history-mobile {
   flex: 1;
   min-height: 0;
   display: flex;
@@ -517,6 +595,15 @@ body {
   flex-direction: column;
   overflow: hidden;
   background: var(--color-bg);
+}
+
+/* ─── History page (desktop standalone) ───────────────────── */
+.history-page {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
 }
 
 /* ─── Mobile: conditional visibility (max 1023px) ─────────── */
@@ -584,11 +671,16 @@ body {
   transform: scale(0.98);
 }
 
+/* ─── Desktop colophon footer ─────────────────────────────── */
+.app-footer {
+  display: none;
+}
+
 /* ─── Desktop 1024px+ ─────────────────────────────────────── */
 @media (min-width: 1024px) {
   /* Fixed-width sidebar */
   .app-sidebar {
-    width: 280px;
+    width: 260px;
     flex-shrink: 0;
   }
 
@@ -610,11 +702,22 @@ body {
     display: none;
   }
 
-  /* Show desktop sidebar internals */
-  .sidebar-top {
-    display: block;
+  /* Desktop sidebar nav (hidden on mobile) */
+  .sidebar-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 0.375rem;
+    padding: 0.875rem 0.75rem 0.75rem;
+    border-bottom: 1px solid var(--color-border);
+    flex-shrink: 0;
   }
 
+  /* Hide mobile ReadingHistory on desktop */
+  .sidebar-history-mobile {
+    display: none;
+  }
+
+  /* Show sidebar footer on desktop */
   .sidebar-footer {
     display: flex;
   }
@@ -622,6 +725,49 @@ body {
   /* Allow main to scroll on desktop */
   .app-main {
     overflow-y: auto;
+  }
+
+  /* History page desktop layout */
+  .history-page {
+    max-width: 900px;
+    width: 100%;
+    margin: 0 auto;
+    padding: 2rem;
+  }
+
+  /* Desktop colophon footer */
+  .app-footer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    padding: 0.625rem 1rem;
+    border-top: 1px solid var(--color-border);
+    background: var(--color-surface);
+    flex-shrink: 0;
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
+    font-family: var(--font-sans);
+    transition: background-color 0.3s ease, border-color 0.3s ease;
+    letter-spacing: 0.02em;
+  }
+
+  .app-footer-copy {
+    color: var(--color-text-muted);
+  }
+
+  .app-footer-github {
+    color: var(--color-text-muted);
+    display: flex;
+    align-items: center;
+    opacity: 0.7;
+    transition: opacity 0.2s ease, color 0.2s ease;
+    text-decoration: none;
+  }
+
+  .app-footer-github:hover {
+    opacity: 1;
+    color: var(--color-accent);
   }
 }
 </style>

@@ -8,6 +8,7 @@ import {
   type HoraryReading,
 } from "../utils/llm";
 import { formatLLMError } from "../utils/llm/client";
+import { readingStorage, encodeReadingToUrl } from "../utils/storage";
 
 interface ConversationMessage {
   role: "user" | "assistant";
@@ -18,6 +19,7 @@ interface ConversationMessage {
 
 const props = defineProps<{
   reading: HoraryReading;
+  readingId?: string;
   existingConversation?: Array<{role: string; content: string; timestamp?: string}>;
 }>();
 
@@ -32,6 +34,26 @@ const hasInitialReading = ref(false);
 const conversationContainer = ref<HTMLElement>();
 const questionCollapsed = ref(false);
 const geocodedLocation = ref<string>("");
+const linkCopied = ref(false);
+
+const copyShareLink = async () => {
+  if (!props.readingId) return;
+  const stored = readingStorage.getReading(props.readingId);
+  if (!stored) return;
+  const url = await encodeReadingToUrl(stored);
+  try {
+    await navigator.clipboard.writeText(url);
+  } catch {
+    const input = document.createElement("input");
+    input.value = url;
+    document.body.appendChild(input);
+    input.select();
+    document.execCommand("copy");
+    document.body.removeChild(input);
+  }
+  linkCopied.value = true;
+  setTimeout(() => { linkCopied.value = false; }, 2000);
+};
 
 // Format error message with actionable guidance
 function formatErrorMessage(error: any): string {
@@ -233,14 +255,39 @@ watch(() => props.reading, (newReading) => {
 <template>
   <div class="horary-conversation">
     <div class="conversation-header">
-      <button
-        @click="questionCollapsed = !questionCollapsed"
-        class="question-toggle"
-        :title="questionCollapsed ? 'Show question details' : 'Collapse question details'"
-      >
-        <span class="question-preview">{{ questionInfo.question }}</span>
-        <span class="question-chevron">{{ questionCollapsed ? '▼' : '▲' }}</span>
-      </button>
+      <div class="question-heading">
+        <button
+          @click="questionCollapsed = !questionCollapsed"
+          class="question-toggle"
+          :title="questionCollapsed ? 'Show question details' : 'Collapse question details'"
+        >
+          <span class="question-preview">{{ questionInfo.question }}</span>
+          <span class="question-chevron">{{ questionCollapsed ? '▼' : '▲' }}</span>
+        </button>
+        <button
+          v-if="readingId"
+          @click="copyShareLink"
+          class="share-link-button"
+          :title="linkCopied ? 'Link copied!' : 'Copy share link'"
+        >
+          <svg v-if="!linkCopied" width="15" height="15" viewBox="0 0 24 24" fill="none">
+            <path
+              d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round" />
+          </svg>
+          <svg v-else width="15" height="15" viewBox="0 0 24 24" fill="none">
+            <path
+              d="M5 13l4 4L19 7"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round" />
+          </svg>
+        </button>
+      </div>
       <div v-show="!questionCollapsed" class="question-meta">
         <p class="meta">{{ questionInfo.time }} • {{ questionInfo.location }}</p>
       </div>
@@ -336,8 +383,14 @@ watch(() => props.reading, (newReading) => {
   background: var(--color-surface-raised);
 }
 
+.question-heading {
+  display: flex;
+  align-items: center;
+}
+
 .question-toggle {
-  width: 100%;
+  flex: 1;
+  min-width: 0;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -354,6 +407,25 @@ watch(() => props.reading, (newReading) => {
 }
 
 .question-toggle:hover {
+  background: var(--color-bg-hover);
+}
+
+.share-link-button {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 0.75rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--color-text-muted);
+  border-radius: 0.375rem;
+  transition: color 0.15s ease, background-color 0.15s ease;
+}
+
+.share-link-button:hover {
+  color: var(--color-text-primary);
   background: var(--color-bg-hover);
 }
 

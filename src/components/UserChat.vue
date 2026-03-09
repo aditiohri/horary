@@ -337,6 +337,7 @@ watch(activeTab, async (newTab) => {
           <Chat
             v-if="!isMobile || activeTab === 'chat'"
             :reading="chartData"
+            :reading-id="currentReadingId ?? undefined"
             :existing-conversation="selectedReading?.conversation || []"
             @conversation-update="handleConversationUpdate" />
         </div>

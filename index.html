@@ -6,7 +6,17 @@
     <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
     <link rel="manifest" href="/manifest.json" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="light dark" />
     <meta name="theme-color" content="#FFD700" />
+    <script>
+      (function () {
+        var stored = localStorage.getItem('darkMode');
+        var dark = stored !== null
+          ? stored === 'true'
+          : window.matchMedia('(prefers-color-scheme: dark)').matches;
+        if (dark) document.documentElement.classList.add('dark');
+      })();
+    </script>
     <meta
       name="description"
       content="Ask horary astrology questions and get readings" />

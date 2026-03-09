@@ -23,10 +23,16 @@ const showHoraryInfo = ref(false);
 const showFeedback = ref(false);
 
 const savedReadingsCount = ref(readingStorage.getStorageStats().totalReadings);
+const historyRefreshKey = ref(0);
 const refreshReadingsCount = () => {
   savedReadingsCount.value = readingStorage.getStorageStats().totalReadings;
 };
 watch(currentView, refreshReadingsCount);
+
+const handleReadingSaved = () => {
+  historyRefreshKey.value++;
+  refreshReadingsCount();
+};
 
 const startNewReading = () => {
   selectedHistoryReading.value = null;
@@ -129,6 +135,7 @@ onMounted(async () => {
         <div class="sidebar-history-mobile">
           <ReadingHistory
             :compact="true"
+            :refresh-key="historyRefreshKey"
             @select-reading="handleSelectReading"
             @close="goHome"
           />
@@ -171,6 +178,7 @@ onMounted(async () => {
           @new-reading="selectedHistoryReading = null"
           @reading-started="currentView = 'reading'"
           @view-history="goHistory"
+          @reading-saved="handleReadingSaved"
         />
       </main>
     </div>

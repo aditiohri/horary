@@ -19,8 +19,55 @@ const state = ref<ModalState>('idle');
 const errorMessage = ref('');
 const issueUrl = ref('');
 
+const imageFile = ref<File | null>(null);
+const imagePreviewUrl = ref<string>('');
+const imageError = ref<string>('');
+const fileInputRef = ref<HTMLInputElement | null>(null);
+
+const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+const MAX_BYTES = 1 * 1024 * 1024; // 1 MB
+
 function close() {
   emit('update:modelValue', false);
+}
+
+function onFileChange(event: Event) {
+  imageError.value = '';
+  const input = event.target as HTMLInputElement;
+  const file = input.files?.[0];
+  if (!file) return;
+  if (!ALLOWED_MIME_TYPES.includes(file.type)) {
+    imageError.value = 'Only JPEG, PNG, GIF, and WebP images are allowed.';
+    input.value = '';
+    return;
+  }
+  if (file.size > MAX_BYTES) {
+    imageError.value = 'Image must be 1 MB or smaller.';
+    input.value = '';
+    return;
+  }
+  imageFile.value = file;
+  imagePreviewUrl.value = URL.createObjectURL(file);
+}
+
+function removeImage() {
+  imageFile.value = null;
+  if (imagePreviewUrl.value) URL.revokeObjectURL(imagePreviewUrl.value);
+  imagePreviewUrl.value = '';
+  imageError.value = '';
+  if (fileInputRef.value) fileInputRef.value.value = '';
+}
+
+function fileToBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const dataUrl = reader.result as string;
+      resolve(dataUrl.split(',')[1]);
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
 }
 
 // Reset form after modal closes
@@ -33,6 +80,7 @@ watch(() => props.modelValue, (open) => {
       state.value = 'idle';
       errorMessage.value = '';
       issueUrl.value = '';
+      removeImage();
     }, 300);
   }
 });
@@ -45,6 +93,18 @@ async function submit() {
   state.value = 'submitting';
   errorMessage.value = '';
 
+  let imagePayload: { base64: string; mimeType: string } | undefined;
+  if (imageFile.value) {
+    try {
+      const base64 = await fileToBase64(imageFile.value);
+      imagePayload = { base64, mimeType: imageFile.value.type };
+    } catch {
+      errorMessage.value = 'Failed to read the image file. Please try again.';
+      state.value = 'error';
+      return;
+    }
+  }
+
   try {
     const response = await fetch('/.netlify/functions/feedback', {
       method: 'POST',
@@ -53,6 +113,7 @@ async function submit() {
         type: feedbackType.value,
         title: title.value.trim(),
         body: details.value.trim(),
+        ...(imagePayload && { image: imagePayload }),
       }),
     });
     const data = await response.json();
@@ -132,6 +193,38 @@ async function submit() {
               rows="5"
               :disabled="state === 'submitting'"
             />
+          </div>
+
+          <div class="form-group">
+            <label>
+              Screenshot
+              <span class="char-count">optional</span>
+            </label>
+            <div v-if="!imageFile" class="file-drop-zone">
+              <input
+                ref="fileInputRef"
+                id="feedback-image"
+                type="file"
+                accept="image/jpeg,image/png,image/gif,image/webp"
+                class="file-input-hidden"
+                :disabled="state === 'submitting'"
+                @change="onFileChange"
+              />
+              <label for="feedback-image" class="file-drop-label" :class="{ disabled: state === 'submitting' }">
+                Attach a screenshot (JPEG, PNG, GIF, WebP · max 1 MB)
+              </label>
+            </div>
+            <div v-else class="image-preview">
+              <img :src="imagePreviewUrl" alt="Screenshot preview" class="preview-img" />
+              <button
+                type="button"
+                class="remove-image"
+                :disabled="state === 'submitting'"
+                @click="removeImage"
+                aria-label="Remove image"
+              >✕</button>
+            </div>
+            <p v-if="imageError" class="form-error image-error">{{ imageError }}</p>
           </div>
 
           <p v-if="errorMessage" class="form-error">{{ errorMessage }}</p>
@@ -363,5 +456,81 @@ async function submit() {
 
 .success-sub a:hover {
   text-decoration: underline;
+}
+
+.file-drop-zone {
+  position: relative;
+}
+
+.file-input-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.file-drop-label {
+  display: block;
+  padding: 0.625rem 0.75rem;
+  border: 1px dashed var(--color-border);
+  border-radius: 0.5rem;
+  font-size: 0.8125rem;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  text-align: center;
+  transition: border-color 0.2s, color 0.2s;
+}
+
+.file-drop-label:not(.disabled):hover {
+  border-color: var(--color-border-focus);
+  color: var(--color-text-secondary);
+}
+
+.file-drop-label.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.image-preview {
+  position: relative;
+  display: inline-flex;
+}
+
+.preview-img {
+  max-width: 100%;
+  max-height: 10rem;
+  border-radius: 0.375rem;
+  border: 1px solid var(--color-border);
+  object-fit: contain;
+  display: block;
+}
+
+.remove-image {
+  position: absolute;
+  top: 0.25rem;
+  right: 0.25rem;
+  background: rgba(0, 0, 0, 0.55);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 1.375rem;
+  height: 1.375rem;
+  font-size: 0.6875rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.remove-image:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.image-error {
+  margin-top: 0.375rem;
+  margin-bottom: 0;
 }
 </style>

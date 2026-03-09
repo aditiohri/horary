@@ -2,6 +2,77 @@ import type { Handler, HandlerEvent } from '@netlify/functions';
 
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
 const GITHUB_REPO = process.env.GITHUB_REPO || 'aditiohri/horary';
+const GITHUB_BRANCH = process.env.GITHUB_BRANCH || 'main';
+
+const ALLOWED_IMAGE_TYPES: Record<string, string> = {
+  'image/jpeg': 'jpeg',
+  'image/png':  'png',
+  'image/gif':  'gif',
+  'image/webp': 'webp',
+};
+
+// 1 MB pre-encoding cap; base64 inflates by ~33%, so cap base64 string at ceil(1MB * 4/3)
+const MAX_BASE64_LENGTH = Math.ceil(1024 * 1024 * (4 / 3)) + 4;
+
+function validateImageMagicBytes(buf: Buffer, mimeType: string): boolean {
+  if (mimeType === 'image/jpeg') {
+    return buf[0] === 0xFF && buf[1] === 0xD8 && buf[2] === 0xFF;
+  }
+  if (mimeType === 'image/png') {
+    return (
+      buf[0] === 0x89 && buf[1] === 0x50 && buf[2] === 0x4E && buf[3] === 0x47 &&
+      buf[4] === 0x0D && buf[5] === 0x0A && buf[6] === 0x1A && buf[7] === 0x0A
+    );
+  }
+  if (mimeType === 'image/gif') {
+    return (
+      buf[0] === 0x47 && buf[1] === 0x49 && buf[2] === 0x46 &&
+      buf[3] === 0x38 && (buf[4] === 0x37 || buf[4] === 0x39) && buf[5] === 0x61
+    );
+  }
+  if (mimeType === 'image/webp') {
+    return (
+      buf[0] === 0x52 && buf[1] === 0x49 && buf[2] === 0x46 && buf[3] === 0x46 &&
+      buf[8] === 0x57 && buf[9] === 0x45 && buf[10] === 0x42 && buf[11] === 0x50
+    );
+  }
+  return false;
+}
+
+async function uploadImageToGitHub(
+  owner: string,
+  repo: string,
+  base64: string,
+  extension: string,
+  timestamp: string,
+): Promise<string | null> {
+  // Build path entirely from server-controlled values — never from user-supplied filename
+  const hash = Buffer.from(base64.slice(0, 64)).toString('hex').slice(0, 8);
+  const path = `feedback-images/${timestamp}-${hash}.${extension}`;
+
+  const ghRes = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}`, {
+    method: 'PUT',
+    headers: {
+      'Authorization': `token ${GITHUB_TOKEN}`,
+      'Accept': 'application/vnd.github.v3+json',
+      'Content-Type': 'application/json',
+      'User-Agent': 'horary-feedback-bot',
+    },
+    body: JSON.stringify({
+      message: `Add feedback screenshot ${timestamp}`,
+      content: base64,
+      branch: GITHUB_BRANCH,
+    }),
+  });
+
+  if (!ghRes.ok) {
+    const err = await ghRes.json().catch(() => ({}));
+    console.error('GitHub Contents API error:', ghRes.status, err);
+    return null;
+  }
+
+  return `https://raw.githubusercontent.com/${owner}/${repo}/${GITHUB_BRANCH}/${path}`;
+}
 
 // Rate limiter: 5 submissions per IP per hour
 const rateLimitMap = new Map<string, { count: number; windowStart: number }>();
@@ -90,7 +161,8 @@ export const handler: Handler = async (event: HandlerEvent) => {
     };
   }
 
-  let body: { type?: string; title?: string; body?: string };
+  interface ImagePayload { base64: string; mimeType: string; }
+  let body: { type?: string; title?: string; body?: string; image?: ImagePayload };
   try {
     body = JSON.parse(event.body || '{}');
   } catch {
@@ -109,6 +181,45 @@ export const handler: Handler = async (event: HandlerEvent) => {
     return { statusCode: 400, headers: corsHeaders, body: JSON.stringify({ error: 'Details must be 2000 characters or fewer.' }) };
   }
 
+  const [owner, repo] = GITHUB_REPO.split('/');
+
+  // Optional image validation and upload
+  let imageMarkdown = '';
+  if (body.image) {
+    const { base64, mimeType } = body.image;
+
+    if (!ALLOWED_IMAGE_TYPES[mimeType]) {
+      return { statusCode: 400, headers: corsHeaders, body: JSON.stringify({ error: 'Invalid image type.' }) };
+    }
+    if (typeof base64 !== 'string' || base64.length > MAX_BASE64_LENGTH) {
+      return { statusCode: 400, headers: corsHeaders, body: JSON.stringify({ error: 'Image exceeds 1 MB limit.' }) };
+    }
+    // Validate base64 charset before decoding
+    if (!/^[A-Za-z0-9+/]+=*$/.test(base64)) {
+      return { statusCode: 400, headers: corsHeaders, body: JSON.stringify({ error: 'Invalid image data.' }) };
+    }
+
+    let buf: Buffer;
+    try {
+      buf = Buffer.from(base64, 'base64');
+    } catch {
+      return { statusCode: 400, headers: corsHeaders, body: JSON.stringify({ error: 'Invalid image data.' }) };
+    }
+
+    if (!validateImageMagicBytes(buf, mimeType)) {
+      return { statusCode: 400, headers: corsHeaders, body: JSON.stringify({ error: 'Image content does not match declared type.' }) };
+    }
+
+    const extension = ALLOWED_IMAGE_TYPES[mimeType];
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+    const rawUrl = await uploadImageToGitHub(owner, repo, base64, extension, timestamp);
+    if (rawUrl) {
+      imageMarkdown = `\n\n## Screenshot\n\n![Screenshot](${rawUrl})`;
+    } else {
+      console.error('Image upload failed; submitting issue without screenshot');
+    }
+  }
+
   const feedbackType = type as FeedbackType;
   const issueBody = [
     `## Feedback submitted via horary-chat.netlify.app`,
@@ -119,9 +230,7 @@ export const handler: Handler = async (event: HandlerEvent) => {
     ``,
     `---`,
     `*Submitted: ${new Date().toISOString()}*`,
-  ].join('\n');
-
-  const [owner, repo] = GITHUB_REPO.split('/');
+  ].join('\n') + imageMarkdown;
   const ghResponse = await fetch(`https://api.github.com/repos/${owner}/${repo}/issues`, {
     method: 'POST',
     headers: {

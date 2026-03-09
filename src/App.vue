@@ -10,7 +10,7 @@ import { useDarkMode } from './composables/useDarkMode';
 
 type AppView = 'home' | 'reading';
 
-const currentView = ref<AppView>('home');
+const currentView = ref<AppView>('reading');
 const selectedHistoryReading = ref<StoredReading | null>(null);
 const chatResetKey = ref(0);
 const { isDark, toggleDarkMode } = useDarkMode();

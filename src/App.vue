@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch, onMounted } from 'vue';
+import { ref, watch, onMounted, computed } from 'vue';
 import UserChat from "./components/UserChat.vue";
 import ReadingHistory from "./components/ReadingHistory.vue";
 import LLMSettings from "./components/LLMSettings.vue";
@@ -18,6 +18,7 @@ const { isDark, toggleDarkMode } = useDarkMode();
 
 const { needRefresh, updateServiceWorker } = useRegisterSW();
 watch(needRefresh, (val) => { if (val) updateServiceWorker(); });
+const currentYear = computed(() => new Date().getFullYear());
 const showSettings = ref(false);
 const showHoraryInfo = ref(false);
 const showFeedback = ref(false);
@@ -220,7 +221,7 @@ onMounted(async () => {
 
   <!-- Desktop colophon footer -->
   <footer class="app-footer">
-    <span class="app-footer-copy">© 2025 aditiohri</span>
+    <span class="app-footer-copy">© {{ currentYear }} aditiohri</span>
     <a
       href="https://github.com/aditiohri/horary"
       target="_blank"

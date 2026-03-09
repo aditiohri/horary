@@ -33,6 +33,8 @@ const {
   resetConnectionStatus,
 } = useLLMSettings();
 
+const currentYear = computed(() => new Date().getFullYear());
+
 // Local form state
 const localProvider = ref<LLMProvider>(settings.provider);
 const localBaseUrl = ref(settings.provider === 'ollama' ? settings.baseUrl : 'http://localhost:11434/v1/');
@@ -530,7 +532,7 @@ onUnmounted(() => {
 
       <!-- Colophon: copyright + GitHub link -->
       <div class="settings-colophon">
-        <span>© 2025 aditiohri</span>
+        <span>© {{ currentYear }} aditiohri</span>
         <a
           href="https://github.com/aditiohri/horary"
           target="_blank"

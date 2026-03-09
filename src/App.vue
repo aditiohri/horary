@@ -37,7 +37,7 @@ const handleReadingSaved = () => {
 const startNewReading = () => {
   selectedHistoryReading.value = null;
   chatResetKey.value++;
-  currentView.value = 'home';
+  currentView.value = 'reading';
 };
 
 const goHome = () => {
@@ -80,7 +80,7 @@ onMounted(async () => {
             @click="goHome"
             aria-label="Horary Astrology — return to home"
           >
-            Horary Astrology
+            Horary<span class="app-title-astrology"> Astrology</span>
           </button>
           <button
             class="info-tag"
@@ -621,6 +621,10 @@ body {
   }
 
   .app-main.mobile-hidden {
+    display: none;
+  }
+
+  .app-title-astrology {
     display: none;
   }
 }

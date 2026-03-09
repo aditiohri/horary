@@ -969,6 +969,7 @@ watch(activeChartTab, async (newTab) => {
     position: sticky;
     top: 0;
     align-self: start;
+    height: calc(100vh - 100px);
     max-height: calc(100vh - 100px);
   }
 }

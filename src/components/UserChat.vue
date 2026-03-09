@@ -24,6 +24,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   'new-reading': [];
+  'reading-saved': [];
 }>();
 
 const { saveReading, updateReading } = useReadingStorage();
@@ -56,6 +57,7 @@ const handleChartCalculated = async (data: QuestionData) => {
       conversation: [],
     });
     currentReadingId.value = readingId;
+    emit('reading-saved');
   } catch (error) {
     console.error("Error saving reading:", error);
   }
@@ -335,7 +337,7 @@ watch(activeTab, async (newTab) => {
 
           <!-- Chat (always on desktop; only when chat tab active on mobile) -->
           <Chat
-            v-if="!isMobile || activeTab === 'chat'"
+            v-show="!isMobile || activeTab === 'chat'"
             :reading="chartData"
             :reading-id="currentReadingId ?? undefined"
             :existing-conversation="selectedReading?.conversation || []"

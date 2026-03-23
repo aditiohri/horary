@@ -346,6 +346,13 @@ watch(activeChartTab, async (newTab) => {
             :reading-id="currentReadingId ?? undefined"
             :existing-conversation="selectedReading?.conversation || []"
             @conversation-update="handleConversationUpdate" />
+
+          <!-- Mobile chat tab: Ask New Question button -->
+          <div v-if="isMobile && activeTab === 'chat'" class="mobile-chat-actions">
+            <button @click="startNewReading" class="new-reading-button">
+              Ask New Question
+            </button>
+          </div>
         </div>
 
         <!-- RIGHT: Chart panel — desktop only (unmounted on mobile to avoid #paper conflict) -->

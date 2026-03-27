@@ -242,6 +242,7 @@ interface ParsedHoraryResponse {
   judgment: string;
   technical: string;
   summary: string;
+  followups: string[];
   isThreePart: boolean;
 }
 
@@ -249,12 +250,28 @@ function parseHoraryResponse(content: string): ParsedHoraryResponse {
   const jIdx = content.indexOf('## Overall Judgment');
   const tIdx = content.indexOf('## Detailed Astrological Analysis');
   const sIdx = content.indexOf('## Summary');
+  const fIdx = content.indexOf('## Suggested Follow-up Questions');
   const isThreePart = jIdx !== -1 && tIdx !== -1 && sIdx !== -1 && jIdx < tIdx && tIdx < sIdx;
-  if (!isThreePart) return { judgment: '', technical: '', summary: '', isThreePart: false };
+  if (!isThreePart) return { judgment: '', technical: '', summary: '', followups: [], isThreePart: false };
+
+  const summaryEnd = fIdx !== -1 && fIdx > sIdx ? fIdx : undefined;
+  const summaryText = content.slice(sIdx, summaryEnd).trim();
+
+  let followups: string[] = [];
+  if (fIdx !== -1 && fIdx > sIdx) {
+    followups = content
+      .slice(fIdx)
+      .split('\n')
+      .filter(line => /^[-*]\s+/.test(line.trim()))
+      .map(line => line.replace(/^[-*]\s+/, '').trim())
+      .filter(q => q.length > 0);
+  }
+
   return {
     judgment: content.slice(jIdx, tIdx).trim(),
     technical: content.slice(tIdx, sIdx).trim(),
-    summary: content.slice(sIdx).trim(),
+    summary: summaryText,
+    followups,
     isThreePart: true,
   };
 }
@@ -352,6 +369,15 @@ watch(() => props.reading, (newReading) => {
                 </div>
 
                 <div v-html="formatMessageContent(message.parsed.summary)"></div>
+
+                <div v-if="message.parsed.followups.length" class="followup-suggestions">
+                  <button
+                    v-for="q in message.parsed.followups"
+                    :key="q"
+                    class="followup-chip"
+                    @click="currentMessage = q"
+                  >{{ q }}</button>
+                </div>
               </div>
             </template>
 
@@ -919,5 +945,33 @@ details[open] .followup-guide-toggle::before {
   border-left: 2px solid var(--color-border);
   padding-left: 0.75rem;
   margin: 0.5rem 0 0.75rem;
+}
+
+.followup-suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.followup-chip {
+  display: inline-block;
+  padding: 0.3rem 0.65rem;
+  font-size: 0.8rem;
+  font-family: inherit;
+  color: var(--color-text-secondary);
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  cursor: pointer;
+  text-align: left;
+  transition: color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
+  line-height: 1.4;
+}
+
+.followup-chip:hover {
+  color: var(--color-text-primary);
+  border-color: var(--color-accent);
+  background: var(--color-bg-hover);
 }
 </style>

@@ -91,6 +91,11 @@ class ReadingStorage {
     }
   }
 
+  // Delete all readings
+  deleteAllReadings(): void {
+    localStorage.removeItem(this.STORAGE_KEY);
+  }
+
   // Search readings by question text
   searchReadings(query: string): StoredReading[] {
     const readings = this.getAllReadings();
@@ -256,6 +261,7 @@ export function useReadingStorage() {
     getAllReadings: readingStorage.getAllReadings.bind(readingStorage),
     getReading: readingStorage.getReading.bind(readingStorage),
     deleteReading: readingStorage.deleteReading.bind(readingStorage),
+    deleteAllReadings: readingStorage.deleteAllReadings.bind(readingStorage),
     searchReadings: readingStorage.searchReadings.bind(readingStorage),
     getReadingsByDateRange:
       readingStorage.getReadingsByDateRange.bind(readingStorage),

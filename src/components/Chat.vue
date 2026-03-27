@@ -231,6 +231,39 @@ function formatMessageContent(content: string): string {
   });
 }
 
+// Track which messages have technical details expanded (keyed by message index)
+const expandedDetails = ref<Record<number, boolean>>({});
+
+function toggleDetails(index: number): void {
+  expandedDetails.value = { ...expandedDetails.value, [index]: !expandedDetails.value[index] };
+}
+
+interface ParsedHoraryResponse {
+  judgment: string;
+  technical: string;
+  summary: string;
+  isThreePart: boolean;
+}
+
+function parseHoraryResponse(content: string): ParsedHoraryResponse {
+  const jIdx = content.indexOf('## Overall Judgment');
+  const tIdx = content.indexOf('## Detailed Astrological Analysis');
+  const sIdx = content.indexOf('## Summary');
+  const isThreePart = jIdx !== -1 && tIdx !== -1 && sIdx !== -1 && jIdx < tIdx && tIdx < sIdx;
+  if (!isThreePart) return { judgment: '', technical: '', summary: '', isThreePart: false };
+  return {
+    judgment: content.slice(jIdx, tIdx).trim(),
+    technical: content.slice(tIdx, sIdx).trim(),
+    summary: content.slice(sIdx).trim(),
+    isThreePart: true,
+  };
+}
+
+// Cache parsed results to avoid re-parsing on every render
+const parsedMessages = computed(() =>
+  messages.value.map(m => ({ ...m, parsed: parseHoraryResponse(m.content) }))
+);
+
 // Auto-generate initial reading when reading prop is available
 watch(() => props.reading, (newReading) => {
   if (newReading && !hasInitialReading.value) {
@@ -296,13 +329,39 @@ watch(() => props.reading, (newReading) => {
     <div class="conversation-container" ref="conversationContainer">
       <div class="messages">
         <div
-          v-for="(message, index) in messages"
+          v-for="(message, index) in parsedMessages"
           :key="index"
           :class="['message', message.role, { 'error-message': message.isError }]">
           <div class="message-content">
-            <div
-              class="message-text"
-              v-html="formatMessageContent(message.content)"></div>
+            <!-- Three-part horary reading with toggle -->
+            <template v-if="message.role === 'assistant' && !message.isError && message.parsed.isThreePart">
+              <div class="message-text">
+                <div v-html="formatMessageContent(message.parsed.judgment)"></div>
+
+                <button
+                  class="details-toggle"
+                  @click="toggleDetails(index)"
+                  :aria-expanded="!!expandedDetails[index]"
+                >
+                  <span>{{ expandedDetails[index] ? 'Hide astrological details' : 'Show astrological details' }}</span>
+                  <span class="details-toggle-chevron" :class="{ 'is-open': expandedDetails[index] }">▼</span>
+                </button>
+
+                <div v-if="expandedDetails[index]" class="details-section">
+                  <div v-html="formatMessageContent(message.parsed.technical)"></div>
+                </div>
+
+                <div v-html="formatMessageContent(message.parsed.summary)"></div>
+              </div>
+            </template>
+
+            <!-- Fallback: follow-ups, errors, and any non-three-part messages -->
+            <template v-else>
+              <div
+                class="message-text"
+                v-html="formatMessageContent(message.content)"></div>
+            </template>
+
             <div class="message-time">{{ formatTime(message.timestamp) }}</div>
           </div>
         </div>
@@ -823,5 +882,42 @@ details[open] .followup-guide-toggle::before {
   color: var(--color-text-muted) !important;
   border-top: 1px solid var(--color-border);
   padding-top: 0.5rem;
+}
+
+.details-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  margin: 0.75rem 0;
+  padding: 0.3rem 0.6rem;
+  background: none;
+  border: 1px solid var(--color-border);
+  border-radius: 0.375rem;
+  cursor: pointer;
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+  font-family: inherit;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.details-toggle:hover {
+  color: var(--color-text-secondary);
+  border-color: var(--color-text-muted);
+}
+
+.details-toggle-chevron {
+  font-size: 0.65rem;
+  display: inline-block;
+  transition: transform 0.2s ease;
+}
+
+.details-toggle-chevron.is-open {
+  transform: rotate(180deg);
+}
+
+.details-section {
+  border-left: 2px solid var(--color-border);
+  padding-left: 0.75rem;
+  margin: 0.5rem 0 0.75rem;
 }
 </style>

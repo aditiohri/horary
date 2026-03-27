@@ -12,12 +12,15 @@ const emit = defineEmits<{
 const { getAllReadings, deleteReading, searchReadings, getStorageStats } =
   useReadingStorage();
 
+const PAGE_SIZE = 10;
+
 const readings = ref<StoredReading[]>([]);
 const searchQuery = ref("");
 const isLoading = ref(false);
 const showConfirmDelete = ref(false);
 const readingToDelete = ref<StoredReading | null>(null);
 const copiedReadingId = ref<string | null>(null);
+const currentPage = ref(1);
 
 // Computed filtered readings
 const filteredReadings = computed(() => {
@@ -27,11 +30,23 @@ const filteredReadings = computed(() => {
   return searchReadings(searchQuery.value);
 });
 
+const totalPages = computed(() =>
+  Math.max(1, Math.ceil(filteredReadings.value.length / PAGE_SIZE))
+);
+
+const paginatedReadings = computed(() => {
+  const start = (currentPage.value - 1) * PAGE_SIZE;
+  return filteredReadings.value.slice(start, start + PAGE_SIZE);
+});
+
+const prevPage = () => { if (currentPage.value > 1) currentPage.value--; };
+const nextPage = () => { if (currentPage.value < totalPages.value) currentPage.value++; };
+
 // Group readings by date
 const groupedReadings = computed(() => {
   const groups: { [key: string]: StoredReading[] } = {};
 
-  filteredReadings.value.forEach((reading) => {
+  paginatedReadings.value.forEach((reading) => {
     const date = new Date(reading.timestamp).toLocaleDateString();
     if (!groups[date]) {
       groups[date] = [];
@@ -84,6 +99,7 @@ const handleDelete = async () => {
   try {
     deleteReading(readingToDelete.value.id);
     await loadReadings();
+    if (currentPage.value > totalPages.value) currentPage.value = totalPages.value;
     showConfirmDelete.value = false;
     readingToDelete.value = null;
   } catch (error) {
@@ -125,6 +141,7 @@ const truncateQuestion = (question: string, maxLength: number = 100) => {
 onMounted(loadReadings);
 
 watch(() => props.refreshKey, loadReadings);
+watch(searchQuery, () => { currentPage.value = 1; });
 </script>
 
 <template>
@@ -249,6 +266,22 @@ watch(() => props.refreshKey, loadReadings);
             </div>
           </div>
         </div>
+      </div>
+
+      <div v-if="totalPages > 1" class="pagination">
+        <button
+          class="pagination-button"
+          :disabled="currentPage === 1"
+          @click="prevPage">
+          Previous
+        </button>
+        <span class="pagination-info">Page {{ currentPage }} of {{ totalPages }}</span>
+        <button
+          class="pagination-button"
+          :disabled="currentPage === totalPages"
+          @click="nextPage">
+          Next
+        </button>
       </div>
     </div>
 
@@ -553,6 +586,42 @@ watch(() => props.refreshKey, loadReadings);
 .confirm-delete-button:hover {
   background: var(--color-error);
   filter: brightness(0.85);
+}
+
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 1rem 0 0.5rem;
+}
+
+.pagination-button {
+  background: var(--color-surface-raised);
+  color: var(--color-text-secondary);
+  border: 1px solid var(--color-border);
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  font-size: 0.875rem;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.pagination-button:hover:not(:disabled) {
+  background: var(--color-bg-hover);
+  color: var(--color-text-primary);
+}
+
+.pagination-button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.pagination-info {
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+  min-width: 80px;
+  text-align: center;
 }
 
 /* Compact mode — used when embedded in sidebar */

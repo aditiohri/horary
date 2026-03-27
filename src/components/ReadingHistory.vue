@@ -9,7 +9,7 @@ const emit = defineEmits<{
   (e: "close"): void;
 }>();
 
-const { getAllReadings, deleteReading, searchReadings, getStorageStats } =
+const { getAllReadings, deleteReading, deleteAllReadings, searchReadings, getStorageStats } =
   useReadingStorage();
 
 const PAGE_SIZE = 10;
@@ -19,6 +19,7 @@ const searchQuery = ref("");
 const isLoading = ref(false);
 const showConfirmDelete = ref(false);
 const readingToDelete = ref<StoredReading | null>(null);
+const showConfirmDeleteAll = ref(false);
 const copiedReadingId = ref<string | null>(null);
 const currentPage = ref(1);
 
@@ -107,6 +108,14 @@ const handleDelete = async () => {
   }
 };
 
+// Delete all readings
+const handleDeleteAll = async () => {
+  deleteAllReadings();
+  await loadReadings();
+  showConfirmDeleteAll.value = false;
+  currentPage.value = 1;
+};
+
 // Copy share link for a reading
 const copyShareLink = async (reading: StoredReading) => {
   const url = await encodeReadingToUrl(reading);
@@ -173,6 +182,12 @@ watch(searchQuery, () => { currentPage.value = 1; });
         <span class="stat"
           >{{ (storageStats.storageSize / 1024).toFixed(1) }}KB used</span
         >
+        <button
+          v-if="readings.length > 0"
+          @click="showConfirmDeleteAll = true"
+          class="delete-all-button">
+          Delete all
+        </button>
       </div>
     </div>
 
@@ -285,6 +300,28 @@ watch(searchQuery, () => { currentPage.value = 1; });
       </div>
     </div>
 
+    <!-- Delete all confirmation modal -->
+    <div
+      v-if="showConfirmDeleteAll"
+      class="modal-overlay"
+      @click="showConfirmDeleteAll = false">
+      <div class="modal" @click.stop>
+        <h3>Delete All Readings</h3>
+        <p>
+          Are you sure you want to delete all {{ readings.length }} readings?
+          This action cannot be undone.
+        </p>
+        <div class="modal-actions">
+          <button @click="showConfirmDeleteAll = false" class="cancel-button">
+            Cancel
+          </button>
+          <button @click="handleDeleteAll" class="confirm-delete-button">
+            Delete all
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- Delete confirmation modal -->
     <div
       v-if="showConfirmDelete"
@@ -378,6 +415,22 @@ watch(searchQuery, () => { currentPage.value = 1; });
   gap: 1rem;
   font-size: 0.875rem;
   color: var(--color-text-secondary);
+  align-items: center;
+}
+
+.delete-all-button {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  color: var(--color-error);
+  font-size: 0.875rem;
+  margin-left: auto;
+  transition: opacity 0.2s;
+}
+
+.delete-all-button:hover {
+  opacity: 0.75;
 }
 
 .history-content {

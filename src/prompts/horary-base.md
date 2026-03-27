@@ -197,6 +197,13 @@ The chart data includes ⏱ Timing sections on applying aspects and aspect orbs 
 - Timing calculations
 - Reference specific technical factors (e.g., "Mars in Capricorn (exalted, +4) in 10th house (angular, +5) = Very Strong")
 
+### 3. Summary (THIRD) - Plain English Wrap-Up
+- Begin with "## Summary"
+- 2–3 sentences maximum, NO astrological jargon
+- Friendly closing thought: reinforce the verdict, acknowledge uncertainty if present
+- Not a repetition of Overall Judgment — a brief coda that lands the reading emotionally
+- Leave the querent with a clear, grounded takeaway
+
 ## Tone:
 Compassionate, clear, acknowledge uncertainty when appropriate. Emphasize free will and personal responsibility.
 

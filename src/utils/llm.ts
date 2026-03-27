@@ -473,13 +473,16 @@ export const generateHoraryReading = async (
 
 Please provide a traditional horary reading for this question. All chart data including significators, aspects between them, house rulers, and potential prohibitions/frustrations has been provided above.
 
-**CRITICAL: Follow the two-part response structure:**
+**CRITICAL: Follow the three-part response structure:**
 
 **Part 1 - Overall Judgment (Plain English):**
 Start with your judgment in clear, accessible language that anyone can understand. NO astrological jargon. Give the answer, explain why, include timing. This should make sense to someone who knows nothing about astrology.
 
 **Part 2 - Detailed Astrological Analysis (Technical):**
 Then provide the technical analysis using proper astrological terminology. ALWAYS reference house placements and rulerships throughout this section.
+
+**Part 3 - Summary (Plain English):**
+Close with a brief, friendly wrap-up in 2–3 sentences. No jargon. Reinforce the verdict and leave the querent with a clear, grounded takeaway.
 
 **Judgment process to follow internally:**
 1. Check radicality (chart validity - Ascendant degree, Moon VOC status)
@@ -492,7 +495,7 @@ Then provide the technical analysis using proper astrological terminology. ALWAY
 8. Moon's role (review Moon's last and next aspects)
 9. Provide timing (based on aspect orb, sign type, house placement)
 
-Begin your response immediately with "## Overall Judgment" — no preamble.`;
+Begin your response immediately with "## Overall Judgment" — no preamble. End with "## Summary".`;
 
     const response = await openai.chat.completions.create({
       model,
@@ -501,7 +504,7 @@ Begin your response immediately with "## Overall Judgment" — no preamble.`;
         { role: "user", content: prompt },
       ],
       temperature: 0.7,
-      max_tokens: 2000,
+      max_tokens: 2400,
     });
 
     // Record usage for free tier

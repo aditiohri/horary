@@ -16,6 +16,8 @@ const PAGE_SIZE = 10;
 
 const readings = ref<StoredReading[]>([]);
 const searchQuery = ref("");
+const debouncedQuery = ref("");
+let debounceTimer: ReturnType<typeof setTimeout> | null = null;
 const isLoading = ref(false);
 const showConfirmDelete = ref(false);
 const readingToDelete = ref<StoredReading | null>(null);
@@ -25,10 +27,15 @@ const currentPage = ref(1);
 
 // Computed filtered readings
 const filteredReadings = computed(() => {
-  if (!searchQuery.value.trim()) {
+  if (!debouncedQuery.value.trim()) {
     return readings.value;
   }
-  return searchReadings(searchQuery.value);
+  return searchReadings(debouncedQuery.value);
+});
+
+const resultCountText = computed(() => {
+  if (!debouncedQuery.value.trim()) return "";
+  return `${filteredReadings.value.length} of ${readings.value.length} readings`;
 });
 
 const totalPages = computed(() =>
@@ -150,8 +157,18 @@ const truncateQuestion = (question: string, maxLength: number = 100) => {
 onMounted(loadReadings);
 
 watch(() => props.refreshKey, loadReadings);
-watch(searchQuery, () => { currentPage.value = 1; });
-watch(() => props.searchResetKey, () => { searchQuery.value = ""; currentPage.value = 1; });
+watch(searchQuery, (val) => {
+  if (debounceTimer) clearTimeout(debounceTimer);
+  debounceTimer = setTimeout(() => {
+    debouncedQuery.value = val;
+    currentPage.value = 1;
+  }, 300);
+});
+watch(() => props.searchResetKey, () => {
+  searchQuery.value = "";
+  debouncedQuery.value = "";
+  currentPage.value = 1;
+});
 </script>
 
 <template>
@@ -171,10 +188,16 @@ watch(() => props.searchResetKey, () => { searchQuery.value = ""; currentPage.va
       </div>
 
       <div class="search-bar">
+        <span class="search-icon" aria-hidden="true">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+            <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+            <path d="m21 21-4.35-4.35" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+          </svg>
+        </span>
         <input
           v-model="searchQuery"
           type="text"
-          placeholder="Search readings..."
+          placeholder="Search readings…"
           class="search-input"
           @keydown.enter.prevent />
         <button
@@ -183,11 +206,12 @@ watch(() => props.searchResetKey, () => { searchQuery.value = ""; currentPage.va
           @click="searchQuery = ''"
           title="Clear search"
           aria-label="Clear search">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
             <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
           </svg>
         </button>
       </div>
+      <div v-if="resultCountText" class="search-result-count">{{ resultCountText }}</div>
 
       <div class="stats">
         <span class="stat">{{ storageStats.totalReadings }} readings</span>
@@ -208,10 +232,10 @@ watch(() => props.searchResetKey, () => { searchQuery.value = ""; currentPage.va
 
       <div v-else-if="filteredReadings.length === 0" class="empty-state">
         <div class="empty-icon">📜</div>
-        <h3>{{ searchQuery ? "No matching readings" : "No readings yet" }}</h3>
+        <h3>{{ debouncedQuery ? "No matching readings" : "No readings yet" }}</h3>
         <p>
           {{
-            searchQuery
+            debouncedQuery
               ? "Try a different search term"
               : "Your horary readings will appear here"
           }}
@@ -419,46 +443,66 @@ watch(() => props.searchResetKey, () => { searchQuery.value = ""; currentPage.va
 }
 
 .search-bar {
-  margin-bottom: 1rem;
+  position: relative;
+  margin-bottom: 0.5rem;
+}
+
+.search-icon {
+  position: absolute;
+  left: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--color-text-muted);
+  pointer-events: none;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
 }
 
 .search-input {
-  flex: 1;
-  padding: 0.75rem;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.75rem 2.75rem 0.75rem 2.5rem;
   border: 2px solid var(--color-border);
   border-radius: 0.5rem;
   font-size: 1rem;
-  transition: border-color 0.2s;
+  transition: border-color 0.2s, box-shadow 0.2s;
   background: var(--color-bg);
   color: var(--color-text-primary);
-}
-
-.search-clear-button {
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  background: none;
-  border: 1px solid var(--color-border);
-  border-radius: 0.375rem;
-  cursor: pointer;
-  color: var(--color-text-muted);
-  transition: color 0.15s ease, background-color 0.15s ease;
-}
-
-.search-clear-button:hover {
-  color: var(--color-text-primary);
-  background: var(--color-bg-hover);
 }
 
 .search-input:focus {
   outline: none;
   border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px rgba(184, 105, 10, 0.2);
+}
+
+.search-clear-button {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--color-text-muted);
+  transition: color 0.15s ease;
+  border-radius: 0 0.5rem 0.5rem 0;
+}
+
+.search-clear-button:hover {
+  color: var(--color-text-primary);
+}
+
+.search-result-count {
+  font-size: 0.8125rem;
+  color: var(--color-text-muted);
+  margin-bottom: 0.75rem;
+  padding-left: 0.125rem;
 }
 
 .stats {

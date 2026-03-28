@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, watch, computed, onMounted, onUnmounted } from 'vue';
+import { formatStorageSize, STORAGE_WARNING_THRESHOLD_BYTES } from '../utils/storage';
 import { useLLMSettings } from '../composables/useLLMSettings';
 import type { LLMProvider } from '../types/llm';
 import { PROVIDER_CONFIGS } from '../types/llm';
@@ -11,6 +12,7 @@ const props = defineProps<{
   modelValue: boolean;
   isDark: boolean;
   readingsCount: number;
+  storageSize: number;
 }>();
 
 const emit = defineEmits<{
@@ -37,6 +39,7 @@ const {
 } = useLLMSettings();
 
 const currentYear = computed(() => new Date().getFullYear());
+const isStorageHigh = computed(() => props.storageSize >= STORAGE_WARNING_THRESHOLD_BYTES);
 
 // Local form state
 const localProvider = ref<LLMProvider>(settings.provider);
@@ -231,8 +234,21 @@ onUnmounted(() => {
         <div class="readings-history-section">
           <div class="readings-history-info">
             <span class="readings-history-label">Reading History</span>
-            <span class="readings-history-count">{{ props.readingsCount }} {{ props.readingsCount === 1 ? 'reading' : 'readings' }}</span>
+            <span class="readings-history-count">
+              {{ props.readingsCount }} {{ props.readingsCount === 1 ? 'reading' : 'readings' }}
+              · {{ formatStorageSize(props.storageSize) }}
+              <svg v-if="isStorageHigh" class="storage-warning-icon" width="13" height="13"
+                   viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                   stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/>
+                <path d="M12 9v4"/>
+                <path d="M12 17h.01"/>
+              </svg>
+            </span>
           </div>
+          <p v-if="isStorageHigh" class="storage-warning-hint">
+            Approaching storage limit — consider deleting old readings
+          </p>
           <button
             class="view-history-button"
             @click="() => { emit('viewHistory'); emit('update:modelValue', false); }"
@@ -1024,6 +1040,20 @@ onUnmounted(() => {
   font-size: 0.875rem;
   font-weight: 600;
   color: var(--color-text-primary);
+  display: flex;
+  align-items: center;
+}
+
+.storage-warning-icon {
+  color: var(--color-warning);
+  margin-left: 0.25rem;
+  flex-shrink: 0;
+}
+
+.storage-warning-hint {
+  margin: 0.25rem 0 0;
+  font-size: 0.75rem;
+  color: var(--color-warning);
 }
 
 .view-history-button {

@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from "vue";
-import { useReadingStorage, encodeReadingToUrl, type StoredReading } from "../utils/storage";
+import { useReadingStorage, encodeReadingToUrl, type StoredReading, STORAGE_WARNING_THRESHOLD_BYTES } from "../utils/storage";
 
 const props = withDefaults(defineProps<{ compact?: boolean; refreshKey?: number; searchResetKey?: number }>(), { compact: false, refreshKey: 0, searchResetKey: 0 });
 
 const emit = defineEmits<{
   (e: "select-reading", reading: StoredReading): void;
   (e: "close"): void;
+  (e: "open-settings"): void;
 }>();
 
 const { getAllReadings, deleteReading, searchReadings, getStorageStats } =
@@ -75,6 +76,9 @@ const resultCountText = computed(() => {
   const end = Math.min(currentPage.value * PAGE_SIZE, total);
   return `Showing ${start}–${end} of ${total} readings`;
 });
+
+const isSearchActive = computed(() => !!debouncedQuery.value.trim());
+const isStorageHigh = computed(() => storageStats.value.storageSize >= STORAGE_WARNING_THRESHOLD_BYTES);
 
 // Group readings by date
 const groupedReadings = computed(() => {
@@ -231,11 +235,25 @@ watch(() => props.searchResetKey, () => {
       </div>
       <div v-if="resultCountText" class="search-result-count">{{ resultCountText }}</div>
 
-      <div class="stats">
-        <span class="stat">{{ storageStats.totalReadings }} readings</span>
-        <span class="stat"
-          >{{ (storageStats.storageSize / 1024).toFixed(1) }}KB used</span
-        >
+      <div
+        v-if="isStorageHigh && !isSearchActive"
+        class="storage-warning-banner"
+        role="button"
+        tabindex="0"
+        @click="emit('open-settings')"
+        @keydown.enter="emit('open-settings')"
+      >
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/>
+          <path d="M12 9v4"/>
+          <path d="M12 17h.01"/>
+        </svg>
+        Storage almost full
+      </div>
+
+      <div v-if="!isSearchActive" class="readings-subtitle">
+        {{ storageStats.totalReadings }} saved readings
       </div>
     </div>
 
@@ -496,12 +514,31 @@ watch(() => props.searchResetKey, () => {
   padding-left: 0.125rem;
 }
 
-.stats {
+.storage-warning-banner {
   display: flex;
-  gap: 1rem;
-  font-size: 0.875rem;
-  color: var(--color-text-secondary);
   align-items: center;
+  gap: 0.375rem;
+  padding: 0.5rem 0.75rem;
+  margin-bottom: 0.5rem;
+  background: color-mix(in srgb, var(--color-warning) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-warning) 35%, transparent);
+  border-radius: 0.5rem;
+  font-size: 0.8125rem;
+  color: var(--color-warning);
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.15s;
+}
+
+.storage-warning-banner:hover {
+  background: color-mix(in srgb, var(--color-warning) 18%, transparent);
+}
+
+.readings-subtitle {
+  font-size: 0.8125rem;
+  color: var(--color-text-muted);
+  margin-bottom: 0.75rem;
+  padding-left: 0.125rem;
 }
 
 .history-content {

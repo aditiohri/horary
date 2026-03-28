@@ -200,6 +200,15 @@ class ReadingStorage {
 // Create and export a singleton instance
 export const readingStorage = new ReadingStorage();
 
+export const STORAGE_WARNING_THRESHOLD_BYTES = 5 * 1024 * 1024; // 5 MB
+
+export function formatStorageSize(bytes: number): string {
+  if (bytes >= 1024 * 1024) {
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  }
+  return `${Math.round(bytes / 1024)} KB`;
+}
+
 // Encode a reading into a shareable URL (gzip + URL-safe base64)
 export async function encodeReadingToUrl(reading: StoredReading): Promise<string> {
   const bytes = new TextEncoder().encode(JSON.stringify(reading));

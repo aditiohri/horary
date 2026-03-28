@@ -728,6 +728,14 @@ watch(activeChartTab, async (newTab) => {
   padding-bottom: 0;
 }
 
+.mobile-chat-actions {
+  padding: 0.75rem 1rem;
+}
+
+.mobile-chat-actions .new-reading-button {
+  width: 100%;
+}
+
 .mobile-chart-actions {
   display: flex;
   justify-content: space-between;

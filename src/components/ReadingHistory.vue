@@ -23,6 +23,7 @@ const showConfirmDelete = ref(false);
 const readingToDelete = ref<StoredReading | null>(null);
 const copiedReadingId = ref<string | null>(null);
 const currentPage = ref(1);
+const listContentRef = ref<HTMLElement | null>(null);
 
 // Computed filtered readings
 const filteredReadings = computed(() => {
@@ -30,11 +31,6 @@ const filteredReadings = computed(() => {
     return readings.value;
   }
   return searchReadings(debouncedQuery.value);
-});
-
-const resultCountText = computed(() => {
-  if (!debouncedQuery.value.trim()) return "";
-  return `${filteredReadings.value.length} of ${readings.value.length} readings`;
 });
 
 const totalPages = computed(() =>
@@ -46,8 +42,39 @@ const paginatedReadings = computed(() => {
   return filteredReadings.value.slice(start, start + PAGE_SIZE);
 });
 
-const prevPage = () => { if (currentPage.value > 1) currentPage.value--; };
-const nextPage = () => { if (currentPage.value < totalPages.value) currentPage.value++; };
+const goToPage = (page: number) => {
+  currentPage.value = page;
+  listContentRef.value?.scrollTo({ top: 0, behavior: 'smooth' });
+};
+const prevPage = () => { if (currentPage.value > 1) goToPage(currentPage.value - 1); };
+const nextPage = () => { if (currentPage.value < totalPages.value) goToPage(currentPage.value + 1); };
+
+// Page numbers with ellipsis for numbered pagination
+const pageNumbers = computed((): (number | '...')[] => {
+  const total = totalPages.value;
+  const current = currentPage.value;
+  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+  const alwaysShow = new Set([1, 2, current - 1, current, current + 1, total - 1, total]);
+  const sorted = Array.from(alwaysShow).filter(p => p >= 1 && p <= total).sort((a, b) => a - b);
+  const result: (number | '...')[] = [];
+  let prev = 0;
+  for (const page of sorted) {
+    if (page - prev === 2) result.push(prev + 1);
+    else if (page - prev > 2) result.push('...');
+    result.push(page);
+    prev = page;
+  }
+  return result;
+});
+
+// Result count: "Showing X–Y of Z readings" when a search query is active
+const resultCountText = computed(() => {
+  if (!debouncedQuery.value.trim() || filteredReadings.value.length === 0) return '';
+  const total = filteredReadings.value.length;
+  const start = (currentPage.value - 1) * PAGE_SIZE + 1;
+  const end = Math.min(currentPage.value * PAGE_SIZE, total);
+  return `Showing ${start}–${end} of ${total} readings`;
+});
 
 // Group readings by date
 const groupedReadings = computed(() => {
@@ -212,35 +239,39 @@ watch(() => props.searchResetKey, () => {
       </div>
     </div>
 
-    <div class="history-content">
+    <div class="history-content" ref="listContentRef">
       <div v-if="isLoading" class="loading">Loading readings...</div>
 
-      <div v-else-if="filteredReadings.length === 0" class="empty-state">
+      <div v-else-if="filteredReadings.length === 0 && !debouncedQuery" class="empty-state">
         <div class="empty-icon">📜</div>
-        <h3>{{ debouncedQuery ? "No matching readings" : "No readings yet" }}</h3>
-        <p>
-          {{
-            debouncedQuery
-              ? "Try a different search term"
-              : "Your horary readings will appear here"
-          }}
-        </p>
+        <h3>No readings yet</h3>
+        <p>Your horary readings will appear here</p>
+      </div>
+
+      <div v-else-if="filteredReadings.length === 0 && debouncedQuery" class="empty-state search-empty-state">
+        <div class="empty-icon">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"/>
+            <path d="m21 21-4.35-4.35"/>
+            <path d="m8 8 6 6"/>
+            <path d="m14 8-6 6"/>
+          </svg>
+        </div>
+        <h3>No readings found</h3>
+        <p>No readings found for "<em>{{ debouncedQuery }}</em>"</p>
       </div>
 
       <div v-else class="readings-list">
         <div v-if="totalPages > 1" class="pagination pagination-top">
-          <button
-            class="pagination-button"
-            :disabled="currentPage === 1"
-            @click="prevPage">
-            Previous
+          <button class="page-nav-btn" :disabled="currentPage === 1" @click="prevPage" aria-label="Previous page">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
           </button>
-          <span class="pagination-info">Page {{ currentPage }} of {{ totalPages }}</span>
-          <button
-            class="pagination-button"
-            :disabled="currentPage === totalPages"
-            @click="nextPage">
-            Next
+          <template v-for="p in pageNumbers" :key="String(p) + '-top'">
+            <span v-if="p === '...'" class="page-ellipsis">…</span>
+            <button v-else :class="['page-number', { active: p === currentPage }]" @click="goToPage(p as number)" :aria-current="p === currentPage ? 'page' : undefined">{{ p }}</button>
+          </template>
+          <button class="page-nav-btn" :disabled="currentPage === totalPages" @click="nextPage" aria-label="Next page">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
           </button>
         </div>
 
@@ -321,18 +352,15 @@ watch(() => props.searchResetKey, () => {
       </div>
 
       <div v-if="totalPages > 1" class="pagination">
-        <button
-          class="pagination-button"
-          :disabled="currentPage === 1"
-          @click="prevPage">
-          Previous
+        <button class="page-nav-btn" :disabled="currentPage === 1" @click="prevPage" aria-label="Previous page">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
         </button>
-        <span class="pagination-info">Page {{ currentPage }} of {{ totalPages }}</span>
-        <button
-          class="pagination-button"
-          :disabled="currentPage === totalPages"
-          @click="nextPage">
-          Next
+        <template v-for="p in pageNumbers" :key="String(p) + '-bot'">
+          <span v-if="p === '...'" class="page-ellipsis">…</span>
+          <button v-else :class="['page-number', { active: p === currentPage }]" @click="goToPage(p as number)" :aria-current="p === currentPage ? 'page' : undefined">{{ p }}</button>
+        </template>
+        <button class="page-nav-btn" :disabled="currentPage === totalPages" @click="nextPage" aria-label="Next page">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
         </button>
       </div>
     </div>
@@ -684,11 +712,17 @@ watch(() => props.searchResetKey, () => {
   filter: brightness(0.85);
 }
 
+.search-empty-state .empty-icon {
+  color: var(--color-text-muted);
+  font-size: inherit;
+}
+
 .pagination {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 1rem;
+  flex-wrap: wrap;
+  gap: 0.25rem;
   padding: 1rem 0 0.5rem;
 }
 
@@ -696,32 +730,68 @@ watch(() => props.searchResetKey, () => {
   padding: 0 0 1rem;
 }
 
-.pagination-button {
+.page-nav-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
   background: var(--color-surface-raised);
   color: var(--color-text-secondary);
   border: 1px solid var(--color-border);
-  padding: 0.5rem 1rem;
   border-radius: 0.5rem;
   cursor: pointer;
-  font-size: 0.875rem;
   transition: background-color 0.2s, color 0.2s;
 }
 
-.pagination-button:hover:not(:disabled) {
+.page-nav-btn:hover:not(:disabled) {
   background: var(--color-bg-hover);
   color: var(--color-text-primary);
 }
 
-.pagination-button:disabled {
-  opacity: 0.4;
+.page-nav-btn:disabled {
+  opacity: 0.35;
   cursor: default;
 }
 
-.pagination-info {
-  font-size: 0.875rem;
+.page-number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  background: var(--color-surface-raised);
   color: var(--color-text-secondary);
-  min-width: 80px;
-  text-align: center;
+  border: 1px solid var(--color-border);
+  border-radius: 0.5rem;
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: background-color 0.2s, color 0.2s, border-color 0.2s;
+}
+
+.page-number:hover:not(.active) {
+  background: var(--color-bg-hover);
+  color: var(--color-text-primary);
+}
+
+.page-number.active {
+  background: var(--color-accent);
+  color: var(--color-accent-foreground);
+  border-color: var(--color-accent);
+  font-weight: 600;
+  cursor: default;
+}
+
+.page-ellipsis {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  color: var(--color-text-muted);
+  font-size: 0.875rem;
+  user-select: none;
 }
 
 /* Compact mode — used when embedded in sidebar */

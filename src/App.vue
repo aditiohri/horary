@@ -218,6 +218,7 @@ onMounted(async () => {
       @toggle-dark="toggleDarkMode"
       @feedback="showFeedback = true"
       @view-history="() => { showSettings = false; goHistory(); }"
+      @delete-all="() => { readingStorage.deleteAllReadings(); historyRefreshKey++; refreshReadingsCount(); }"
     />
 
     <!-- Horary Info Modal -->

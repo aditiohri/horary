@@ -25,10 +25,17 @@ const showFeedback = ref(false);
 
 const savedReadingsCount = ref(readingStorage.getStorageStats().totalReadings);
 const historyRefreshKey = ref(0);
+const mobileSearchResetKey = ref(0);
 const refreshReadingsCount = () => {
   savedReadingsCount.value = readingStorage.getStorageStats().totalReadings;
 };
-watch(currentView, refreshReadingsCount);
+watch(currentView, (newView, oldView) => {
+  refreshReadingsCount();
+  // Clear mobile sidebar search when navigating away from home
+  if (oldView === 'home' && newView !== 'home') {
+    mobileSearchResetKey.value++;
+  }
+});
 
 const handleReadingSaved = () => {
   historyRefreshKey.value++;
@@ -137,6 +144,7 @@ onMounted(async () => {
           <ReadingHistory
             :compact="true"
             :refresh-key="historyRefreshKey"
+            :search-reset-key="mobileSearchResetKey"
             @select-reading="handleSelectReading"
             @close="goHome"
           />

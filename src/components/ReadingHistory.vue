@@ -2,7 +2,7 @@
 import { ref, computed, onMounted, watch } from "vue";
 import { useReadingStorage, encodeReadingToUrl, type StoredReading } from "../utils/storage";
 
-const props = withDefaults(defineProps<{ compact?: boolean; refreshKey?: number }>(), { compact: false, refreshKey: 0 });
+const props = withDefaults(defineProps<{ compact?: boolean; refreshKey?: number; searchResetKey?: number }>(), { compact: false, refreshKey: 0, searchResetKey: 0 });
 
 const emit = defineEmits<{
   (e: "select-reading", reading: StoredReading): void;
@@ -151,6 +151,7 @@ onMounted(loadReadings);
 
 watch(() => props.refreshKey, loadReadings);
 watch(searchQuery, () => { currentPage.value = 1; });
+watch(() => props.searchResetKey, () => { searchQuery.value = ""; currentPage.value = 1; });
 </script>
 
 <template>
@@ -174,7 +175,18 @@ watch(searchQuery, () => { currentPage.value = 1; });
           v-model="searchQuery"
           type="text"
           placeholder="Search readings..."
-          class="search-input" />
+          class="search-input"
+          @keydown.enter.prevent />
+        <button
+          v-if="searchQuery"
+          class="search-clear-button"
+          @click="searchQuery = ''"
+          title="Clear search"
+          aria-label="Clear search">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+            <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+          </svg>
+        </button>
       </div>
 
       <div class="stats">
@@ -207,6 +219,22 @@ watch(searchQuery, () => { currentPage.value = 1; });
       </div>
 
       <div v-else class="readings-list">
+        <div v-if="totalPages > 1" class="pagination pagination-top">
+          <button
+            class="pagination-button"
+            :disabled="currentPage === 1"
+            @click="prevPage">
+            Previous
+          </button>
+          <span class="pagination-info">Page {{ currentPage }} of {{ totalPages }}</span>
+          <button
+            class="pagination-button"
+            :disabled="currentPage === totalPages"
+            @click="nextPage">
+            Next
+          </button>
+        </div>
+
         <div
           v-for="[date, dateReadings] in groupedReadings"
           :key="date"
@@ -392,10 +420,13 @@ watch(searchQuery, () => { currentPage.value = 1; });
 
 .search-bar {
   margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .search-input {
-  width: 100%;
+  flex: 1;
   padding: 0.75rem;
   border: 2px solid var(--color-border);
   border-radius: 0.5rem;
@@ -403,6 +434,26 @@ watch(searchQuery, () => { currentPage.value = 1; });
   transition: border-color 0.2s;
   background: var(--color-bg);
   color: var(--color-text-primary);
+}
+
+.search-clear-button {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: none;
+  border: 1px solid var(--color-border);
+  border-radius: 0.375rem;
+  cursor: pointer;
+  color: var(--color-text-muted);
+  transition: color 0.15s ease, background-color 0.15s ease;
+}
+
+.search-clear-button:hover {
+  color: var(--color-text-primary);
+  background: var(--color-bg-hover);
 }
 
 .search-input:focus {
@@ -647,6 +698,10 @@ watch(searchQuery, () => { currentPage.value = 1; });
   justify-content: center;
   gap: 1rem;
   padding: 1rem 0 0.5rem;
+}
+
+.pagination-top {
+  padding: 0 0 1rem;
 }
 
 .pagination-button {

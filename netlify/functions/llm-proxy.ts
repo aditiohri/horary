@@ -40,6 +40,9 @@ function humanizeGroqError(status: number, isUserKey: boolean, error?: { type?: 
     }
     return 'This shared AI service is currently at capacity — you\'re not the only one using it! Please wait a moment and try again, or add your own free Groq API key in Settings → LLM Provider.';
   }
+  if (status === 400) {
+    return 'The request was invalid — it may be too long or contain an unsupported parameter. Try a shorter question, or contact the developer if this persists.';
+  }
   if (status >= 500) {
     return 'The AI service is temporarily unavailable. Please try again in a few minutes.';
   }

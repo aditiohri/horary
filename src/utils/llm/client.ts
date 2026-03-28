@@ -97,9 +97,12 @@ export function getCurrentModel(settings?: LLMSettings): string {
  */
 export function formatLLMError(error: any, provider?: string): string {
   const errorMessage = error?.message || String(error);
+  const statusCode: number | undefined = typeof error?.status === 'number' ? error.status : undefined;
+  const withStatus = (msg: string) => statusCode !== undefined ? `${msg} (HTTP ${statusCode})` : msg;
   const activeProvider = provider || loadSettings().provider;
 
   // Quota limit messages are already user-friendly — pass through as-is
+  // (these come from plain Error objects with no .status)
   if (errorMessage.includes('shared AI service has')) {
     return errorMessage;
   }
@@ -110,62 +113,62 @@ export function formatLLMError(error: any, provider?: string): string {
   // Connection errors
   if (errorMessage.includes('ECONNREFUSED') || errorMessage.includes('Failed to fetch')) {
     if (activeProvider === 'ollama') {
-      return 'Cannot connect to Ollama server. Please ensure Ollama is running on your machine.';
+      return withStatus('Cannot connect to Ollama server. Please ensure Ollama is running on your machine.');
     }
-    return 'Couldn\'t reach the AI service. Please check your internet connection and try again.';
+    return withStatus('Couldn\'t reach the AI service. Please check your internet connection and try again.');
   }
 
   // API key errors
   if (errorMessage.includes('API key') || errorMessage.includes('apiKey') || errorMessage.includes('401')) {
     if (isGroq) {
-      return 'Your Groq API key was rejected. Please check it in Settings and try again.';
+      return withStatus('Your Groq API key was rejected. Please check it in Settings and try again.');
     }
     if (isFreeTier) {
-      return 'The AI service credentials are misconfigured. Please contact the developer.';
+      return withStatus('The AI service credentials are misconfigured. Please contact the developer.');
     }
-    return `Invalid or missing API key. Please check your ${activeProvider.toUpperCase()} API key in Settings.`;
+    return withStatus(`Invalid or missing API key. Please check your ${activeProvider.toUpperCase()} API key in Settings.`);
   }
 
   // Model not found
   if (errorMessage.includes('404') || errorMessage.includes('not found')) {
     if (activeProvider === 'ollama') {
-      return 'Model not found. Please pull the model using: ollama pull <model-name>';
+      return withStatus('Model not found. Please pull the model using: ollama pull <model-name>');
     }
     if (isFreeTier || isGroq) {
-      return 'The requested AI model is unavailable right now. Please try again shortly.';
+      return withStatus('The requested AI model is unavailable right now. Please try again shortly.');
     }
-    return 'Model not found. Please check your model name in Settings.';
+    return withStatus('Model not found. Please check your model name in Settings.');
   }
 
   // Timeout errors
   if (errorMessage.includes('timeout') || errorMessage.includes('aborted')) {
     if (isFreeTier || isGroq) {
-      return 'The AI service took too long to respond. Please try again in a moment.';
+      return withStatus('The AI service took too long to respond. Please try again in a moment.');
     }
-    return 'Request timeout. The server took too long to respond. Try increasing timeout in Settings.';
+    return withStatus('Request timeout. The server took too long to respond. Try increasing timeout in Settings.');
   }
 
   // Rate limit errors
   if (errorMessage.includes('429') || errorMessage.includes('rate limit') || errorMessage.includes('at capacity')) {
     if (isGroq) {
-      return 'You\'ve hit your personal Groq rate limit. Please wait a moment and try again.';
+      return withStatus('You\'ve hit your personal Groq rate limit. Please wait a moment and try again.');
     }
     if (isFreeTier) {
-      return 'This shared AI service is currently at capacity — you\'re not the only one using it! Please wait a moment and try again, or add your own free Groq API key in Settings → LLM Provider.';
+      return withStatus('This shared AI service is currently at capacity — you\'re not the only one using it! Please wait a moment and try again, or add your own free Groq API key in Settings → LLM Provider.');
     }
-    return 'Rate limit exceeded. Please wait a moment before trying again.';
+    return withStatus('Rate limit exceeded. Please wait a moment before trying again.');
   }
 
   // Server errors
   if (errorMessage.includes('500') || errorMessage.includes('502') || errorMessage.includes('503') || errorMessage.includes('unavailable')) {
     if (isFreeTier || isGroq) {
-      return 'The AI service is temporarily unavailable. Please try again in a few minutes.';
+      return withStatus('The AI service is temporarily unavailable. Please try again in a few minutes.');
     }
   }
 
   // Generic error — keep Ollama messages technical for developers, soften others
   if (isFreeTier || isGroq) {
-    return 'The AI service encountered an unexpected problem. Please try again shortly.';
+    return withStatus('The AI service encountered an unexpected problem. Please try again shortly.');
   }
   return `Error from ${activeProvider.toUpperCase()}: ${errorMessage}`;
 }

@@ -152,6 +152,7 @@ const scrollToBottom = async () => {
   if (conversationContainer.value) {
     conversationContainer.value.scrollTop =
       conversationContainer.value.scrollHeight;
+    showScrollDown.value = false;
   }
 };
 
@@ -281,6 +282,26 @@ const parsedMessages = computed(() =>
   messages.value.map(m => ({ ...m, parsed: parseHoraryResponse(m.content) }))
 );
 
+// Latest follow-up suggestions from the most recent assistant message that has them
+const latestFollowups = computed(() => {
+  for (let i = parsedMessages.value.length - 1; i >= 0; i--) {
+    const m = parsedMessages.value[i];
+    if (m.role === 'assistant' && m.parsed.followups.length > 0) {
+      return m.parsed.followups;
+    }
+  }
+  return [] as string[];
+});
+
+// Scroll-to-bottom button visibility
+const showScrollDown = ref(false);
+
+const onScrollConversation = () => {
+  const el = conversationContainer.value;
+  if (!el) return;
+  showScrollDown.value = el.scrollTop + el.clientHeight < el.scrollHeight - 80;
+};
+
 // Auto-generate initial reading when reading prop is available
 watch(() => props.reading, (newReading) => {
   if (newReading && !hasInitialReading.value) {
@@ -343,7 +364,7 @@ watch(() => props.reading, (newReading) => {
       </div>
     </div>
 
-    <div class="conversation-container" ref="conversationContainer">
+    <div class="conversation-container" ref="conversationContainer" @scroll="onScrollConversation">
       <div class="messages">
         <div
           v-for="(message, index) in parsedMessages"
@@ -369,15 +390,6 @@ watch(() => props.reading, (newReading) => {
                 </div>
 
                 <div v-html="formatMessageContent(message.parsed.summary)"></div>
-
-                <div v-if="message.parsed.followups.length" class="followup-suggestions">
-                  <button
-                    v-for="q in message.parsed.followups"
-                    :key="q"
-                    class="followup-chip"
-                    @click="currentMessage = q"
-                  >{{ q }}</button>
-                </div>
               </div>
             </template>
 
@@ -405,6 +417,26 @@ watch(() => props.reading, (newReading) => {
           </div>
         </div>
       </div>
+    </div>
+
+    <button
+      v-if="showScrollDown"
+      class="scroll-to-bottom"
+      @click="scrollToBottom"
+      title="Scroll to bottom"
+      aria-label="Scroll to bottom">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+        <path d="M12 5v14M5 12l7 7 7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+      </svg>
+    </button>
+
+    <div v-if="latestFollowups.length && !isLoading" class="followup-bar">
+      <button
+        v-for="q in latestFollowups"
+        :key="q"
+        class="followup-chip"
+        @click="currentMessage = q"
+      >{{ q }}</button>
     </div>
 
     <div class="conversation-input">
@@ -461,6 +493,7 @@ watch(() => props.reading, (newReading) => {
   border-radius: 1rem;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   overflow: hidden;
+  position: relative;
 }
 
 .conversation-header {
@@ -972,6 +1005,39 @@ details[open] .followup-guide-toggle::before {
 .followup-chip:hover {
   color: var(--color-text-primary);
   border-color: var(--color-accent);
+  background: var(--color-bg-hover);
+}
+
+.followup-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-top: 1px solid var(--color-border);
+  background: var(--color-surface);
+}
+
+.scroll-to-bottom {
+  position: absolute;
+  bottom: 5rem;
+  right: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border);
+  border-radius: 50%;
+  cursor: pointer;
+  color: var(--color-text-secondary);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+  transition: color 0.15s ease, background-color 0.15s ease;
+  z-index: 10;
+}
+
+.scroll-to-bottom:hover {
+  color: var(--color-text-primary);
   background: var(--color-bg-hover);
 }
 </style>

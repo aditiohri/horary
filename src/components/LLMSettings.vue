@@ -18,7 +18,10 @@ const emit = defineEmits<{
   'toggleDark': [];
   'feedback': [];
   'viewHistory': [];
+  'deleteAll': [];
 }>();
+
+const showDeleteAllConfirm = ref(false);
 
 const {
   settings,
@@ -530,6 +533,17 @@ onUnmounted(() => {
         </div>
       </div>
 
+      <!-- Danger zone -->
+      <div class="danger-zone">
+        <div class="danger-divider"></div>
+        <button
+          class="delete-all-readings-button"
+          @click="showDeleteAllConfirm = true"
+        >
+          🗑 Delete all readings
+        </button>
+      </div>
+
       <!-- Colophon: copyright + GitHub link -->
       <div class="settings-colophon">
         <span>© {{ currentYear }} aditiohri</span>
@@ -562,6 +576,36 @@ onUnmounted(() => {
         </div>
       </div>
     </div>
+
+    <!-- Delete all confirmation dialog -->
+    <div
+      v-if="showDeleteAllConfirm"
+      class="confirm-overlay"
+      @click.self="showDeleteAllConfirm = false"
+    >
+      <div class="confirm-dialog" @click.stop>
+        <h3 class="confirm-title">Delete all readings?</h3>
+        <p class="confirm-body">
+          This will permanently delete all {{ props.readingsCount }}
+          {{ props.readingsCount === 1 ? 'reading' : 'readings' }}.
+          This cannot be undone.
+        </p>
+        <div class="confirm-actions">
+          <button
+            class="confirm-cancel-button"
+            @click="showDeleteAllConfirm = false"
+          >
+            Cancel
+          </button>
+          <button
+            class="confirm-delete-button"
+            @click="() => { emit('deleteAll'); showDeleteAllConfirm = false; emit('update:modelValue', false); }"
+          >
+            Delete all
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -581,6 +625,7 @@ onUnmounted(() => {
 }
 
 .modal {
+  position: relative;
   background: var(--color-surface);
   border-radius: 0.75rem;
   max-width: 600px;
@@ -1130,5 +1175,110 @@ onUnmounted(() => {
 
 .settings-github-link:hover {
   color: var(--color-accent);
+}
+
+/* ─── Danger zone ─────────────────────────────────────────── */
+.danger-zone {
+  padding: 0 1rem 0.25rem;
+}
+
+.danger-divider {
+  height: 1px;
+  background: var(--color-border);
+  margin-bottom: 0.875rem;
+}
+
+.delete-all-readings-button {
+  background: none;
+  border: none;
+  padding: 0.375rem 0;
+  cursor: pointer;
+  color: var(--color-error);
+  font-size: 0.875rem;
+  font-family: inherit;
+  transition: opacity 0.2s;
+}
+
+.delete-all-readings-button:hover {
+  opacity: 0.75;
+}
+
+/* ─── Delete-all confirmation dialog ─────────────────────── */
+.confirm-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.75rem;
+  z-index: 10;
+  padding: 1.5rem;
+}
+
+.confirm-dialog {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  width: 100%;
+  max-width: 22rem;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+}
+
+.confirm-title {
+  margin: 0 0 0.625rem 0;
+  font-size: 1.1rem;
+  color: var(--color-text-primary);
+}
+
+.confirm-body {
+  margin: 0 0 1.5rem 0;
+  color: var(--color-text-secondary);
+  font-size: 0.9375rem;
+  line-height: 1.5;
+}
+
+.confirm-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+/* Cancel is the dominant / easy-to-tap option */
+.confirm-cancel-button {
+  flex: 1;
+  background: var(--color-surface-raised);
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-border);
+  padding: 0.625rem 1rem;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  font-size: 0.9375rem;
+  font-family: inherit;
+  font-weight: 500;
+  transition: background-color 0.2s;
+}
+
+.confirm-cancel-button:hover {
+  background: var(--color-bg-hover);
+}
+
+/* Delete is smaller / visually subordinate for friction */
+.confirm-delete-button {
+  background: none;
+  color: var(--color-error);
+  border: 1px solid var(--color-error);
+  padding: 0.5rem 0.875rem;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  font-size: 0.8125rem;
+  font-family: inherit;
+  transition: background-color 0.2s, opacity 0.2s;
+  white-space: nowrap;
+}
+
+.confirm-delete-button:hover {
+  background: rgba(197, 32, 32, 0.08);
 }
 </style>

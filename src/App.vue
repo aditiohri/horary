@@ -5,7 +5,7 @@ import ReadingHistory from "./components/ReadingHistory.vue";
 import LLMSettings from "./components/LLMSettings.vue";
 import HoraryInfoModal from "./components/HoraryInfoModal.vue";
 import FeedbackModal from "./components/FeedbackModal.vue";
-import { readingStorage, decodeReadingFromUrl, type StoredReading } from './utils/storage';
+import { readingStorage, decodeReadingFromUrl, type StoredReading, STORAGE_WARNING_THRESHOLD_BYTES } from './utils/storage';
 import { useDarkMode } from './composables/useDarkMode';
 import { useRegisterSW } from 'virtual:pwa-register/vue';
 
@@ -24,10 +24,14 @@ const showHoraryInfo = ref(false);
 const showFeedback = ref(false);
 
 const savedReadingsCount = ref(readingStorage.getStorageStats().totalReadings);
+const savedStorageSize = ref(readingStorage.getStorageStats().storageSize);
+const isStorageHigh = computed(() => savedStorageSize.value >= STORAGE_WARNING_THRESHOLD_BYTES);
 const historyRefreshKey = ref(0);
 const mobileSearchResetKey = ref(0);
 const refreshReadingsCount = () => {
-  savedReadingsCount.value = readingStorage.getStorageStats().totalReadings;
+  const stats = readingStorage.getStorageStats();
+  savedReadingsCount.value = stats.totalReadings;
+  savedStorageSize.value = stats.storageSize;
 };
 watch(currentView, (newView, oldView) => {
   refreshReadingsCount();
@@ -113,6 +117,7 @@ onMounted(async () => {
             title="Settings"
           >
             ⚙
+            <span v-if="isStorageHigh" class="settings-warning-dot" aria-hidden="true"></span>
           </button>
         </div>
       </div>
@@ -147,6 +152,7 @@ onMounted(async () => {
             :search-reset-key="mobileSearchResetKey"
             @select-reading="handleSelectReading"
             @close="goHome"
+            @open-settings="showSettings = true"
           />
         </div>
 
@@ -176,6 +182,7 @@ onMounted(async () => {
           <ReadingHistory
             @select-reading="handleSelectReading"
             @close="goHome"
+            @open-settings="showSettings = true"
           />
         </div>
 
@@ -215,6 +222,7 @@ onMounted(async () => {
       v-model="showSettings"
       :is-dark="isDark"
       :readings-count="savedReadingsCount"
+      :storage-size="savedStorageSize"
       @toggle-dark="toggleDarkMode"
       @feedback="showFeedback = true"
       @view-history="() => { showSettings = false; goHistory(); }"
@@ -465,6 +473,7 @@ body {
 
 /* Settings gear button */
 .settings-button {
+  position: relative;
   background: var(--color-surface-raised);
   border: 1px solid var(--color-border);
   border-radius: 0.5rem;
@@ -479,6 +488,18 @@ body {
   height: 2.25rem;
   color: var(--color-text-secondary);
   font-family: inherit;
+}
+
+.settings-warning-dot {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-warning);
+  border: 2px solid var(--color-bg);
+  pointer-events: none;
 }
 
 .settings-button:hover {

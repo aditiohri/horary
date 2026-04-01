@@ -2,7 +2,6 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import {
   getFreeTierLimits,
   loadFreeTierUsage,
-  saveFreeTierUsage,
   checkQuota,
   recordUsage,
   getUsageStats,

@@ -171,6 +171,11 @@ export function formatLLMError(error: any, provider?: string): string {
     }
   }
 
+  // Content too large — genuine 413 (not a token rate limit)
+  if (errorMessage.includes('too long') || errorMessage.includes('shorten')) {
+    return withCode('Your question is too long for the AI to process. Please try a shorter question.');
+  }
+
   // Generic error — keep Ollama messages technical for developers, soften others
   if (isFreeTier || isGroq) {
     return withCode('The AI service encountered an unexpected problem. Please try again shortly.');

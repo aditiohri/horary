@@ -30,9 +30,6 @@ Relationship: 1st=querent, 7th=partner, 5th=romance | Job: 1st=querent, 10th=emp
 **House Identification:**
 The chart data includes a "### Relevant House Context" section pre-analyzed for this specific question. It lists the primary and supporting houses with their full traditional meanings, topics, and derivative house notes. Use that section as your primary reference for which house(s) govern the quesited.
 
-Quick reference (full detail is in the chart data):
-1st Querent/body | 2nd Money/possessions | 3rd Siblings/communication/vehicles | 4th Home/father/real estate | 5th Romance/children/gambling | 6th Illness/employees/pets | 7th Partner/opponents/contracts | 8th Death/inheritance/shared resources | 9th Long journeys/law/higher education | 10th Career/employer/reputation | 11th Friends/hopes/groups | 12th Hidden enemies/confinement/self-undoing
-
 ### 3. Essential Dignities (Planet's Condition in Sign)
 **Dignity scores provided:**
 - **Ruler/Domicile** (+5): Very strong, acts freely
@@ -68,14 +65,6 @@ Quick reference (full detail is in the chart data):
   - Moon has no essential dignity (0), but strong dispositor helps
   - Interpretation: "Moon neutral, but well-supported by capable Mercury"
 
-<!-- [ADJUSTABLE: May be condensed for smaller models] -->
-**Example with Venus in Pisces (Common Confusion):**
-- Venus in Pisces = EXALTED (+4) = Strong planet
-- Jupiter rules Pisces = Jupiter is Venus's dispositor
-- Venus's exaltation does NOT depend on Jupiter's condition
-- If Jupiter is also strong → Venus has strong support too
-- If Jupiter is weak → Venus is still exalted, just less supported
-
 **Key Rule:** Essential dignity (the planet's own strength) comes FIRST. Dispositor support is a bonus or limitation on top of that baseline.
 
 **For Part of Fortune:** Strong PoF dispositor = querent HAS capacity to succeed. Weak = LACKS resources.
@@ -99,13 +88,6 @@ Quick reference (full detail is in the chart data):
 1. **Which houses** planets rule
 2. **What they represent** in the question
 3. The **relationship dynamic**
-
-<!-- [ADJUSTABLE: May be condensed for smaller models] -->
-**CORRECT Example:**
-"Sun rules 1st (you) and Saturn rules 7th (them). Sun in Leo (own sign), Saturn in Aquarius (own sign). No mutual reception = both operate independently, not disposed to help each other."
-
-**WRONG Example:**
-"Sun in Leo, Saturn in Aquarius. No mutual reception." ❌ (Doesn't say WHO they represent!)
 
 **Reception Types:**
 - **Mutual**: In each other's signs → favorably disposed
@@ -157,8 +139,6 @@ The chart data includes ⏱ Timing sections on applying aspects and aspect orbs 
 2. Identify significators
 3. Assess dignity (are significators strong or weak?)
    - Check the dignity SCORE first (4-7 = strong, -4 to -5 = weak)
-   - Venus in Pisces? Score +4 = EXALTED = Strong
-   - Mars in Capricorn? Score +4 = EXALTED = Strong
 4. Check Part of Fortune (dispositor strong?)
 5. Check aspects (applying/separating?)
 6. Check prohibitions/frustrations

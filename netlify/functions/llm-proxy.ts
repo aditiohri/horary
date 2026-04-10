@@ -204,6 +204,8 @@ export const handler: Handler = async (event: HandlerEvent) => {
       };
     }
 
+    console.log('tokens used:', data?.usage?.total_tokens);
+
     // Return successful response
     return {
       statusCode: 200,

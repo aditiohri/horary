@@ -471,36 +471,11 @@ export const generateHoraryReading = async (
 
     const prompt = `${formattedChart}
 
-Please provide a traditional horary reading for this question. All chart data including significators, aspects between them, house rulers, and potential prohibitions/frustrations has been provided above.
+Please provide a traditional horary reading for this question using the chart data above.
 
-**CRITICAL: Follow the three-part response structure:**
+Begin your response immediately with "## Overall Judgment" — no preamble. End with "## Suggested Follow-up Questions" (3–4 short, specific questions drawn directly from this chart, formatted as a bulleted list).`;
 
-**Part 1 - Overall Judgment (Plain English):**
-Start with your judgment in clear, accessible language that anyone can understand. NO astrological jargon. Give the answer, explain why, include timing. This should make sense to someone who knows nothing about astrology.
-
-**Part 2 - Detailed Astrological Analysis (Technical):**
-Then provide the technical analysis using proper astrological terminology. ALWAYS reference house placements and rulerships throughout this section.
-
-**Part 3 - Summary (Plain English):**
-Close with a brief, friendly wrap-up in 2–3 sentences. No jargon. Reinforce the verdict and leave the querent with a clear, grounded takeaway.
-
-**Part 4 - Suggested Follow-up Questions:**
-End with 3–4 short, specific follow-up questions the querent might want to explore next, drawn directly from this chart (e.g. timing, a specific planet's role, a derivative house topic, reception, or an unexplored factor). Format as a simple bulleted list under the heading "## Suggested Follow-up Questions". Each question should be concise and self-contained — something a user could click and send as-is.
-
-**Judgment process to follow internally:**
-1. Check radicality (chart validity - Ascendant degree, Moon VOC status)
-2. Review significators (1st and 7th house rulers in Significator Analysis section)
-3. Assess dignity (examine essential dignity scores - Venus in Pisces = +4 exalted, etc.)
-4. Analyze house placements (which houses do key planets occupy and rule?)
-5. Check aspects (applying or separating? Check "Aspects Between Significators")
-6. Check prohibitions/frustrations (retrograde warnings, third planet interference)
-7. Consider reception (how do significators receive each other by dignity?)
-8. Moon's role (review Moon's last and next aspects)
-9. Provide timing (based on aspect orb, sign type, house placement)
-
-Begin your response immediately with "## Overall Judgment" — no preamble. End with "## Suggested Follow-up Questions".`;
-
-    const response = await openai.chat.completions.create({
+    const makeRequest = () => openai.chat.completions.create({
       model,
       messages: [
         { role: "system", content: systemPrompt },
@@ -509,6 +484,20 @@ Begin your response immediately with "## Overall Judgment" — no preamble. End 
       temperature: 0.7,
       max_tokens: 2600,
     });
+
+    let response;
+    try {
+      response = await makeRequest();
+    } catch (apiError: any) {
+      // Groq uses 413 (not 429) for token-per-minute rate limits.
+      // The TPM window resets quickly, so retry once after a short delay.
+      if (apiError?.status === 413 && apiError?.code === 'rate_limit_exceeded') {
+        await new Promise(r => setTimeout(r, 8000));
+        response = await makeRequest();
+      } else {
+        throw apiError;
+      }
+    }
 
     // Record usage for free tier
     if (settings.provider === 'groq-free') {

@@ -364,71 +364,77 @@ watch(() => props.reading, (newReading) => {
       </div>
     </div>
 
-    <div class="conversation-container" ref="conversationContainer" @scroll="onScrollConversation">
-      <div class="messages">
-        <div
-          v-for="(message, index) in parsedMessages"
-          :key="index"
-          :class="['message', message.role, { 'error-message': message.isError }]">
-          <div class="message-content">
-            <!-- Three-part horary reading with toggle -->
-            <template v-if="message.role === 'assistant' && !message.isError && message.parsed.isThreePart">
-              <div class="message-text">
-                <div v-html="formatMessageContent(message.parsed.judgment)"></div>
+    <div class="conversation-wrapper">
+      <div class="conversation-container" ref="conversationContainer" @scroll="onScrollConversation">
+        <div class="messages">
+          <div
+            v-for="(message, index) in parsedMessages"
+            :key="index"
+            :class="['message', message.role, { 'error-message': message.isError }]">
+            <div class="message-content">
+              <!-- Three-part horary reading with toggle -->
+              <template v-if="message.role === 'assistant' && !message.isError && message.parsed.isThreePart">
+                <div class="message-text">
+                  <div v-html="formatMessageContent(message.parsed.judgment)"></div>
 
-                <button
-                  class="details-toggle"
-                  @click="toggleDetails(index)"
-                  :aria-expanded="!!expandedDetails[index]"
-                >
-                  <span>{{ expandedDetails[index] ? 'Hide astrological details' : 'Show astrological details' }}</span>
-                  <span class="details-toggle-chevron" :class="{ 'is-open': expandedDetails[index] }">▼</span>
-                </button>
+                  <button
+                    class="details-toggle"
+                    @click="toggleDetails(index)"
+                    :aria-expanded="!!expandedDetails[index]"
+                  >
+                    <span>{{ expandedDetails[index] ? 'Hide astrological details' : 'Show astrological details' }}</span>
+                    <span class="details-toggle-chevron" :class="{ 'is-open': expandedDetails[index] }">▼</span>
+                  </button>
 
-                <div v-if="expandedDetails[index]" class="details-section">
-                  <div v-html="formatMessageContent(message.parsed.technical)"></div>
+                  <div v-if="expandedDetails[index]" class="details-section">
+                    <div v-html="formatMessageContent(message.parsed.technical)"></div>
+                  </div>
+
+                  <div v-html="formatMessageContent(message.parsed.summary)"></div>
                 </div>
+              </template>
 
-                <div v-html="formatMessageContent(message.parsed.summary)"></div>
-              </div>
-            </template>
+              <!-- Fallback: follow-ups, errors, and any non-three-part messages -->
+              <template v-else>
+                <div
+                  class="message-text"
+                  v-html="formatMessageContent(message.content)"></div>
+              </template>
 
-            <!-- Fallback: follow-ups, errors, and any non-three-part messages -->
-            <template v-else>
-              <div
-                class="message-text"
-                v-html="formatMessageContent(message.content)"></div>
-            </template>
-
-            <div class="message-time">{{ formatTime(message.timestamp) }}</div>
+              <div class="message-time">{{ formatTime(message.timestamp) }}</div>
+            </div>
           </div>
-        </div>
 
-        <div v-if="isLoading" class="message assistant">
-          <div class="message-content">
-            <div class="loading-indicator">
-              <div class="loading-dots">
-                <span></span>
-                <span></span>
-                <span></span>
+          <div v-if="isLoading" class="message assistant">
+            <div class="message-content">
+              <div class="loading-indicator">
+                <div class="loading-dots">
+                  <span></span>
+                  <span></span>
+                  <span></span>
+                </div>
+                <span class="loading-text">Analyzing chart...</span>
               </div>
-              <span class="loading-text">Analyzing chart...</span>
             </div>
           </div>
         </div>
       </div>
+
+      <button
+        v-if="showScrollDown"
+        class="scroll-to-bottom"
+        @click="scrollToBottom"
+        title="Scroll to bottom"
+        aria-label="Scroll to bottom">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+          <path d="M12 5v14M5 12l7 7 7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+      </button>
     </div>
 
-    <button
-      v-if="showScrollDown"
-      class="scroll-to-bottom"
-      @click="scrollToBottom"
-      title="Scroll to bottom"
-      aria-label="Scroll to bottom">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-        <path d="M12 5v14M5 12l7 7 7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-      </svg>
-    </button>
+    <div class="ai-disclaimer">
+      <span class="ai-disclaimer-pill">AI-generated content may be incorrect</span>
+    </div>
 
     <div v-if="latestFollowups.length && !isLoading" class="followup-bar">
       <button
@@ -568,8 +574,14 @@ watch(() => props.reading, (newReading) => {
   margin: 0;
 }
 
-.conversation-container {
+.conversation-wrapper {
   flex: 1;
+  position: relative;
+  min-height: 0;
+}
+
+.conversation-container {
+  height: 100%;
   overflow-y: auto;
   padding: 0.75rem 1rem 1rem;
   scroll-behavior: smooth;
@@ -1008,6 +1020,23 @@ details[open] .followup-guide-toggle::before {
   background: var(--color-bg-hover);
 }
 
+.ai-disclaimer {
+  display: flex;
+  justify-content: center;
+  padding: 0.4rem 1rem;
+  background: var(--color-surface);
+}
+
+.ai-disclaimer-pill {
+  font-size: 0.72rem;
+  color: var(--color-text-muted);
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  padding: 0.2rem 0.75rem;
+  white-space: nowrap;
+}
+
 .followup-bar {
   display: flex;
   flex-wrap: wrap;
@@ -1019,7 +1048,7 @@ details[open] .followup-guide-toggle::before {
 
 .scroll-to-bottom {
   position: absolute;
-  bottom: 5rem;
+  bottom: 1rem;
   right: 1rem;
   display: flex;
   align-items: center;

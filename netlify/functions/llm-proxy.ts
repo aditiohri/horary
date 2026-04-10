@@ -27,6 +27,13 @@ function humanizeGroqError(status: number, isUserKey: boolean, error?: { type?: 
     return { message: 'The requested AI model is unavailable right now. Please try again shortly.', code };
   }
   if (status === 413) {
+    if (errorType === 'tokens' || errorType.includes('token') || error?.code === 'rate_limit_exceeded') {
+      // Groq uses 413 (not 429) for token-per-minute rate limits
+      if (isUserKey) {
+        return { message: "You've hit your personal Groq token rate limit. Please wait a moment and try again.", code };
+      }
+      return { message: 'This shared AI service has used a lot of capacity recently — you\'re not the only one using it! Please wait a moment and try again, or add your own free Groq API key in Settings → LLM Provider.', code };
+    }
     return { message: 'Your question is too long for the AI to process. Please shorten it and try again.', code };
   }
   if (status === 422) {

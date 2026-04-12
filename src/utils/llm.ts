@@ -475,7 +475,7 @@ Please provide a traditional horary reading for this question using the chart da
 
 Begin your response immediately with "## Overall Judgment" — no preamble. End with "## Suggested Follow-up Questions" (3–4 short, specific questions drawn directly from this chart, formatted as a bulleted list).`;
 
-    const makeRequest = () => openai.chat.completions.create({
+    const response = await openai.chat.completions.create({
       model,
       messages: [
         { role: "system", content: systemPrompt },
@@ -484,20 +484,6 @@ Begin your response immediately with "## Overall Judgment" — no preamble. End 
       temperature: 0.7,
       max_tokens: 2600,
     });
-
-    let response;
-    try {
-      response = await makeRequest();
-    } catch (apiError: any) {
-      // Groq uses 413 (not 429) for token-per-minute rate limits.
-      // The TPM window resets quickly, so retry once after a short delay.
-      if (apiError?.status === 413 && apiError?.code === 'rate_limit_exceeded') {
-        await new Promise(r => setTimeout(r, 8000));
-        response = await makeRequest();
-      } else {
-        throw apiError;
-      }
-    }
 
     // Record usage for free tier
     if (settings.provider === 'groq-free') {

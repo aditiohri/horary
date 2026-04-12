@@ -431,7 +431,7 @@ watch(activeChartTab, async (newTab) => {
 
         <div class="about-card">
           <h3>🤖 AI Model &amp; API</h3>
-          <p>Interpretations are powered by <strong>Qwen 3 32B</strong> by default (with Llama 3.3 70B and others also available), served via <strong>Groq's inference API</strong>. Requests are routed through a secure server-side proxy — your browser never communicates with Groq directly, and the API key is never exposed to the client. The free tier allows up to 10 requests per hour.</p>
+          <p>Interpretations are powered by <strong>Llama 3.3 70B</strong> by default (with Qwen 3 32B and others also available), served via <strong>Groq's inference API</strong>. Requests are routed through a secure server-side proxy — your browser never communicates with Groq directly, and the API key is never exposed to the client. You can bring your own free Groq API key in Settings for a dedicated rate limit.</p>
         </div>
 
         <div class="about-card">

@@ -1,6 +1,9 @@
 import type { Handler, HandlerEvent } from '@netlify/functions';
+import Anthropic from '@anthropic-ai/sdk';
 
 const GROQ_API_KEY = process.env.GROQ_FREE_TIER_KEY;
+
+const DEFAULT_ANTHROPIC_MAX_TOKENS = 1024;
 
 // Simple in-memory rate limiter (best-effort; resets on cold starts)
 const rateLimitMap = new Map<string, { count: number; windowStart: number }>();
@@ -57,6 +60,102 @@ function humanizeGroqError(status: number, isUserKey: boolean, error?: { type?: 
   return { message: 'The AI service encountered an unexpected problem. Please try again shortly.', code };
 }
 
+function humanizeAnthropicError(status: number, error?: { type?: string; message?: string }): { message: string; code: string | null } {
+  const errorType = error?.type || null;
+
+  if (status === 401) {
+    return { message: 'Your Anthropic API key was rejected. Please double-check it in Settings and try again.', code: errorType };
+  }
+  if (status === 403) {
+    return { message: 'Your Anthropic API key doesn\'t have permission to use this model.', code: errorType };
+  }
+  if (status === 404) {
+    return { message: 'The requested Claude model is unavailable right now. Please try again shortly, or pick a different model in Settings.', code: errorType };
+  }
+  if (status === 429) {
+    return { message: 'You\'ve hit your personal Anthropic rate limit. Please wait a moment and try again.', code: errorType };
+  }
+  if (status === 400) {
+    return { message: 'The request was invalid — it may be too long or contain an unsupported parameter. Try a shorter question.', code: errorType };
+  }
+  if (status === 413) {
+    return { message: 'Your question is too long for Claude to process. Please shorten it and try again.', code: errorType };
+  }
+  if (status >= 500) {
+    return { message: 'The Claude API is temporarily unavailable. Please try again in a few minutes.', code: errorType };
+  }
+  return { message: 'Claude encountered an unexpected problem. Please try again shortly.', code: errorType };
+}
+
+/**
+ * Translate an OpenAI-chat-completion-shaped request body into Anthropic Messages API params.
+ * Pulls any system-role message(s) out into Anthropic's separate top-level `system` field.
+ */
+function toAnthropicParams(requestBody: any): {
+  model: string;
+  max_tokens: number;
+  temperature?: number;
+  system?: string;
+  messages: { role: 'user' | 'assistant'; content: string }[];
+} {
+  const systemParts: string[] = [];
+  const messages: { role: 'user' | 'assistant'; content: string }[] = [];
+
+  for (const msg of requestBody.messages) {
+    if (msg.role === 'system') {
+      systemParts.push(msg.content);
+    } else {
+      messages.push({ role: msg.role, content: msg.content });
+    }
+  }
+
+  return {
+    model: requestBody.model,
+    max_tokens: requestBody.max_tokens || DEFAULT_ANTHROPIC_MAX_TOKENS,
+    temperature: requestBody.temperature,
+    system: systemParts.length > 0 ? systemParts.join('\n\n') : undefined,
+    messages,
+  };
+}
+
+/**
+ * Translate an Anthropic Messages API response into an OpenAI-chat-completion shape
+ * so the frontend (which always talks the OpenAI SDK format) needs no changes.
+ */
+function fromAnthropicResponse(response: Anthropic.Messages.Message): any {
+  const text = response.content
+    .filter((block): block is Anthropic.Messages.TextBlock => block.type === 'text')
+    .map((block) => block.text)
+    .join('');
+
+  const finishReasonMap: Record<string, string> = {
+    end_turn: 'stop',
+    stop_sequence: 'stop',
+    max_tokens: 'length',
+    tool_use: 'tool_calls',
+    pause_turn: 'stop',
+    refusal: 'content_filter',
+  };
+
+  return {
+    id: response.id,
+    object: 'chat.completion',
+    model: response.model,
+    choices: [
+      {
+        index: 0,
+        message: { role: 'assistant', content: text },
+        finish_reason: finishReasonMap[response.stop_reason || 'end_turn'] || 'stop',
+      },
+    ],
+    usage: {
+      prompt_tokens: response.usage.input_tokens,
+      completion_tokens: response.usage.output_tokens,
+      total_tokens: response.usage.input_tokens + response.usage.output_tokens,
+    },
+  };
+}
+
 function isRateLimited(ip: string): boolean {
   const now = Date.now();
   const entry = rateLimitMap.get(ip);
@@ -89,7 +188,7 @@ export const handler: Handler = async (event: HandlerEvent) => {
       headers: {
         'Access-Control-Allow-Origin': corsOrigin,
         'Access-Control-Allow-Methods': 'POST, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Groq-API-Key',
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Groq-API-Key, X-Anthropic-API-Key, X-LLM-Provider',
       },
       body: '',
     };
@@ -110,6 +209,90 @@ export const handler: Handler = async (event: HandlerEvent) => {
       body: JSON.stringify({ error: 'Forbidden - unauthorized origin' }),
     };
   }
+
+  // Determine target provider — defaults to groq for backward compatibility
+  const llmProvider = (event.headers['x-llm-provider'] || 'groq').toLowerCase();
+
+  // Rate limiting by client IP — applies uniformly to all providers.
+  // Prefer Netlify's edge-assigned header (not spoofable by the client) over
+  // x-forwarded-for, which can carry client-influenced values in some setups.
+  const clientIp =
+    event.headers['x-nf-client-connection-ip'] ||
+    event.headers['x-forwarded-for']?.split(',')[0].trim() ||
+    'unknown';
+  if (isRateLimited(clientIp)) {
+    return {
+      statusCode: 429,
+      headers: {
+        'Access-Control-Allow-Origin': corsOrigin,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ error: 'You\'ve made too many requests in a short time. Please wait a minute and try again.' }),
+    };
+  }
+
+  if (llmProvider === 'anthropic') {
+    // Anthropic is BYOK-only — there is no shared/free tier for Claude.
+    const anthropicKey = event.headers['x-anthropic-api-key'] || '';
+
+    if (!anthropicKey || !anthropicKey.startsWith('sk-ant-')) {
+      return {
+        statusCode: 400,
+        headers: {
+          'Access-Control-Allow-Origin': corsOrigin,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ error: 'Invalid or missing API key. Anthropic keys should start with sk-ant-.' }),
+      };
+    }
+
+    try {
+      const requestBody = JSON.parse(event.body || '{}');
+
+      if (!requestBody.model || !Array.isArray(requestBody.messages)) {
+        return {
+          statusCode: 400,
+          headers: {
+            'Access-Control-Allow-Origin': corsOrigin,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ error: 'Invalid request - missing model or messages' }),
+        };
+      }
+
+      // Key is never logged — only forwarded to Anthropic
+      const anthropic = new Anthropic({ apiKey: anthropicKey });
+      const anthropicResponse = await anthropic.messages.create(toAnthropicParams(requestBody));
+
+      console.log('tokens used:', anthropicResponse.usage.input_tokens + anthropicResponse.usage.output_tokens);
+
+      return {
+        statusCode: 200,
+        headers: {
+          'Access-Control-Allow-Origin': corsOrigin,
+          'Access-Control-Allow-Headers': 'Content-Type',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(fromAnthropicResponse(anthropicResponse)),
+      };
+    } catch (error: any) {
+      const status = typeof error?.status === 'number' ? error.status : 500;
+      // error.error is the full { type: 'error', error: { type, message } } envelope
+      const anthropicError = error?.error?.error;
+      console.error('Anthropic API error (user key):', status, anthropicError?.type || error?.name);
+      return {
+        statusCode: status,
+        headers: {
+          'Access-Control-Allow-Origin': corsOrigin,
+          'Access-Control-Allow-Headers': 'Content-Type',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ error: humanizeAnthropicError(status, anthropicError) }),
+      };
+    }
+  }
+
+  // --- Groq path (default) ---
 
   // Check for user-provided API key in header
   const userProvidedKey = event.headers['x-groq-api-key'] || '';
@@ -137,22 +320,6 @@ export const handler: Handler = async (event: HandlerEvent) => {
     return {
       statusCode: 500,
       body: JSON.stringify({ error: 'The service is not properly configured. Please contact the developer.' }),
-    };
-  }
-
-  // Rate limiting by client IP
-  const clientIp =
-    event.headers['x-forwarded-for']?.split(',')[0].trim() ||
-    event.headers['x-nf-client-connection-ip'] ||
-    'unknown';
-  if (isRateLimited(clientIp)) {
-    return {
-      statusCode: 429,
-      headers: {
-        'Access-Control-Allow-Origin': corsOrigin,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ error: 'You\'ve made too many requests in a short time. Please wait a minute and try again.' }),
     };
   }
 

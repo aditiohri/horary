@@ -2,11 +2,23 @@
 import { ref, watch, computed, onMounted, onUnmounted } from 'vue';
 import { formatStorageSize, STORAGE_WARNING_THRESHOLD_BYTES } from '../utils/storage';
 import { useLLMSettings } from '../composables/useLLMSettings';
-import type { LLMProvider } from '../types/llm';
+import type { LLMProvider, LLMSettings, ProviderConfig } from '../types/llm';
 import { PROVIDER_CONFIGS } from '../types/llm';
 import { getProviderConfig } from '../utils/llmProviders';
 import { canUseOllama } from '../utils/environment';
 import { getUsageStats } from '../utils/llm/freeTier';
+
+// Extract the stored API key from any provider's settings, without hardcoding
+// which providers require one (groq and anthropic today, more may follow).
+function extractApiKey(s: LLMSettings): string {
+  return 'apiKey' in s ? s.apiKey : '';
+}
+
+// Short, sentence-friendly provider name for validation/help copy, e.g.
+// "Personal (Claude)" -> "Claude".
+function friendlyProviderName(config: ProviderConfig): string {
+  return config.name.match(/\(([^)]+)\)/)?.[1] ?? config.name;
+}
 
 const props = defineProps<{
   modelValue: boolean;
@@ -44,7 +56,7 @@ const isStorageHigh = computed(() => props.storageSize >= STORAGE_WARNING_THRESH
 // Local form state
 const localProvider = ref<LLMProvider>(settings.provider);
 const localBaseUrl = ref(settings.provider === 'ollama' ? settings.baseUrl : 'http://localhost:11434/v1/');
-const localApiKey = ref(settings.provider === 'groq' ? settings.apiKey : '');
+const localApiKey = ref(extractApiKey(settings));
 const localModel = ref(settings.model);
 const localTimeout = ref(settings.timeout);
 const hasUnsavedChanges = ref(false);
@@ -58,6 +70,7 @@ const canOllama = canUseOllama();
 
 // Current provider config
 const currentProviderConfig = computed(() => getProviderConfig(localProvider.value));
+const providerDisplayName = computed(() => friendlyProviderName(currentProviderConfig.value));
 
 // Free tier usage stats
 const usageStats = computed(() => {
@@ -73,7 +86,7 @@ const usageStats = computed(() => {
 // Watch for changes to detect unsaved state
 watch([localProvider, localBaseUrl, localApiKey, localModel, localTimeout], () => {
   const savedBaseUrl = settings.provider === 'ollama' ? settings.baseUrl : '';
-  const savedApiKey = settings.provider === 'groq' ? settings.apiKey : '';
+  const savedApiKey = extractApiKey(settings);
 
   hasUnsavedChanges.value =
     localProvider.value !== settings.provider ||
@@ -100,9 +113,9 @@ watch(localProvider, (newProvider) => {
   } else if (newProvider === 'groq-free') {
     localApiKey.value = '';
     localBaseUrl.value = '';
-  } else if (newProvider === 'groq') {
-    // Pre-fill saved key if switching back to groq
-    localApiKey.value = settings.provider === 'groq' ? settings.apiKey : '';
+  } else if (config.requiresApiKey) {
+    // Pre-fill saved key if switching back to the provider it was saved under
+    localApiKey.value = newProvider === settings.provider ? extractApiKey(settings) : '';
     localBaseUrl.value = '';
   } else {
     localApiKey.value = '';
@@ -145,14 +158,16 @@ async function handleRefreshModels() {
 
 // Save settings handler
 function handleSave() {
-  // Validate API key for groq provider
-  if (localProvider.value === 'groq') {
+  // Validate API key for any provider that requires one
+  if (currentProviderConfig.value.requiresApiKey) {
+    const name = friendlyProviderName(currentProviderConfig.value);
     if (!localApiKey.value.trim()) {
-      apiKeyError.value = 'Please enter your Groq API key before saving.';
+      apiKeyError.value = `Please enter your ${name} API key before saving.`;
       return;
     }
-    if (!localApiKey.value.startsWith('gsk_')) {
-      apiKeyError.value = 'Groq keys start with gsk_ — please check your key.';
+    if (currentProviderConfig.value.apiKeyPattern && !currentProviderConfig.value.apiKeyPattern.test(localApiKey.value)) {
+      const prefix = currentProviderConfig.value.apiKeyPlaceholder?.replace(/\.\.\.$/, '');
+      apiKeyError.value = `${name} keys start with ${prefix} — please check your key.`;
       return;
     }
   }
@@ -174,7 +189,7 @@ function handleCancel() {
   // Reset local form to saved settings
   localProvider.value = settings.provider;
   localBaseUrl.value = settings.provider === 'ollama' ? settings.baseUrl : 'http://localhost:11434/v1/';
-  localApiKey.value = settings.provider === 'groq' ? settings.apiKey : '';
+  localApiKey.value = extractApiKey(settings);
   localModel.value = settings.model;
   localTimeout.value = settings.timeout;
   hasUnsavedChanges.value = false;
@@ -372,18 +387,18 @@ onUnmounted(() => {
               </div>
               <p v-if="apiKeyError" class="form-error">{{ apiKeyError }}</p>
               <p class="form-help">
-                Get your free API key from
+                Get your API key from
                 <a
                   :href="currentProviderConfig.getApiKeyUrl"
                   target="_blank"
                   rel="noopener noreferrer"
                   class="help-link"
                 >
-                  console.groq.com/keys
+                  {{ currentProviderConfig.getApiKeyUrl?.replace(/^https?:\/\//, '') }}
                 </a>
               </p>
               <p class="form-help security-notice">
-                Your key is stored in your browser only and sent directly to Groq via our proxy. It is never logged or shared.
+                Your key is stored in your browser only and sent directly to {{ providerDisplayName }} via our proxy. It is never logged or shared.
               </p>
             </div>
 
@@ -543,6 +558,22 @@ onUnmounted(() => {
               <p class="form-help" style="margin-top: 0.75rem;">
                 Get a free API key at
                 <a href="https://console.groq.com/keys" target="_blank" rel="noopener noreferrer" class="help-link">console.groq.com/keys</a>
+              </p>
+            </div>
+
+            <div v-else-if="localProvider === 'anthropic'" class="help-section">
+              <h4 style="margin-top: 0; color: var(--color-text-primary);">Personal (Claude)</h4>
+              <p class="form-help">
+                Use your own Anthropic API key to chat with Claude models:
+              </p>
+              <ul style="margin: 0.5rem 0; padding-left: 1.5rem; color: var(--color-text-secondary); font-size: 0.875rem;">
+                <li><strong>Your own personal rate limits</strong> — independent from other users</li>
+                <li><strong>Choice of Claude models</strong> — Sonnet, Opus, and Haiku</li>
+                <li>Anthropic API usage is billed to your account (no free tier)</li>
+              </ul>
+              <p class="form-help" style="margin-top: 0.75rem;">
+                Get an API key at
+                <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener noreferrer" class="help-link">console.anthropic.com/settings/keys</a>
               </p>
             </div>
           </div>

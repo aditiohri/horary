@@ -64,6 +64,32 @@ function createGroqClient(settings: LLMSettings): OpenAI {
 }
 
 /**
+ * Create client for user-provided Anthropic API key
+ * Key is sent via X-Anthropic-API-Key header to the proxy, which translates
+ * the request into an Anthropic Messages API call
+ */
+function createAnthropicClient(settings: LLMSettings): OpenAI {
+  if (settings.provider !== 'anthropic') {
+    throw new Error('Invalid provider for Anthropic client');
+  }
+
+  const baseURL = import.meta.env.DEV
+    ? 'http://localhost:8888/.netlify/functions'
+    : `${window.location.origin}/.netlify/functions`;
+
+  return new OpenAI({
+    apiKey: 'user-key-via-proxy', // Dummy - real key is sent in X-Anthropic-API-Key header
+    dangerouslyAllowBrowser: true,
+    baseURL: `${baseURL}/llm-proxy`,
+    defaultHeaders: {
+      'Content-Type': 'application/json',
+      'X-LLM-Provider': 'anthropic',
+      'X-Anthropic-API-Key': settings.apiKey,
+    },
+  });
+}
+
+/**
  * Unified client factory - creates the appropriate client based on settings
  */
 export function createLLMClient(settings?: LLMSettings): OpenAI {
@@ -78,6 +104,9 @@ export function createLLMClient(settings?: LLMSettings): OpenAI {
 
     case 'groq':
       return createGroqClient(activeSettings);
+
+    case 'anthropic':
+      return createAnthropicClient(activeSettings);
 
     default:
       throw new Error(`Unknown provider: ${(activeSettings as any).provider}`);
@@ -114,6 +143,7 @@ export function formatLLMError(error: any, provider?: string): string {
 
   const isFreeTier = activeProvider === 'groq-free';
   const isGroq = activeProvider === 'groq';
+  const isAnthropic = activeProvider === 'anthropic';
 
   // Connection errors
   if (errorMessage.includes('ECONNREFUSED') || errorMessage.includes('Failed to fetch')) {
@@ -128,6 +158,9 @@ export function formatLLMError(error: any, provider?: string): string {
     if (isGroq) {
       return withCode('Your Groq API key was rejected. Please check it in Settings and try again.');
     }
+    if (isAnthropic) {
+      return withCode('Your Anthropic API key was rejected. Please check it in Settings and try again.');
+    }
     if (isFreeTier) {
       return withCode('The AI service credentials are misconfigured. Please contact the developer.');
     }
@@ -139,7 +172,7 @@ export function formatLLMError(error: any, provider?: string): string {
     if (activeProvider === 'ollama') {
       return withCode('Model not found. Please pull the model using: ollama pull <model-name>');
     }
-    if (isFreeTier || isGroq) {
+    if (isFreeTier || isGroq || isAnthropic) {
       return withCode('The requested AI model is unavailable right now. Please try again shortly.');
     }
     return withCode('Model not found. Please check your model name in Settings.');
@@ -147,7 +180,7 @@ export function formatLLMError(error: any, provider?: string): string {
 
   // Timeout errors
   if (errorMessage.includes('timeout') || errorMessage.includes('aborted')) {
-    if (isFreeTier || isGroq) {
+    if (isFreeTier || isGroq || isAnthropic) {
       return withCode('The AI service took too long to respond. Please try again in a moment.');
     }
     return withCode('Request timeout. The server took too long to respond. Try increasing timeout in Settings.');
@@ -158,6 +191,9 @@ export function formatLLMError(error: any, provider?: string): string {
     if (isGroq) {
       return withCode('You\'ve hit your personal Groq rate limit. Please wait a moment and try again.');
     }
+    if (isAnthropic) {
+      return withCode('You\'ve hit your personal Anthropic rate limit. Please wait a moment and try again.');
+    }
     if (isFreeTier) {
       return withCode('This shared AI service is currently at capacity — you\'re not the only one using it! Please wait a moment and try again, or add your own free Groq API key in Settings → LLM Provider.');
     }
@@ -166,7 +202,7 @@ export function formatLLMError(error: any, provider?: string): string {
 
   // Server errors
   if (errorMessage.includes('500') || errorMessage.includes('502') || errorMessage.includes('503') || errorMessage.includes('unavailable')) {
-    if (isFreeTier || isGroq) {
+    if (isFreeTier || isGroq || isAnthropic) {
       return withCode('The AI service is temporarily unavailable. Please try again in a few minutes.');
     }
   }
@@ -177,7 +213,7 @@ export function formatLLMError(error: any, provider?: string): string {
   }
 
   // Generic error — keep Ollama messages technical for developers, soften others
-  if (isFreeTier || isGroq) {
+  if (isFreeTier || isGroq || isAnthropic) {
     return withCode('The AI service encountered an unexpected problem. Please try again shortly.');
   }
   return `Error from ${activeProvider.toUpperCase()}: ${errorMessage}`;

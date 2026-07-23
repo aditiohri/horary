@@ -71,6 +71,13 @@ describe('formatLLMError — connection errors', () => {
     expect(result).toContain('internet connection');
     expect(result).toContain('[no error code provided]');
   });
+
+  it('returns generic connectivity message on Failed to fetch for anthropic', () => {
+    const error = makeError('Failed to fetch');
+    const result = formatLLMError(error, 'anthropic');
+    expect(result).toContain('internet connection');
+    expect(result).toContain('[no error code provided]');
+  });
 });
 
 describe('formatLLMError — API key errors', () => {
@@ -85,6 +92,13 @@ describe('formatLLMError — API key errors', () => {
     const error = makeError('401 Unauthorized', { status: 401 });
     const result = formatLLMError(error, 'groq-free');
     expect(result).toContain('misconfigured');
+  });
+
+  it('returns key-rejected message for anthropic provider on 401', () => {
+    const error = makeError('401 Unauthorized', { status: 401 });
+    const result = formatLLMError(error, 'anthropic');
+    expect(result).toContain('Anthropic API key was rejected');
+    expect(result).toContain('[HTTP 401]');
   });
 
   it('returns provider-prefixed message for unknown provider on API key error', () => {
@@ -114,6 +128,12 @@ describe('formatLLMError — model not found', () => {
     const result = formatLLMError(error, 'groq-free');
     expect(result).toContain('unavailable');
   });
+
+  it('returns unavailable message for anthropic on 404', () => {
+    const error = makeError('404 Not Found', { status: 404 });
+    const result = formatLLMError(error, 'anthropic');
+    expect(result).toContain('unavailable');
+  });
 });
 
 describe('formatLLMError — timeout errors', () => {
@@ -126,6 +146,12 @@ describe('formatLLMError — timeout errors', () => {
   it('returns timeout message for groq on aborted request', () => {
     const error = makeError('The user aborted a request.');
     const result = formatLLMError(error, 'groq');
+    expect(result).toContain('too long');
+  });
+
+  it('returns timeout message for anthropic on aborted request', () => {
+    const error = makeError('The user aborted a request.');
+    const result = formatLLMError(error, 'anthropic');
     expect(result).toContain('too long');
   });
 
@@ -150,6 +176,12 @@ describe('formatLLMError — rate limit errors', () => {
     expect(result).toContain('shared AI service');
     expect(result).toContain('capacity');
   });
+
+  it('returns personal rate limit message for anthropic on 429', () => {
+    const error = makeError('429 rate limit exceeded', { status: 429 });
+    const result = formatLLMError(error, 'anthropic');
+    expect(result).toContain('personal Anthropic rate limit');
+  });
 });
 
 describe('formatLLMError — server errors', () => {
@@ -162,6 +194,12 @@ describe('formatLLMError — server errors', () => {
   it('returns temporarily unavailable message on 503 for groq', () => {
     const error = makeError('503 Service Unavailable', { status: 503 });
     const result = formatLLMError(error, 'groq');
+    expect(result).toContain('temporarily unavailable');
+  });
+
+  it('returns temporarily unavailable message on 503 for anthropic', () => {
+    const error = makeError('503 Service Unavailable', { status: 503 });
+    const result = formatLLMError(error, 'anthropic');
     expect(result).toContain('temporarily unavailable');
   });
 });

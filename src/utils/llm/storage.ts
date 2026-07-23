@@ -35,6 +35,14 @@ export function getDefaultSettings(provider: LLMProvider): LLMSettings {
         model: config.defaultModel,
         timeout: DEFAULT_TIMEOUT,
       };
+
+    case 'anthropic':
+      return {
+        provider: 'anthropic',
+        apiKey: '',
+        model: config.defaultModel,
+        timeout: DEFAULT_TIMEOUT,
+      };
   }
 }
 
@@ -91,9 +99,9 @@ export function loadSettings(): LLMSettings {
         return groqFreeSettings;
       }
 
-      // For groq: ensure apiKey field exists (may be missing from older stored settings)
-      if (parsed.provider === 'groq') {
-        const defaults = getDefaultSettings('groq');
+      // For BYOK providers: ensure apiKey field exists (may be missing from older stored settings)
+      if (parsed.provider === 'groq' || parsed.provider === 'anthropic') {
+        const defaults = getDefaultSettings(parsed.provider);
         return { ...defaults, ...parsed };
       }
 

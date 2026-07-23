@@ -1,4 +1,4 @@
-export type LLMProvider = 'ollama' | 'groq-free' | 'groq';
+export type LLMProvider = 'ollama' | 'groq-free' | 'groq' | 'anthropic';
 
 export interface BaseLLMSettings {
   provider: LLMProvider;
@@ -25,6 +25,13 @@ export interface GroqProviderSettings {
   timeout: number;
 }
 
+export interface AnthropicProviderSettings {
+  provider: 'anthropic';
+  apiKey: string;
+  model: string;
+  timeout: number;
+}
+
 export interface FreeTierUsage {
   tokensUsed: number;        // Total tokens consumed
   requestCount: number;      // Total requests made
@@ -44,7 +51,8 @@ export interface FreeTierLimits {
 export type LLMSettings =
   | OllamaProviderSettings
   | FreeTierProviderSettings
-  | GroqProviderSettings;
+  | GroqProviderSettings
+  | AnthropicProviderSettings;
 
 export interface ProviderConfig {
   id: LLMProvider;
@@ -103,5 +111,21 @@ export const PROVIDER_CONFIGS: Record<LLMProvider, ProviderConfig> = {
     apiKeyPlaceholder: 'gsk_...',
     apiKeyPattern: /^gsk_/,
     getApiKeyUrl: 'https://console.groq.com/keys',
+  },
+  anthropic: {
+    id: 'anthropic',
+    name: 'Personal (Claude)',
+    description: 'Use your own Anthropic API key to chat with Claude models.',
+    requiresApiKey: true,
+    supportsLocal: false,
+    defaultModel: 'claude-sonnet-5',
+    suggestedModels: [
+      'claude-sonnet-5',
+      'claude-opus-4-8',
+      'claude-haiku-4-5',
+    ],
+    apiKeyPlaceholder: 'sk-ant-...',
+    apiKeyPattern: /^sk-ant-/,
+    getApiKeyUrl: 'https://console.anthropic.com/settings/keys',
   },
 };

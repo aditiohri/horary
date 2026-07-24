@@ -44,6 +44,7 @@ This application implements comprehensive horary astrology features based on tra
 
 ### AI-Powered Readings
 - Groq cloud AI on the deployed site (no setup required)
+- Bring your own Groq or Anthropic (Claude) API key for personal rate limits
 - Local Ollama support for developers running the app locally
 - Traditional horary interpretation following William Lilly's principles
 - Follow-up conversation support
@@ -72,7 +73,16 @@ Readings are routed through a serverless Netlify function that holds the Groq ke
    ```
 3. Run with `npm run dev` (uses Netlify dev to load env vars and serverless functions)
 
-### Option 2: Ollama (Local) — for developers
+### Option 2: Bring Your Own Key (Groq or Anthropic)
+
+Use your own API key for personal rate limits — no sharing with other users of the shared Groq tier.
+
+- **Groq**: get a free key at [console.groq.com/keys](https://console.groq.com/keys) (`gsk_...`)
+- **Anthropic (Claude)**: get a key at [console.anthropic.com/settings/keys](https://console.anthropic.com/settings/keys) (`sk-ant-...`) — BYOK only, since Claude has no free tier
+
+Both are entered in Settings (⚙️ → LLM Provider) and stored only in your browser's localStorage. Your key is sent to the Netlify serverless function via a request header on each call and forwarded straight to the provider — it's never persisted server-side or logged. For Claude, the proxy translates the request to Anthropic's Messages API format server-side, so no separate client code path is needed.
+
+### Option 3: Ollama (Local) — for developers
 
 Run a model locally on your own machine. Fully private and free, but requires decent hardware (8GB+ RAM) and only works when running the app locally — not on the deployed site.
 
@@ -100,11 +110,15 @@ After the app starts:
 
 ## Privacy & Security
 
-**Groq (deployed site):**
+**Groq (deployed site, shared tier):**
 - Readings are sent through a Netlify serverless function to Groq's API for processing
 - The Groq API key lives only in Netlify's environment — never in client code or browser storage
 - We don't log, store, or see your readings or questions
 - Groq's [privacy policy](https://groq.com/privacy-policy/) applies to data processed by their API
+
+**Groq or Anthropic (your own key):**
+- Your key is stored only in your browser's localStorage, sent to the proxy via a request header, and forwarded directly to the provider — never persisted server-side or logged
+- Anthropic's [privacy policy](https://www.anthropic.com/legal/privacy) applies to data processed by their API when you use your own Claude key
 
 **Ollama (local):**
 - 100% private — everything runs on your machine, nothing leaves your computer
@@ -123,7 +137,7 @@ After the app starts:
 
 - **Frontend**: Vue 3 + TypeScript + Vite
 - **Chart Library**: circular-natal-horoscope-js, @astrodraw/astrochart
-- **LLM**: OpenAI SDK (compatible interface for Ollama and Groq)
+- **LLM**: OpenAI SDK on the client (compatible interface for Ollama, Groq, and Claude — the proxy translates Claude requests to Anthropic's Messages API server-side via `@anthropic-ai/sdk`)
 - **Testing**: Vitest (173 passing tests)
 - **Hosting**: Netlify (frontend + serverless functions)
 - **Storage**: localStorage (no backend database)
@@ -147,7 +161,7 @@ The AI assistant uses these traditional rules to interpret your chart and answer
 ### Prerequisites
 - Node.js 20+
 - Netlify CLI (`npm install -g netlify-cli`) — needed to run serverless functions locally
-- A Groq API key (free at [console.groq.com/keys](https://console.groq.com/keys)), or Ollama for fully local dev
+- A Groq API key (free at [console.groq.com/keys](https://console.groq.com/keys)), an Anthropic API key ([console.anthropic.com/settings/keys](https://console.anthropic.com/settings/keys)), or Ollama for fully local dev
 
 ### Local Setup
 
@@ -207,7 +221,7 @@ src/
 
 netlify/
 └── functions/
-    └── llm-proxy.ts          # Groq API proxy (serverless)
+    └── llm-proxy.ts          # Groq + Anthropic API proxy (serverless)
 ```
 
 ## Roadmap
@@ -220,7 +234,7 @@ netlify/
 - ✅ Aspect motion (applying/separating)
 - ✅ Timing estimates
 - ✅ Comprehensive test coverage (173 tests)
-- ✅ LLM support (Ollama local + Groq cloud)
+- ✅ LLM support (Ollama local + Groq cloud + Groq/Anthropic BYOK)
 - ✅ Environment-aware provider selection
 - ✅ Deployment (Netlify)
 

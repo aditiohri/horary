@@ -302,10 +302,11 @@ const onScrollConversation = () => {
   showScrollDown.value = el.scrollTop + el.clientHeight < el.scrollHeight - 80;
 };
 
-// Auto-generate initial reading when reading prop is available
+// Restore an existing conversation when reading prop is available.
+// Generating a new reading is opt-in (see the "Get AI Interpretation" button)
+// so that creating a chart never requires an LLM call.
 watch(() => props.reading, (newReading) => {
   if (newReading && !hasInitialReading.value) {
-    // If we have an existing conversation, restore it instead of generating new
     if (props.existingConversation && props.existingConversation.length > 0) {
       messages.value = props.existingConversation.map((msg) => ({
         role: msg.role as "user" | "assistant",
@@ -315,9 +316,6 @@ watch(() => props.reading, (newReading) => {
       hasInitialReading.value = true;
       isLoading.value = false;
       nextTick(() => scrollToBottom());
-    } else {
-      // Generate new reading
-      generateInitialReading();
     }
   }
 }, { immediate: true });
@@ -367,6 +365,16 @@ watch(() => props.reading, (newReading) => {
     <div class="conversation-wrapper">
       <div class="conversation-container" ref="conversationContainer" @scroll="onScrollConversation">
         <div class="messages">
+          <div v-if="messages.length === 0 && !isLoading" class="empty-state">
+            <p class="empty-state-text">
+              Your chart is ready — view it in the Wheel and Data tabs anytime.
+              Get an AI interpretation here whenever you want one.
+            </p>
+            <button class="get-reading-button" @click="generateInitialReading">
+              Get AI Interpretation
+            </button>
+          </div>
+
           <div
             v-for="(message, index) in parsedMessages"
             :key="index"
@@ -760,6 +768,36 @@ watch(() => props.reading, (newReading) => {
 
 .message.assistant .message-time {
   align-self: flex-start;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  text-align: center;
+  padding: 2rem 1rem;
+}
+
+.empty-state-text {
+  color: var(--color-text-secondary);
+  max-width: 32rem;
+  margin: 0;
+}
+
+.get-reading-button {
+  padding: 0.65rem 1.25rem;
+  border: none;
+  border-radius: 0.5rem;
+  background: var(--color-accent);
+  color: var(--color-text-inverse);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.get-reading-button:hover {
+  background: var(--color-accent-hover);
 }
 
 .loading-indicator {
